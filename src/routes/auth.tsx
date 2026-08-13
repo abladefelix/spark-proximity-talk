@@ -6,6 +6,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import logo from "@/assets/shatta-logo.png";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -84,7 +85,11 @@ function AuthPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
-      <Link to="/" className="text-sm font-semibold tracking-[0.28em] text-muted-foreground">
+      <Link
+        to="/"
+        className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground"
+      >
+        <img src={logo} alt="SHATTA logo" width={28} height={28} className="size-7" />
         SHATTA
       </Link>
       <h1 className="mt-6 text-3xl leading-tight">

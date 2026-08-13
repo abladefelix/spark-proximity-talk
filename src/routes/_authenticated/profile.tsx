@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BadgeCheck, Bell, Camera, Ban } from "lucide-react";
+import { BadgeCheck, Bell, Camera, Ban, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,14 @@ function ProfilePage() {
         .eq("user_id", me)
         .maybeSingle();
       return data;
+    },
+  });
+
+  const { data: isStaff = false } = useQuery({
+    queryKey: ["is-staff"],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role");
+      return (data ?? []).some((r) => r.role === "admin" || r.role === "moderator");
     },
   });
 
@@ -309,6 +317,18 @@ function ProfilePage() {
               ))}
             </ul>
           </div>
+        )}
+
+        {isStaff && (
+          <Link
+            to="/admin"
+            className="flex items-center justify-between rounded-2xl border border-border p-4 text-sm font-semibold"
+          >
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-primary" /> Admin control
+            </span>
+            <span className="text-muted-foreground">›</span>
+          </Link>
         )}
 
         <Button variant="ghost" className="w-full text-muted-foreground" onClick={signOut}>
