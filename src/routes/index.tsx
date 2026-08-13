@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoAsset from "@/assets/shatta-mark.png.asset.json";
+import logoUrl from "@/assets/shatta-s.png";
 import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
 
 
@@ -50,7 +50,7 @@ function Landing() {
       <div className="flex items-center justify-between">
         <span className="w-9" />
         <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
-          <img src={logoAsset.url} alt="" width={28} height={28} className="size-7" />
+          <img src={logoUrl} alt="" width={28} height={28} className="size-7" />
           SHATTA
         </p>
         <ThemeToggle />
@@ -68,7 +68,7 @@ function Landing() {
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <img
-          src={logoAsset.url}
+          src={logoUrl}
           alt=""
           loading="lazy"
           width={24}

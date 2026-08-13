@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import markAsset from "@/assets/shatta-mark.png.asset.json";
+import logoUrl from "@/assets/shatta-s.png";
 import {
   Dialog,
   DialogContent,
@@ -190,10 +190,11 @@ function RadarPage() {
 
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center px-5">
-      <div className="absolute left-3 top-4">
-        <ThemeToggle />
+      <div className="absolute left-4 top-4">
+        <img src={logoUrl} alt="SHATTA" width={32} height={32} className="size-8" />
       </div>
-      <div className="absolute right-5 top-6">
+      <div className="absolute right-4 top-4 flex items-center gap-3">
+        <ThemeToggle />
         <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
       </div>
 
@@ -207,14 +208,6 @@ function RadarPage() {
         <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
-        <img
-          src={markAsset.url}
-          alt=""
-          loading="lazy"
-          width={24}
-          height={24}
-          className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
-        />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 
