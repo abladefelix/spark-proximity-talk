@@ -50,7 +50,7 @@ function Landing() {
       <div className="flex items-center justify-between">
         <span className="w-9" />
         <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
-          <img src={logo} alt="" width={28} height={28} className="size-7" />
+          <img src={logoAsset.url} alt="" width={28} height={28} className="size-7" />
           SHATTA
         </p>
         <ThemeToggle />
@@ -68,7 +68,7 @@ function Landing() {
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <img
-          src={logo}
+          src={logoAsset.url}
           alt=""
           loading="lazy"
           width={24}

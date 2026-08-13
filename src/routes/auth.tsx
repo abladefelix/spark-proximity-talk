@@ -89,7 +89,7 @@ function AuthPage() {
         to="/"
         className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground"
       >
-        <img src={logo} alt="SHATTA logo" width={28} height={28} className="size-7" />
+        <img src={logoAsset.url} alt="SHATTA logo" width={28} height={28} className="size-7" />
         SHATTA
       </Link>
       <h1 className="mt-6 text-3xl leading-tight">

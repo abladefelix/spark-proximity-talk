@@ -207,7 +207,7 @@ function RadarPage() {
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <img
-          src={mark}
+          src={markAsset.url}
           alt=""
           loading="lazy"
           width={24}
