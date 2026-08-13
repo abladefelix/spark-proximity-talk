@@ -175,19 +175,19 @@ function RadarPage() {
             onClick={() => setSelectedId(person.id)}
             style={{ left, top }}
             aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition active:scale-95"
+            className="absolute -translate-x-1/2 -translate-y-1/2 transition active:scale-95"
           >
-            <PersonAvatar
-              path={person.avatar_url}
-              name={person.display_name}
-              username={person.username}
-              className="size-11 ring-2 ring-background"
-            />
-            {person.they_signaled && !person.match_id && (
-              <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-primary" />
-            )}
+            <RadarBeacon active={person.they_signaled && !person.match_id}>
+              <PersonAvatar
+                path={person.avatar_url}
+                name={person.display_name}
+                username={person.username}
+                className="size-full"
+              />
+            </RadarBeacon>
           </button>
         ))}
+
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
