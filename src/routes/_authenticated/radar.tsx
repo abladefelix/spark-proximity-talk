@@ -191,15 +191,19 @@ function RadarPage() {
   });
 
   return (
-    <main className="flex min-h-[80vh] flex-col items-center justify-center px-5">
-      <div className="absolute left-4 top-4">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
+      <div className="flex items-center justify-between">
         <img src={logoUrl} alt="SHATTA" width={32} height={32} className="size-8" />
-      </div>
-      <div className="absolute right-4 top-4 flex items-center gap-3">
-        <ThemeToggle />
-        <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            {visible ? "Visible" : "Hidden"}
+            <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
+          </label>
+        </div>
       </div>
 
+      <div className="flex flex-1 items-center justify-center py-8">
       <section
         aria-label={geoError ?? "Radar"}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
