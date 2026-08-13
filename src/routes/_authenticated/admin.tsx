@@ -199,7 +199,10 @@ function AdminPage() {
 
   async function setVerified(userId: string, verified: boolean) {
     const { error } = await supabase.from("profiles").update({ verified }).eq("id", userId);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(verified ? "Verified" : "Verification removed");
     refreshAll();
   }
@@ -209,7 +212,10 @@ function AdminPage() {
       .from("verification_requests")
       .update({ status: approve ? "approved" : "rejected", reviewed_at: new Date().toISOString() })
       .eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (approve) await supabase.from("profiles").update({ verified: true }).eq("id", userId);
     toast.success(approve ? "Approved" : "Rejected");
     refreshAll();
@@ -219,21 +225,30 @@ function AdminPage() {
     const { error } = has
       ? await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role)
       : await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(has ? `Removed ${role}` : `Granted ${role}`);
     refreshAll();
   }
 
   async function deleteProfile(userId: string) {
     const { error } = await supabase.from("profiles").delete().eq("id", userId);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Profile removed");
     refreshAll();
   }
 
   async function dismissReport(id: string) {
     const { error } = await supabase.from("reports").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     refreshAll();
   }
 
@@ -320,7 +335,12 @@ function AdminPage() {
           {filtered.map((p) => (
             <div key={p.id} className="rounded-2xl border border-border p-3">
               <div className="flex items-center gap-3">
-                <PersonAvatar path={p.avatar_url} name={p.display_name ?? p.username} size={44} />
+                <PersonAvatar
+                  path={p.avatar_url}
+                  name={p.display_name}
+                  username={p.username}
+                  className="size-11"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
                     {p.display_name ?? p.username}
