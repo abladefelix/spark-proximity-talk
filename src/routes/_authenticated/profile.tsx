@@ -100,7 +100,7 @@ function ProfilePage() {
             path={profile?.avatar_url}
             name={profile?.display_name}
             username={profile?.username ?? "?"}
-            className="size-24 rounded-2xl"
+            className="size-24 rounded-full"
           />
           <label className="absolute -bottom-2 -right-2 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary">
             <Camera className="size-4 text-primary-foreground" />
