@@ -89,7 +89,7 @@ function ProfilePage() {
 
   return (
     <main className="px-5 pt-8">
-      <h1 className="font-display text-3xl">You</h1>
+      <h1 className="text-2xl font-semibold">You</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         This is what people see when your signal lands.
       </p>
@@ -100,9 +100,9 @@ function ProfilePage() {
             path={profile?.avatar_url}
             name={profile?.display_name}
             username={profile?.username ?? "?"}
-            className="size-24 rounded-3xl"
+            className="size-24 rounded-2xl"
           />
-          <label className="absolute -bottom-2 -right-2 flex size-10 cursor-pointer items-center justify-center rounded-full bg-heat shadow-heat">
+          <label className="absolute -bottom-2 -right-2 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary">
             <Camera className="size-4 text-primary-foreground" />
             <input
               type="file"
@@ -116,7 +116,7 @@ function ProfilePage() {
           </label>
         </div>
         <div className="min-w-0">
-          <p className="truncate font-display text-lg">@{profile?.username ?? "…"}</p>
+          <p className="truncate text-base font-semibold">@{profile?.username ?? "…"}</p>
           <p className="text-xs text-muted-foreground">Username can't be changed</p>
         </div>
       </section>

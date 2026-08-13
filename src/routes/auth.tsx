@@ -84,7 +84,7 @@ function AuthPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
-      <Link to="/" className="font-display text-3xl tracking-tight text-heat">
+      <Link to="/" className="text-sm font-semibold tracking-[0.28em] text-muted-foreground">
         SHATTA
       </Link>
       <h1 className="mt-6 text-3xl leading-tight">
