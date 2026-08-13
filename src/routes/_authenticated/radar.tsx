@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoAsset from "@/assets/shatta-s.png.asset.json";
-
-const logoUrl = logoAsset.url;
 import {
   Dialog,
   DialogContent,
@@ -22,6 +19,7 @@ import {
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { RadarBeacon } from "@/components/RadarBeacon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+
 
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
