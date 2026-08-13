@@ -6,7 +6,13 @@ import { Zap, Check, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
 
 export const Route = createFileRoute("/_authenticated/radar")({
