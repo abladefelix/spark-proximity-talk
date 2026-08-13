@@ -2,21 +2,23 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Zap, Check, LoaderCircle } from "lucide-react";
+import { Zap, Check, LoaderCircle, Ban, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { RadarBeacon } from "@/components/RadarBeacon";
-
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
@@ -46,6 +48,8 @@ type NearbyPerson = {
   i_signaled: boolean;
   they_signaled: boolean;
   match_id: string | null;
+  verified: boolean;
+  is_online: boolean;
 };
 
 function formatDistance(m: number) {
@@ -59,6 +63,8 @@ function RadarPage() {
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reason, setReason] = useState("");
 
   // Keep my location fresh while the radar is open.
   useEffect(() => {
@@ -95,6 +101,11 @@ function RadarPage() {
     };
   }, [visible, queryClient]);
 
+  // Drop stale signals that were never returned.
+  useEffect(() => {
+    void supabase.rpc("purge_expired_signals");
+  }, []);
+
   const nearby = useQuery({
     queryKey: ["nearby", radius],
     enabled: located,
@@ -124,7 +135,7 @@ function RadarPage() {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
         navigate({ to: "/chat/$matchId", params: { matchId: updated.match_id } });
       } else {
-        toast.success(`Signal sent to @${person.username}`);
+        toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send signal"),
@@ -133,6 +144,35 @@ function RadarPage() {
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = people.find((p) => p.id === selectedId) ?? null;
+
+  async function blockPerson(person: NearbyPerson) {
+    const me = (await supabase.auth.getUser()).data.user?.id;
+    if (!me) return;
+    const { error } = await supabase.from("blocks").insert({ blocker: me, blocked: person.id });
+    if (error) {
+      toast.error("Couldn't block");
+      return;
+    }
+    setSelectedId(null);
+    toast.success(`@${person.username} blocked`);
+    queryClient.invalidateQueries({ queryKey: ["nearby"] });
+    queryClient.invalidateQueries({ queryKey: ["blocked"] });
+  }
+
+  async function reportPerson(person: NearbyPerson) {
+    const me = (await supabase.auth.getUser()).data.user?.id;
+    if (!me || !reason.trim()) return;
+    const { error } = await supabase
+      .from("reports")
+      .insert({ reporter: me, reported: person.id, reason: reason.trim() });
+    if (error) {
+      toast.error("Couldn't send report");
+      return;
+    }
+    setReason("");
+    setReporting(false);
+    toast.success("Report sent. Thanks for keeping SHATTA safe.");
+  }
 
   const beacons = people.map((person) => {
     let hash = 0;
@@ -173,8 +213,8 @@ function RadarPage() {
             key={person.id}
             type="button"
             onClick={() => setSelectedId(person.id)}
-            style={{ left, top }}
-            aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}`}
+            style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
+            aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
             className="absolute -translate-x-1/2 -translate-y-1/2 transition active:scale-95"
           >
             <RadarBeacon active={person.they_signaled && !person.match_id}>
@@ -185,16 +225,27 @@ function RadarPage() {
                 className="size-full"
               />
             </RadarBeacon>
+            {person.is_online && (
+              <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
+            )}
           </button>
         ))}
-
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
 
-      <Dialog open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>
+      <Dialog
+        open={Boolean(selected)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelectedId(null);
+            setReporting(false);
+            setReason("");
+          }
+        }}
+      >
         <DialogContent className="max-w-xs rounded-3xl text-center">
           {selected && (
             <>
@@ -205,11 +256,13 @@ function RadarPage() {
                   username={selected.username}
                   className="size-28"
                 />
-                <DialogTitle className="mt-4 text-xl">
+                <DialogTitle className="mt-4 flex items-center gap-1.5 text-xl">
                   {selected.display_name ?? selected.username}
+                  {selected.verified && <VerifiedBadge className="size-5" />}
                 </DialogTitle>
                 <DialogDescription>
                   @{selected.username} · {formatDistance(selected.distance_m)}
+                  {selected.is_online ? " · active now" : ""}
                 </DialogDescription>
               </DialogHeader>
 
@@ -217,32 +270,80 @@ function RadarPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{selected.bio}</p>
               )}
 
-              {selected.match_id ? (
-                <Button
-                  variant="heat"
-                  className="w-full"
-                  onClick={() =>
-                    navigate({
-                      to: "/chat/$matchId",
-                      params: { matchId: selected.match_id as string },
-                    })
-                  }
-                >
-                  Chat
-                </Button>
-              ) : selected.i_signaled ? (
-                <Button variant="ghost" className="w-full" disabled>
-                  <Check className="size-4" /> Signal sent
-                </Button>
+              {reporting ? (
+                <div className="space-y-3 text-left">
+                  <Textarea
+                    value={reason}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="What happened?"
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                  <DialogFooter className="flex-row gap-2">
+                    <Button
+                      variant="ghost"
+                      className="flex-1"
+                      onClick={() => setReporting(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="heat"
+                      className="flex-1"
+                      disabled={!reason.trim()}
+                      onClick={() => void reportPerson(selected)}
+                    >
+                      Send report
+                    </Button>
+                  </DialogFooter>
+                </div>
               ) : (
-                <Button
-                  variant="heat"
-                  className="w-full"
-                  disabled={signal.isPending}
-                  onClick={() => signal.mutate(selected)}
-                >
-                  <Zap className="size-4" /> Signal
-                </Button>
+                <>
+                  {selected.match_id ? (
+                    <Button
+                      variant="heat"
+                      className="w-full"
+                      onClick={() =>
+                        navigate({
+                          to: "/chat/$matchId",
+                          params: { matchId: selected.match_id as string },
+                        })
+                      }
+                    >
+                      Chat
+                    </Button>
+                  ) : selected.i_signaled ? (
+                    <Button variant="ghost" className="w-full" disabled>
+                      <Check className="size-4" /> Signal sent
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="heat"
+                      className="w-full"
+                      disabled={signal.isPending}
+                      onClick={() => signal.mutate(selected)}
+                    >
+                      <Zap className="size-4" /> Signal
+                    </Button>
+                  )}
+
+                  <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5"
+                      onClick={() => void blockPerson(selected)}
+                    >
+                      <Ban className="size-3.5" /> Block
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5"
+                      onClick={() => setReporting(true)}
+                    >
+                      <Flag className="size-3.5" /> Report
+                    </button>
+                  </div>
+                </>
               )}
             </>
           )}
@@ -251,5 +352,3 @@ function RadarPage() {
     </main>
   );
 }
-
-
