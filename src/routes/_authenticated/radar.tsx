@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { RadarBeacon } from "@/components/RadarBeacon";
+
 
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
