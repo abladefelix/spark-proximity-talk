@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-
-
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
