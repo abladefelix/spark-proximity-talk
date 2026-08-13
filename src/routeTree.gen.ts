@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
@@ -30,6 +31,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
   id: '/chats',
@@ -56,6 +62,7 @@ const AuthenticatedChatMatchIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
@@ -81,14 +90,29 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/chats' | '/profile' | '/radar' | '/chat/$matchId'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/chats'
+    | '/profile'
+    | '/radar'
+    | '/chat/$matchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/chats' | '/profile' | '/radar' | '/chat/$matchId'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/chats'
+    | '/profile'
+    | '/radar'
+    | '/chat/$matchId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/admin'
     | '/_authenticated/chats'
     | '/_authenticated/profile'
     | '/_authenticated/radar'
@@ -124,6 +148,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chats': {
       id: '/_authenticated/chats'
       path: '/chats'
@@ -156,6 +187,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
@@ -163,6 +195,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedChatsRoute: AuthenticatedChatsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRadarRoute: AuthenticatedRadarRoute,
