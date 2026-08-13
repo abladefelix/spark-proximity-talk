@@ -7,6 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -37,6 +44,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [gender, setGender] = useState<string>("unset");
   const [saving, setSaving] = useState(false);
   const [notifState, setNotifState] = useState<string>("default");
 
@@ -140,6 +148,7 @@ function ProfilePage() {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
       setBio(profile.bio ?? "");
+      setGender(profile.gender ?? "unset");
     }
   }, [profile]);
 
@@ -148,7 +157,11 @@ function ProfilePage() {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName.trim() || null, bio: bio.trim() || null })
+      .update({
+        display_name: displayName.trim() || null,
+        bio: bio.trim() || null,
+        gender: gender === "unset" ? null : gender,
+      })
       .eq("id", profile.id);
     setSaving(false);
     if (error) {
@@ -191,6 +204,7 @@ function ProfilePage() {
           <PersonAvatar
             path={profile?.avatar_url}
             name={profile?.display_name}
+            gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
             username={profile?.username ?? "?"}
             className="size-24 rounded-full"
           />
@@ -231,6 +245,23 @@ function ProfilePage() {
             onChange={(e) => setBio(e.target.value)}
             placeholder="Here for good vibes and better playlists."
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="gender">I identify as</Label>
+          <Select value={gender} onValueChange={setGender}>
+            <SelectTrigger id="gender">
+              <SelectValue placeholder="Prefer not to say" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="unset">Prefer not to say</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Shown as your beacon icon on the radar when you have no photo.
+          </p>
         </div>
         <Button variant="heat" size="lg" className="w-full" disabled={saving} onClick={save}>
           Save profile

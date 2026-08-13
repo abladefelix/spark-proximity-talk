@@ -127,6 +127,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          gender: string | null
           id: string
           last_seen: string
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id: string
           last_seen?: string
           updated_at?: string
@@ -149,6 +151,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           last_seen?: string
           updated_at?: string
@@ -292,6 +295,7 @@ export type Database = {
           bio: string
           display_name: string
           distance_m: number
+          gender: string
           i_signaled: boolean
           id: string
           is_online: boolean
