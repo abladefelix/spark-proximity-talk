@@ -213,6 +213,12 @@ function RadarPage() {
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+        <img
+          src={logoUrl}
+          alt=""
+          className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.08]"
+          aria-hidden="true"
+        />
 
         {beacons.map(({ person, left, top }) => (
           <button
