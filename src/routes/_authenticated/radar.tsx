@@ -245,6 +245,9 @@ function RadarPage() {
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
+      </div>
+
+
 
       <Dialog
         open={Boolean(selected)}
