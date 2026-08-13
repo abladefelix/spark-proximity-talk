@@ -30,12 +30,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const demoBeacons = [
-  { label: "A", left: "68%", top: "34%" },
-  { label: "K", left: "32%", top: "58%" },
-  { label: "M", left: "58%", top: "72%" },
-  { label: "J", left: "24%", top: "30%" },
-];
+
+
 
 
 function Landing() {
