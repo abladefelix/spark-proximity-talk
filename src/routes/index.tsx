@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
