@@ -72,12 +72,15 @@ function Landing() {
           <span
             key={b.label}
             style={{ left: b.left, top: b.top }}
-            className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-sm font-semibold"
+            className="absolute -translate-x-1/2 -translate-y-1/2"
           >
-            {b.label}
+            <RadarBeacon active={b.label === "A"}>
+              <RadarBeaconInitial label={b.label} />
+            </RadarBeacon>
           </span>
         ))}
       </section>
+
 
       <h1 className="sr-only">SHATTA — chat with the people right around you</h1>
 
