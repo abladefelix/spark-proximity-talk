@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import mark from "@/assets/shatta-mark.png";
+import markAsset from "@/assets/shatta-mark.png.asset.json";
 import {
   Dialog,
   DialogContent,
@@ -207,7 +207,7 @@ function RadarPage() {
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <img
-          src={mark}
+          src={markAsset.url}
           alt=""
           loading="lazy"
           width={24}
