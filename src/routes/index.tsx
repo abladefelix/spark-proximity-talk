@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logo from "@/assets/shatta-logo.png";
+import logo from "@/assets/shatta-mark.png";
 import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
 
 
@@ -67,6 +67,14 @@ function Landing() {
         <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
+        <img
+          src={logo}
+          alt=""
+          loading="lazy"
+          width={24}
+          height={24}
+          className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
+        />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 

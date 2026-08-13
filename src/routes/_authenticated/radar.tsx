@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import mark from "@/assets/shatta-mark.png";
 import {
   Dialog,
   DialogContent,
@@ -205,6 +206,14 @@ function RadarPage() {
         <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
         <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
         <div className="radar-sweep absolute inset-0 rounded-full" />
+        <img
+          src={mark}
+          alt=""
+          loading="lazy"
+          width={24}
+          height={24}
+          className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
+        />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 
