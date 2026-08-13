@@ -2,13 +2,18 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Camera } from "lucide-react";
+import { BadgeCheck, Bell, Camera, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import {
+  notificationPermission,
+  requestNotificationPermission,
+} from "@/hooks/useNotifications";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -33,6 +38,11 @@ function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
+  const [notifState, setNotifState] = useState<string>("default");
+
+  useEffect(() => {
+    setNotifState(notificationPermission());
+  }, []);
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile"],
@@ -43,6 +53,80 @@ function ProfilePage() {
       return data;
     },
   });
+
+  const { data: verification } = useQuery({
+    queryKey: ["verification"],
+    queryFn: async () => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) return null;
+      const { data } = await supabase
+        .from("verification_requests")
+        .select("status")
+        .eq("user_id", me)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: blocked = [] } = useQuery({
+    queryKey: ["blocked"],
+    queryFn: async () => {
+      const { data: rows } = await supabase.from("blocks").select("id, blocked");
+      if (!rows?.length) return [];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .in(
+          "id",
+          rows.map((r) => r.blocked),
+        );
+      return rows.map((r) => ({
+        blockId: r.id,
+        person: profiles?.find((p) => p.id === r.blocked),
+      }));
+    },
+  });
+
+  async function unblock(blockId: string) {
+    const { error } = await supabase.from("blocks").delete().eq("id", blockId);
+    if (error) {
+      toast.error("Couldn't unblock");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["blocked"] });
+    queryClient.invalidateQueries({ queryKey: ["nearby"] });
+  }
+
+  async function submitVerification(file: File) {
+    const me = profile?.id;
+    if (!me) return;
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${me}/selfie-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("verifications").upload(path, file);
+    if (upErr) {
+      toast.error("Upload failed");
+      return;
+    }
+    const { error } = await supabase
+      .from("verification_requests")
+      .upsert(
+        { user_id: me, selfie_path: path, status: "pending", reviewed_at: null },
+        { onConflict: "user_id" },
+      );
+    if (error) {
+      toast.error("Couldn't submit for verification");
+      return;
+    }
+    toast.success("Selfie sent — we'll review it shortly");
+    queryClient.invalidateQueries({ queryKey: ["verification"] });
+  }
+
+  async function enableNotifications() {
+    const result = await requestNotificationPermission();
+    setNotifState(result);
+    if (result === "granted") toast.success("Notifications on");
+    else if (result === "denied") toast.error("Notifications blocked in your browser settings");
+  }
 
   useEffect(() => {
     if (profile) {
@@ -116,7 +200,10 @@ function ProfilePage() {
           </label>
         </div>
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold">@{profile?.username ?? "…"}</p>
+          <p className="flex items-center gap-1.5 truncate text-base font-semibold">
+            @{profile?.username ?? "…"}
+            {profile?.verified && <VerifiedBadge />}
+          </p>
           <p className="text-xs text-muted-foreground">Username can't be changed</p>
         </div>
       </section>
@@ -140,6 +227,90 @@ function ProfilePage() {
         <Button variant="heat" size="lg" className="w-full" disabled={saving} onClick={save}>
           Save profile
         </Button>
+      </section>
+
+      <section className="mt-8 space-y-4">
+        <div className="rounded-2xl border border-border p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold">
+            <BadgeCheck className="size-4 text-primary" /> Verification
+          </p>
+          {profile?.verified ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Your profile is verified. People see the badge on your beacon.
+            </p>
+          ) : verification?.status === "pending" ? (
+            <p className="mt-1 text-xs text-muted-foreground">Selfie under review.</p>
+          ) : (
+            <>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {verification?.status === "rejected"
+                  ? "Your last selfie didn't match. Try again."
+                  : "Send a quick selfie to get the verified badge and more signals back."}
+              </p>
+              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold">
+                <Camera className="size-3.5" /> Take a selfie
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void submitVerification(file);
+                  }}
+                />
+              </label>
+            </>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold">
+            <Bell className="size-4 text-primary" /> Notifications
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {notifState === "granted"
+              ? "You'll be alerted when someone signals you or replies."
+              : notifState === "denied"
+                ? "Blocked in your browser settings."
+                : notifState === "unsupported"
+                  ? "Not supported on this device — you'll still see in-app alerts."
+                  : "Get alerted when someone signals you or replies."}
+          </p>
+          {notifState === "default" && (
+            <Button
+              variant="soft"
+              size="sm"
+              className="mt-3"
+              onClick={() => void enableNotifications()}
+            >
+              Turn on
+            </Button>
+          )}
+        </div>
+
+        {blocked.length > 0 && (
+          <div className="rounded-2xl border border-border p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <Ban className="size-4" /> Blocked
+            </p>
+            <ul className="mt-3 space-y-2">
+              {blocked.map(({ blockId, person }) => (
+                <li key={blockId} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="truncate">@{person?.username ?? "someone"}</span>
+                  <button
+                    type="button"
+                    className="text-xs text-primary"
+                    onClick={() => void unblock(blockId)}
+                  >
+                    Unblock
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <Button variant="ghost" className="w-full text-muted-foreground" onClick={signOut}>
           Sign out
         </Button>
