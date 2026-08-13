@@ -138,11 +138,11 @@ function RadarPage() {
         </div>
       </header>
 
-      <section className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-card">
+      <section className="mt-6 rounded-2xl border border-border bg-card/60 p-5">
         <div className="flex items-center gap-3">
-          <span className="relative flex size-10 items-center justify-center rounded-full bg-heat">
-            <span className="absolute inset-0 rounded-full bg-primary/40 pulse-ring" />
-            <MapPin className="relative size-5 text-primary-foreground" />
+          <span className="relative flex size-10 items-center justify-center rounded-full bg-secondary/70">
+            <span className="absolute inset-0 rounded-full bg-primary/20 pulse-ring" />
+            <MapPin className="relative size-4 text-primary" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold">
