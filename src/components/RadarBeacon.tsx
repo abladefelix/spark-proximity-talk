@@ -30,10 +30,12 @@ export function RadarBeacon({
 
       <div
         className={cn(
-          "relative z-10 flex items-center justify-center overflow-hidden rounded-full bg-card ring-1 ring-border/60 shadow-heat",
+          "relative z-10 flex items-center justify-center overflow-hidden rounded-full bg-card ring-1 ring-border/60",
+          active ? "beacon-glow" : "shadow-heat",
           sizeClasses[size],
         )}
       >
+
         {children}
       </div>
 
