@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoUrl from "@/assets/shatta-s.png";
+import logoAsset from "@/assets/shatta-s.png.asset.json";
+
+const logoUrl = logoAsset.url;
 import {
   Dialog,
   DialogContent,

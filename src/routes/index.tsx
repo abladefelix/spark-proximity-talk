@@ -3,7 +3,9 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoUrl from "@/assets/shatta-s.png";
+import logoAsset from "@/assets/shatta-s.png.asset.json";
+
+const logoUrl = logoAsset.url;
 import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
 
 
