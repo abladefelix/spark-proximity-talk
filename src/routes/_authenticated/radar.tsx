@@ -122,118 +122,124 @@ function RadarPage() {
   });
 
   const people = nearby.data ?? [];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = people.find((p) => p.id === selectedId) ?? null;
+
+  const beacons = people.map((person) => {
+    let hash = 0;
+    for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
+    const angle = ((hash >>> 0) % 360) * (Math.PI / 180);
+    const r = Math.min(1, person.distance_m / radius) * 0.42;
+    return {
+      person,
+      left: `${50 + Math.cos(angle) * r * 100}%`,
+      top: `${50 + Math.sin(angle) * r * 100}%`,
+    };
+  });
 
   return (
     <main className="px-5 pt-8">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Radar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Who's around you right now</p>
-        </div>
-        <div className="flex flex-col items-end gap-1">
+        <h1 className="text-2xl font-semibold">Radar</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
           <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
-          <span className="text-[11px] text-muted-foreground">
-            {visible ? "Visible" : "Hidden"}
-          </span>
         </div>
       </header>
 
-      <section className="mt-6 rounded-2xl border border-border bg-card/60 p-5">
-        <div className="flex items-center gap-3">
-          <span className="relative flex size-10 items-center justify-center rounded-full bg-secondary/70">
-            <span className="absolute inset-0 rounded-full bg-primary/20 pulse-ring" />
-            <MapPin className="relative size-4 text-primary" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">
-              {geoError ? "Location off" : located ? "Radar live" : "Finding you…"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {geoError ?? `Scanning within ${radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}`}
-            </p>
-          </div>
-        </div>
-        <div className="mt-5">
-          <Slider
-            value={[radius]}
-            onValueChange={([v]) => setRadius(v ?? 500)}
-            min={100}
-            max={5000}
-            step={100}
-          />
-          <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-            <span>100 m</span>
-            <span>5 km</span>
-          </div>
-        </div>
-      </section>
+      <section className="relative mx-auto mt-8 aspect-square w-full max-w-sm">
+        <div className="absolute inset-0 rounded-full border border-border" />
+        <div className="absolute inset-[16%] rounded-full border border-border/70" />
+        <div className="absolute inset-[33%] rounded-full border border-border/50" />
+        <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+        <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 
-      <section className="mt-6 space-y-3">
-        {nearby.isLoading && located && (
-          <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
-            <LoaderCircle className="size-4 animate-spin" /> Scanning…
-          </div>
-        )}
-
-        {located && !nearby.isLoading && people.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-            <p className="text-base font-semibold">Quiet spot</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Nobody on SHATTA within range yet. Widen the radius or check back when the place fills
-              up.
-            </p>
-          </div>
-        )}
-
-        {people.map((person) => (
-          <article
+        {beacons.map(({ person, left, top }) => (
+          <button
             key={person.id}
-            className="flex items-center gap-4 rounded-2xl border border-border bg-card/60 p-4"
+            type="button"
+            onClick={() => setSelectedId(person.id === selectedId ? null : person.id)}
+            style={{ left, top }}
+            aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}`}
+            className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition ${
+              selectedId === person.id ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+            }`}
           >
             <PersonAvatar
               path={person.avatar_url}
               name={person.display_name}
               username={person.username}
-              className="size-14"
+              className="size-11"
             />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold">{person.display_name ?? person.username}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                @{person.username} · {formatDistance(person.distance_m)}
-              </p>
-              {person.they_signaled && !person.match_id && (
-                <p className="mt-1 text-xs font-medium text-primary">
-                  Signalled you — signal back to chat
-                </p>
-              )}
-            </div>
-            {person.match_id ? (
-              <Button
-                size="sm"
-                variant="soft"
-                onClick={() =>
-                  navigate({ to: "/chat/$matchId", params: { matchId: person.match_id as string } })
-                }
-              >
-                Chat
-              </Button>
-            ) : person.i_signaled ? (
-              <Button size="sm" variant="ghost" disabled>
-                <Check className="size-4" /> Sent
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="heat"
-                disabled={signal.isPending}
-                onClick={() => signal.mutate(person)}
-              >
-                <Zap className="size-4" /> Signal
-              </Button>
+            {person.they_signaled && !person.match_id && (
+              <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-primary" />
             )}
-          </article>
+          </button>
         ))}
+
+        {located && !nearby.isLoading && people.length === 0 && (
+          <p className="absolute inset-x-0 bottom-[18%] text-center text-sm text-muted-foreground">
+            Nobody in range yet
+          </p>
+        )}
+        {(!located || nearby.isLoading) && (
+          <p className="absolute inset-x-0 bottom-[18%] flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin" />
+            {geoError ?? "Scanning…"}
+          </p>
+        )}
       </section>
+
+      <div className="mx-auto mt-6 w-full max-w-sm">
+        <Slider
+          value={[radius]}
+          onValueChange={([v]) => setRadius(v ?? 500)}
+          min={100}
+          max={5000}
+          step={100}
+        />
+        <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+          <span>100 m</span>
+          <span>{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
+          <span>5 km</span>
+        </div>
+      </div>
+
+      {selected && (
+        <section className="mx-auto mt-6 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-border bg-card/60 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold">{selected.display_name ?? selected.username}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              @{selected.username} · {formatDistance(selected.distance_m)}
+            </p>
+          </div>
+          {selected.match_id ? (
+            <Button
+              size="sm"
+              variant="soft"
+              onClick={() =>
+                navigate({ to: "/chat/$matchId", params: { matchId: selected.match_id as string } })
+              }
+            >
+              Chat
+            </Button>
+          ) : selected.i_signaled ? (
+            <Button size="sm" variant="ghost" disabled>
+              <Check className="size-4" /> Sent
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="heat"
+              disabled={signal.isPending}
+              onClick={() => signal.mutate(selected)}
+            >
+              <Zap className="size-4" /> Signal
+            </Button>
+          )}
+        </section>
+      )}
     </main>
   );
 }
+
