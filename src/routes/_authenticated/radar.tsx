@@ -127,7 +127,7 @@ function RadarPage() {
     <main className="px-5 pt-8">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl text-heat">SHATTA</h1>
+          <h1 className="text-2xl font-semibold">Radar</h1>
           <p className="mt-1 text-sm text-muted-foreground">Who's around you right now</p>
         </div>
         <div className="flex flex-col items-end gap-1">
