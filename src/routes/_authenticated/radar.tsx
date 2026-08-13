@@ -150,7 +150,7 @@ function RadarPage() {
       </div>
 
       <section
-        aria-label="Radar"
+        aria-label={geoError ?? "Radar"}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div className="radar-grid absolute inset-0" />
