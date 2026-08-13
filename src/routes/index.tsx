@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 
 const logoUrl = logoAsset.url;
-import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
+
 
 
 export const Route = createFileRoute("/")({
@@ -30,12 +30,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const demoBeacons = [
-  { label: "A", left: "68%", top: "34%" },
-  { label: "K", left: "32%", top: "58%" },
-  { label: "M", left: "58%", top: "72%" },
-  { label: "J", left: "24%", top: "30%" },
-];
+
+
 
 
 function Landing() {
@@ -48,7 +44,7 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-10">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-6 pb-10 pt-6">
       <div className="flex items-center justify-between">
         <span className="w-9" />
         <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
@@ -58,49 +54,37 @@ function Landing() {
         <ThemeToggle />
       </div>
 
+      <div className="flex flex-1 flex-col items-center justify-center gap-10 py-8">
+        <section
+          aria-label="Radar showing people nearby as beacons"
+          className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
+        >
+          <div className="radar-grid absolute inset-0" />
+          <div className="absolute inset-[16%] rounded-full border border-border/70" />
+          <div className="absolute inset-[33%] rounded-full border border-border/50" />
+          <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+          <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+          <div className="radar-sweep absolute inset-0 rounded-full" />
+          <img
+            src={logoUrl}
+            alt=""
+            loading="lazy"
+            width={24}
+            height={24}
+            className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
+          />
+          <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+          <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+        </section>
 
-      <section
-        aria-label="Radar preview showing people nearby as beacons"
-        className="relative mx-auto mt-8 aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
-      >
-        <div className="radar-grid absolute inset-0" />
-        <div className="absolute inset-[16%] rounded-full border border-border/70" />
-        <div className="absolute inset-[33%] rounded-full border border-border/50" />
-        <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
-        <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
-        <div className="radar-sweep absolute inset-0 rounded-full" />
-        <img
-          src={logoUrl}
-          alt=""
-          loading="lazy"
-          width={24}
-          height={24}
-          className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
-        />
-        <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
-        <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+        <h1 className="sr-only">SHATTA — chat with the people right around you</h1>
 
-        {demoBeacons.map((b) => (
-          <span
-            key={b.label}
-            style={{ left: b.left, top: b.top }}
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-          >
-            <RadarBeacon active={b.label === "A"}>
-              <RadarBeaconInitial label={b.label} />
-            </RadarBeacon>
-          </span>
-        ))}
-      </section>
-
-
-      <h1 className="sr-only">SHATTA — chat with the people right around you</h1>
-
-      <Button asChild variant="heat" size="lg" className="mt-10 w-full">
-        <Link to="/auth">Start signalling</Link>
-      </Button>
-
+        <Button asChild variant="heat" size="lg" className="w-full">
+          <Link to="/auth">Start signalling</Link>
+        </Button>
+      </div>
     </main>
   );
 }
+
 
