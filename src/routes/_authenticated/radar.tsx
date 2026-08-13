@@ -193,10 +193,16 @@ function RadarPage() {
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
-      <div className="flex items-center justify-end gap-2">
-        <ThemeToggle />
-        <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
-        <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
+          <img src={logoUrl} alt="" width={28} height={28} className="size-7" />
+          SHATTA
+        </p>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
+          <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
+        </div>
       </div>
 
 
