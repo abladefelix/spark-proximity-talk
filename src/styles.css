@@ -126,14 +126,19 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 }
 
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
 @utility text-heat {
-  background-image: var(--gradient-heat);
-  background-clip: text;
-  color: transparent;
+  color: var(--color-primary);
 }
 
 @utility bg-heat {
