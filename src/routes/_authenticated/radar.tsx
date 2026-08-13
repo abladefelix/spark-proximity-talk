@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import mark from "@/assets/shatta-mark.png";
+import markAsset from "@/assets/shatta-mark.png.asset.json";
 import {
   Dialog,
   DialogContent,

@@ -6,7 +6,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/shatta-mark.png";
+import logoAsset from "@/assets/shatta-mark.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logo from "@/assets/shatta-mark.png";
+import logoAsset from "@/assets/shatta-mark.png.asset.json";
 import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
 
 
