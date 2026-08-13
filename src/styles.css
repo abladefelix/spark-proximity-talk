@@ -142,7 +142,7 @@
 }
 
 @utility bg-heat {
-  background-image: var(--gradient-heat);
+  background-color: var(--color-primary);
 }
 
 @utility shadow-heat {
