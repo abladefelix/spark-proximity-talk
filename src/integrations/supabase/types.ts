@@ -258,6 +258,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_exists: { Args: never; Returns: boolean }
+      admin_stats: {
+        Args: never
+        Returns: {
+          blocks: number
+          matches: number
+          messages: number
+          online: number
+          people: number
+          reports: number
+          signals: number
+          verified: number
+        }[]
+      }
+      claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -269,6 +284,7 @@ export type Database = {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       nearby_people: {
         Args: { radius_m?: number }
         Returns: {
