@@ -6,7 +6,13 @@ import { Zap, Check, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
 
 export const Route = createFileRoute("/_authenticated/radar")({
@@ -46,7 +52,7 @@ function formatDistance(m: number) {
 function RadarPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [radius, setRadius] = useState(500);
+  const radius = 500;
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
@@ -138,16 +144,15 @@ function RadarPage() {
   });
 
   return (
-    <main className="px-5 pt-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Radar</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
-          <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
-        </div>
-      </header>
+    <main className="flex min-h-[80vh] flex-col items-center justify-center px-5">
+      <div className="absolute right-5 top-6">
+        <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
+      </div>
 
-      <section className="relative mx-auto mt-8 aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20">
+      <section
+        aria-label={geoError ?? "Radar"}
+        className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
+      >
         <div className="radar-grid absolute inset-0" />
         <div className="absolute inset-[16%] rounded-full border border-border/70" />
         <div className="absolute inset-[33%] rounded-full border border-border/50" />
@@ -157,23 +162,20 @@ function RadarPage() {
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 
-
         {beacons.map(({ person, left, top }) => (
           <button
             key={person.id}
             type="button"
-            onClick={() => setSelectedId(person.id === selectedId ? null : person.id)}
+            onClick={() => setSelectedId(person.id)}
             style={{ left, top }}
             aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}`}
-            className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition ${
-              selectedId === person.id ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
-            }`}
+            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition active:scale-95"
           >
             <PersonAvatar
               path={person.avatar_url}
               name={person.display_name}
               username={person.username}
-              className="size-11"
+              className="size-11 ring-2 ring-background"
             />
             {person.they_signaled && !person.match_id && (
               <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-primary" />
@@ -181,69 +183,67 @@ function RadarPage() {
           </button>
         ))}
 
-        {located && !nearby.isLoading && people.length === 0 && (
-          <p className="absolute inset-x-0 bottom-[18%] text-center text-sm text-muted-foreground">
-            Nobody in range yet
-          </p>
-        )}
         {(!located || nearby.isLoading) && (
-          <p className="absolute inset-x-0 bottom-[18%] flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <LoaderCircle className="size-4 animate-spin" />
-            {geoError ?? "Scanning…"}
-          </p>
+          <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
 
-      <div className="mx-auto mt-6 w-full max-w-sm">
-        <Slider
-          value={[radius]}
-          onValueChange={([v]) => setRadius(v ?? 500)}
-          min={100}
-          max={5000}
-          step={100}
-        />
-        <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-          <span>100 m</span>
-          <span>{radius >= 1000 ? `${radius / 1000} km` : `${radius} m`}</span>
-          <span>5 km</span>
-        </div>
-      </div>
+      <Dialog open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>
+        <DialogContent className="max-w-xs rounded-3xl text-center">
+          {selected && (
+            <>
+              <DialogHeader className="items-center">
+                <PersonAvatar
+                  path={selected.avatar_url}
+                  name={selected.display_name}
+                  username={selected.username}
+                  className="size-28"
+                />
+                <DialogTitle className="mt-4 text-xl">
+                  {selected.display_name ?? selected.username}
+                </DialogTitle>
+                <DialogDescription>
+                  @{selected.username} · {formatDistance(selected.distance_m)}
+                </DialogDescription>
+              </DialogHeader>
 
-      {selected && (
-        <section className="mx-auto mt-6 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-border bg-card/60 p-4">
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{selected.display_name ?? selected.username}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              @{selected.username} · {formatDistance(selected.distance_m)}
-            </p>
-          </div>
-          {selected.match_id ? (
-            <Button
-              size="sm"
-              variant="soft"
-              onClick={() =>
-                navigate({ to: "/chat/$matchId", params: { matchId: selected.match_id as string } })
-              }
-            >
-              Chat
-            </Button>
-          ) : selected.i_signaled ? (
-            <Button size="sm" variant="ghost" disabled>
-              <Check className="size-4" /> Sent
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="heat"
-              disabled={signal.isPending}
-              onClick={() => signal.mutate(selected)}
-            >
-              <Zap className="size-4" /> Signal
-            </Button>
+              {selected.bio && (
+                <p className="text-sm leading-relaxed text-muted-foreground">{selected.bio}</p>
+              )}
+
+              {selected.match_id ? (
+                <Button
+                  variant="heat"
+                  className="w-full"
+                  onClick={() =>
+                    navigate({
+                      to: "/chat/$matchId",
+                      params: { matchId: selected.match_id as string },
+                    })
+                  }
+                >
+                  Chat
+                </Button>
+              ) : selected.i_signaled ? (
+                <Button variant="ghost" className="w-full" disabled>
+                  <Check className="size-4" /> Signal sent
+                </Button>
+              ) : (
+                <Button
+                  variant="heat"
+                  className="w-full"
+                  disabled={signal.isPending}
+                  onClick={() => signal.mutate(selected)}
+                >
+                  <Zap className="size-4" /> Signal
+                </Button>
+              )}
+            </>
           )}
-        </section>
-      )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
+
 

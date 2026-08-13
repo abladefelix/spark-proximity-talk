@@ -72,21 +72,12 @@ function Landing() {
         ))}
       </section>
 
-      <h1 className="mt-10 text-center text-[1.75rem] font-semibold leading-[1.2]">
-        The people around you are already interesting.
-      </h1>
-      <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
-        Everyone nearby shows up as a beacon. Tap one to signal — if they signal back, the chat
-        opens.
-      </p>
+      <h1 className="sr-only">SHATTA — chat with the people right around you</h1>
 
-      <Button asChild variant="heat" size="lg" className="mt-8 w-full">
+      <Button asChild variant="heat" size="lg" className="mt-10 w-full">
         <Link to="/auth">Start signalling</Link>
       </Button>
 
-      <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
-        Your exact location is never shown — only rough distance, and only while you're visible.
-      </p>
     </main>
   );
 }
