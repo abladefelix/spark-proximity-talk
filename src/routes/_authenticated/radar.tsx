@@ -176,8 +176,8 @@ function RadarPage() {
         )}
 
         {located && !nearby.isLoading && people.length === 0 && (
-          <div className="rounded-3xl border border-dashed border-border p-8 text-center">
-            <p className="font-display text-lg">Quiet spot</p>
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <p className="text-base font-semibold">Quiet spot</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Nobody on SHATTA within range yet. Widen the radius or check back when the place fills
               up.
@@ -188,7 +188,7 @@ function RadarPage() {
         {people.map((person) => (
           <article
             key={person.id}
-            className="flex items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card"
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card/60 p-4"
           >
             <PersonAvatar
               path={person.avatar_url}
@@ -202,7 +202,7 @@ function RadarPage() {
                 @{person.username} · {formatDistance(person.distance_m)}
               </p>
               {person.they_signaled && !person.match_id && (
-                <p className="mt-1 text-xs font-semibold text-accent">
+                <p className="mt-1 text-xs font-medium text-primary">
                   Signalled you — signal back to chat
                 </p>
               )}
