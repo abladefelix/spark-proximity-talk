@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Zap, MapPin, MessagesSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/shatta-hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
