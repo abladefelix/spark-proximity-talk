@@ -6,6 +6,7 @@ import { Zap, Check, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Dialog,
   DialogContent,
@@ -145,6 +146,9 @@ function RadarPage() {
 
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center px-5">
+      <div className="absolute left-3 top-4">
+        <ThemeToggle />
+      </div>
       <div className="absolute right-5 top-6">
         <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
       </div>
