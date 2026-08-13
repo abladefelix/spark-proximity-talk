@@ -52,7 +52,7 @@ function formatDistance(m: number) {
 function RadarPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [radius, setRadius] = useState(500);
+  const radius = 500;
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
