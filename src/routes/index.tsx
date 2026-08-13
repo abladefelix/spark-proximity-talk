@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -44,9 +46,14 @@ function Landing() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-10">
-      <p className="text-center text-sm font-semibold tracking-[0.28em] text-muted-foreground">
-        SHATTA
-      </p>
+      <div className="flex items-center justify-between">
+        <span className="w-9" />
+        <p className="text-center text-sm font-semibold tracking-[0.28em] text-muted-foreground">
+          SHATTA
+        </p>
+        <ThemeToggle />
+      </div>
+
 
       <section
         aria-label="Radar preview showing people nearby as beacons"
