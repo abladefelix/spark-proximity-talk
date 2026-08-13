@@ -51,6 +51,7 @@ type NearbyPerson = {
   match_id: string | null;
   verified: boolean;
   is_online: boolean;
+  gender: "male" | "female" | "other" | null;
 };
 
 function formatDistance(m: number) {
@@ -231,6 +232,7 @@ function RadarPage() {
                 path={person.avatar_url}
                 name={person.display_name}
                 username={person.username}
+                gender={person.gender}
                 className="size-full"
               />
             </RadarBeacon>
@@ -263,6 +265,7 @@ function RadarPage() {
                   path={selected.avatar_url}
                   name={selected.display_name}
                   username={selected.username}
+                  gender={selected.gender}
                   className="size-28"
                 />
                 <DialogTitle className="mt-4 flex items-center gap-1.5 text-xl">
