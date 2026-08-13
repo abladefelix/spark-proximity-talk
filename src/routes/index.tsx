@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Zap, MapPin, MessagesSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/shatta-hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,11 +25,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const steps = [
-  { icon: MapPin, title: "Go live", text: "Turn on your radar and see who's within a few metres." },
-  { icon: Zap, title: "Signal", text: "Tap signal. Your name and photo drop on their screen." },
-  { icon: MessagesSquare, title: "Link up", text: "They signal back, the chat opens. Simple." },
+const demoBeacons = [
+  { label: "A", left: "68%", top: "34%" },
+  { label: "K", left: "32%", top: "58%" },
+  { label: "M", left: "58%", top: "72%" },
+  { label: "J", left: "24%", top: "30%" },
 ];
+
 
 function Landing() {
   const navigate = useNavigate();
@@ -42,48 +43,51 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-14">
-      <p className="text-sm font-semibold tracking-[0.28em] text-muted-foreground">SHATTA</p>
-
-      <h1 className="mt-6 text-[2rem] font-semibold leading-[1.15]">
-        The people around you are already interesting.
-      </h1>
-      <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-        Same bar, same bus, same queue. SHATTA finds the strangers near you and lets one signal do
-        the talking.
+    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-10">
+      <p className="text-center text-sm font-semibold tracking-[0.28em] text-muted-foreground">
+        SHATTA
       </p>
 
-      <div className="mt-8 flex gap-3">
-        <Button asChild variant="heat" size="lg" className="flex-1">
-          <Link to="/auth">Start signalling</Link>
-        </Button>
-      </div>
+      <section
+        aria-label="Radar preview showing people nearby as beacons"
+        className="relative mx-auto mt-8 aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
+      >
+        <div className="radar-grid absolute inset-0" />
+        <div className="absolute inset-[16%] rounded-full border border-border/70" />
+        <div className="absolute inset-[33%] rounded-full border border-border/50" />
+        <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+        <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+        <div className="radar-sweep absolute inset-0 rounded-full" />
+        <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+        <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
 
-      <img
-        src={heroImage}
-        alt="Two strangers noticing each other across a warm, busy street at night"
-        className="mt-12 aspect-[4/5] w-full rounded-2xl object-cover"
-        loading="lazy"
-      />
-
-      <section className="mt-12 space-y-1">
-        {steps.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="flex gap-4 border-t border-border py-5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary/70">
-              <Icon className="size-4 text-primary" />
-            </span>
-            <div>
-              <h2 className="text-base font-semibold">{title}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{text}</p>
-            </div>
-          </div>
+        {demoBeacons.map((b) => (
+          <span
+            key={b.label}
+            style={{ left: b.left, top: b.top }}
+            className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-sm font-semibold"
+          >
+            {b.label}
+          </span>
         ))}
       </section>
 
-      <p className="mt-12 text-center text-xs leading-relaxed text-muted-foreground">
-        Your exact location is never shown to anyone — only rough distance, and only while you're
-        visible.
+      <h1 className="mt-10 text-center text-[1.75rem] font-semibold leading-[1.2]">
+        The people around you are already interesting.
+      </h1>
+      <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
+        Everyone nearby shows up as a beacon. Tap one to signal — if they signal back, the chat
+        opens.
+      </p>
+
+      <Button asChild variant="heat" size="lg" className="mt-8 w-full">
+        <Link to="/auth">Start signalling</Link>
+      </Button>
+
+      <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
+        Your exact location is never shown — only rough distance, and only while you're visible.
       </p>
     </main>
   );
 }
+
