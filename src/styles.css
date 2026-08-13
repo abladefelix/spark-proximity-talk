@@ -167,3 +167,26 @@
 @utility pulse-ring {
   animation: shatta-pulse 2.8s ease-out infinite;
 }
+
+@utility radar-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px);
+  background-size: 12.5% 12.5%;
+}
+
+@keyframes shatta-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in oklab, var(--primary) 22%, transparent),
+    transparent 55deg,
+    transparent 360deg
+  );
+  animation: shatta-sweep 5s linear infinite;
+}

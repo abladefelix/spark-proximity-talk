@@ -147,12 +147,16 @@ function RadarPage() {
         </div>
       </header>
 
-      <section className="relative mx-auto mt-8 aspect-square w-full max-w-sm">
-        <div className="absolute inset-0 rounded-full border border-border" />
+      <section className="relative mx-auto mt-8 aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20">
+        <div className="radar-grid absolute inset-0" />
         <div className="absolute inset-[16%] rounded-full border border-border/70" />
         <div className="absolute inset-[33%] rounded-full border border-border/50" />
+        <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+        <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+        <div className="radar-sweep absolute inset-0 rounded-full" />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+
 
         {beacons.map(({ person, left, top }) => (
           <button
