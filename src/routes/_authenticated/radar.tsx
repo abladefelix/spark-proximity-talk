@@ -19,6 +19,9 @@ import {
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { RadarBeacon } from "@/components/RadarBeacon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import logoAsset from "@/assets/shatta-s.png.asset.json";
+
+const logoUrl = logoAsset.url;
 
 
 export const Route = createFileRoute("/_authenticated/radar")({
