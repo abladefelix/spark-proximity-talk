@@ -57,6 +57,52 @@
 
 :root {
   --radius: 0.9rem;
+  color-scheme: light;
+  --background: oklch(0.985 0.004 80);
+  --foreground: oklch(0.22 0.012 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.012 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.012 60);
+  --primary: oklch(0.65 0.16 46);
+  --primary-foreground: oklch(0.99 0.005 80);
+  --secondary: oklch(0.955 0.006 70);
+  --secondary-foreground: oklch(0.26 0.012 60);
+  --muted: oklch(0.955 0.006 70);
+  --muted-foreground: oklch(0.52 0.012 65);
+  --accent: oklch(0.95 0.012 60);
+  --accent-foreground: oklch(0.26 0.012 60);
+  --destructive: oklch(0.577 0.19 22);
+  --destructive-foreground: oklch(0.99 0.005 80);
+  --border: oklch(0.9 0.006 70);
+  --input: oklch(0.9 0.006 70);
+  --ring: oklch(0.65 0.16 46);
+  --chart-1: oklch(0.65 0.16 46);
+  --chart-2: oklch(0.72 0.12 88);
+  --chart-3: oklch(0.62 0.1 150);
+  --chart-4: oklch(0.6 0.11 350);
+  --chart-5: oklch(0.56 0.1 240);
+  --sidebar: oklch(0.985 0.004 80);
+  --sidebar-foreground: oklch(0.22 0.012 60);
+  --sidebar-primary: oklch(0.65 0.16 46);
+  --sidebar-primary-foreground: oklch(0.99 0.005 80);
+  --sidebar-accent: oklch(0.95 0.012 60);
+  --sidebar-accent-foreground: oklch(0.26 0.012 60);
+  --sidebar-border: oklch(0.9 0.006 70);
+  --sidebar-ring: oklch(0.65 0.16 46);
+
+  --gradient-heat: linear-gradient(135deg, oklch(0.68 0.16 46) 0%, oklch(0.74 0.14 66) 100%);
+  --gradient-night: radial-gradient(
+    120% 80% at 50% 0%,
+    oklch(0.97 0.014 60) 0%,
+    oklch(0.985 0.004 80) 65%
+  );
+  --shadow-heat: 0 8px 24px -14px oklch(0.65 0.16 46 / 0.45);
+  --shadow-card: 0 8px 24px -20px oklch(0 0 0 / 0.25);
+}
+
+.dark {
+  color-scheme: dark;
   --background: oklch(0.155 0.008 60);
   --foreground: oklch(0.955 0.005 80);
   --card: oklch(0.198 0.009 60);
@@ -100,18 +146,11 @@
   --shadow-card: 0 8px 24px -20px oklch(0 0 0 / 0.7);
 }
 
-.dark {
-  color-scheme: dark;
-}
-
 @layer base {
   * {
     border-color: var(--color-border);
   }
 
-  html {
-    color-scheme: dark;
-  }
 
   body {
     background-color: var(--color-background);
