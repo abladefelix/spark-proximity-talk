@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked: string
+          blocker: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked: string
+          blocker: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked?: string
+          blocker?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           is_visible: boolean
@@ -64,6 +85,9 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          kind: string
+          lat: number | null
+          lng: number | null
           match_id: string
           sender_id: string
         }
@@ -71,6 +95,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          kind?: string
+          lat?: number | null
+          lng?: number | null
           match_id: string
           sender_id: string
         }
@@ -78,6 +105,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          kind?: string
+          lat?: number | null
+          lng?: number | null
           match_id?: string
           sender_id?: string
         }
@@ -98,8 +128,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          last_seen: string
           updated_at: string
           username: string
+          verified: boolean
         }
         Insert: {
           avatar_url?: string | null
@@ -107,8 +139,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          last_seen?: string
           updated_at?: string
           username: string
+          verified?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -116,29 +150,106 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_seen?: string
           updated_at?: string
           username?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reported: string
+          reporter: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reported: string
+          reporter: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reported?: string
+          reporter?: string
         }
         Relationships: []
       }
       signals: {
         Row: {
           created_at: string
+          expires_at: string
           from_user: string
           id: string
           to_user: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string
           from_user: string
           id?: string
           to_user: string
         }
         Update: {
           created_at?: string
+          expires_at?: string
           from_user?: string
           id?: string
           to_user?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verification_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          selfie_path: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          selfie_path: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          selfie_path?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -147,6 +258,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_match_member: {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
@@ -160,14 +278,17 @@ export type Database = {
           distance_m: number
           i_signaled: boolean
           id: string
+          is_online: boolean
           match_id: string
           they_signaled: boolean
           username: string
+          verified: boolean
         }[]
       }
+      purge_expired_signals: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -294,6 +415,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

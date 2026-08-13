@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, SendHorizonal } from "lucide-react";
+import { ChevronLeft, MapPin, SendHorizonal } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({
   head: () => ({
@@ -22,7 +23,24 @@ export const Route = createFileRoute("/_authenticated/chat/$matchId")({
   component: ChatPage,
 });
 
-type Message = { id: string; sender_id: string; content: string; created_at: string };
+type Message = {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  kind: "text" | "pin";
+  lat: number | null;
+  lng: number | null;
+};
+
+function lastSeenLabel(iso: string | null | undefined) {
+  if (!iso) return "";
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 5) return " · active now";
+  if (mins < 60) return ` · active ${mins}m ago`;
+  if (mins < 1440) return ` · active ${Math.round(mins / 60)}h ago`;
+  return "";
+}
 
 function ChatPage() {
   const { matchId } = Route.useParams();
@@ -48,7 +66,7 @@ function ChatPage() {
       const otherId = match.user_a === me ? match.user_b : match.user_a;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, bio")
+        .select("id, username, display_name, avatar_url, bio, verified, last_seen")
         .eq("id", otherId)
         .maybeSingle();
       return profile;
@@ -60,7 +78,7 @@ function ChatPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id, sender_id, content, created_at")
+        .select("id, sender_id, content, created_at, kind, lat, lng")
         .eq("match_id", matchId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -102,6 +120,40 @@ function ChatPage() {
     queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
   }
 
+  const [pinning, setPinning] = useState(false);
+
+  function sharePin() {
+    if (!me) return;
+    if (!("geolocation" in navigator)) {
+      toast.error("This device can't share location");
+      return;
+    }
+    setPinning(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { error } = await supabase.from("messages").insert({
+          match_id: matchId,
+          sender_id: me,
+          kind: "pin",
+          content: "Meet me here",
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setPinning(false);
+        if (error) {
+          toast.error("Couldn't drop the pin");
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
+      },
+      () => {
+        setPinning(false);
+        toast.error("Location permission is off");
+      },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
@@ -115,11 +167,12 @@ function ChatPage() {
           className="size-10 rounded-xl"
         />
         <div className="min-w-0">
-          <p className="truncate font-semibold leading-tight">
+          <p className="flex items-center gap-1 truncate font-semibold leading-tight">
             {other?.display_name ?? other?.username ?? "Chat"}
+            {other?.verified && <VerifiedBadge />}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {other ? `@${other.username}` : ""}
+            {other ? `@${other.username}${lastSeenLabel(other.last_seen)}` : ""}
           </p>
         </div>
       </header>
@@ -134,15 +187,34 @@ function ChatPage() {
           const mine = m.sender_id === me;
           return (
             <div key={m.id} className={mine ? "flex justify-end" : "flex justify-start"}>
-              <p
-                className={
-                  mine
-                    ? "max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
-                    : "max-w-[78%] rounded-2xl rounded-bl-sm bg-card px-4 py-2.5 text-sm text-card-foreground"
-                }
-              >
-                {m.content}
-              </p>
+              {m.kind === "pin" && m.lat != null && m.lng != null ? (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={
+                    mine
+                      ? "flex max-w-[78%] items-center gap-2 rounded-2xl rounded-br-sm border border-primary/40 bg-primary/15 px-4 py-2.5 text-sm"
+                      : "flex max-w-[78%] items-center gap-2 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-2.5 text-sm"
+                  }
+                >
+                  <MapPin className="size-4 text-primary" />
+                  <span>
+                    Meet-up pin
+                    <span className="block text-xs text-muted-foreground">Tap to open map</span>
+                  </span>
+                </a>
+              ) : (
+                <p
+                  className={
+                    mine
+                      ? "max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+                      : "max-w-[78%] rounded-2xl rounded-bl-sm bg-card px-4 py-2.5 text-sm text-card-foreground"
+                  }
+                >
+                  {m.content}
+                </p>
+              )}
             </div>
           );
         })}
@@ -153,6 +225,17 @@ function ChatPage() {
         onSubmit={send}
         className="sticky bottom-20 mx-4 mb-2 flex items-center gap-2 rounded-full border border-border bg-card p-2"
       >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-muted-foreground"
+          aria-label="Share a meet-up pin"
+          disabled={pinning}
+          onClick={sharePin}
+        >
+          <MapPin className="size-4" />
+        </Button>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
