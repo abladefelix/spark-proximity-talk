@@ -1,24 +1,92 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Zap, MapPin, MessagesSquare } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import heroImage from "@/assets/shatta-hero.jpg";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "SHATTA — Chat with the people right around you" },
+      {
+        name: "description",
+        content:
+          "SHATTA shows you who is close by right now. Send a signal, and if they signal back your chat unlocks. No usernames to hunt for.",
+      },
+      { property: "og:title", content: "SHATTA — Chat with the people right around you" },
+      {
+        property: "og:description",
+        content: "Proximity chat. Signal someone nearby, match, and link up.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const steps = [
+  { icon: MapPin, title: "Go live", text: "Turn on your radar and see who's within a few metres." },
+  { icon: Zap, title: "Signal", text: "Tap signal. Your name and photo drop on their screen." },
+  { icon: MessagesSquare, title: "Link up", text: "They signal back, the chat opens. Simple." },
+];
+
+function Landing() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/radar" });
+    });
+  }, [navigate]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
+    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-12">
+      <p className="font-display text-4xl tracking-tight text-heat">SHATTA</p>
+
+      <h1 className="mt-8 text-4xl leading-[1.05]">
+        The people around you are already interesting.
+      </h1>
+      <p className="mt-4 text-base text-muted-foreground">
+        Same bar, same bus, same queue. SHATTA finds the strangers near you and lets one signal do
+        the talking.
+      </p>
+
+      <div className="mt-8 flex gap-3">
+        <Button asChild variant="heat" size="lg" className="flex-1">
+          <Link to="/auth">Start signalling</Link>
+        </Button>
+      </div>
+
       <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+        src={heroImage}
+        alt="Two strangers noticing each other across a warm, busy street at night"
+        className="mt-10 aspect-[4/5] w-full rounded-[2rem] object-cover shadow-card"
+        loading="lazy"
       />
-    </div>
+
+      <section className="mt-10 space-y-4">
+        {steps.map(({ icon: Icon, title, text }) => (
+          <div
+            key={title}
+            className="flex gap-4 rounded-3xl border border-border bg-card p-5 shadow-card"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-heat">
+              <Icon className="size-5 text-primary-foreground" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg">{title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <p className="mt-10 text-center text-xs text-muted-foreground">
+        Your exact location is never shown to anyone — only rough distance, and only while you're
+        visible.
+      </p>
+    </main>
   );
 }
