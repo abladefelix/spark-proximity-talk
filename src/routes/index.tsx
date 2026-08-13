@@ -46,13 +46,13 @@ function Landing() {
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-6 pb-10 pt-6">
       <div className="flex items-center justify-between">
-        <span className="w-9" />
         <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
           <img src={logoUrl} alt="" width={28} height={28} className="size-7" />
           SHATTA
         </p>
         <ThemeToggle />
       </div>
+
 
       <div className="flex flex-1 flex-col items-center justify-center gap-10 py-8">
         <section
@@ -65,17 +65,10 @@ function Landing() {
           <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
           <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
           <div className="radar-sweep absolute inset-0 rounded-full" />
-          <img
-            src={logoUrl}
-            alt=""
-            loading="lazy"
-            width={24}
-            height={24}
-            className="absolute bottom-[8%] left-1/2 size-6 -translate-x-1/2 opacity-50"
-          />
           <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
           <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
         </section>
+
 
         <h1 className="sr-only">SHATTA — chat with the people right around you</h1>
 
