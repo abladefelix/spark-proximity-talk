@@ -20,7 +20,7 @@ export function PersonAvatar({ path, name, username, className }: Props) {
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-secondary font-display text-secondary-foreground",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary font-semibold text-secondary-foreground",
         className,
       )}
     >

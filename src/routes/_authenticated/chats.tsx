@@ -94,13 +94,13 @@ function ChatsPage() {
 
   return (
     <main className="px-5 pt-8">
-      <h1 className="font-display text-3xl">Your links</h1>
+      <h1 className="text-2xl font-semibold">Your links</h1>
       <p className="mt-1 text-sm text-muted-foreground">Mutual signals only. No noise.</p>
 
       <section className="mt-6 space-y-3">
         {!isLoading && rows.length === 0 && (
-          <div className="rounded-3xl border border-dashed border-border p-8 text-center">
-            <p className="font-display text-lg">No links yet</p>
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <p className="text-base font-semibold">No links yet</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Head to the radar and signal someone close by. When they signal back, the chat opens
               here.
@@ -112,7 +112,7 @@ function ChatsPage() {
             key={row.matchId}
             to="/chat/$matchId"
             params={{ matchId: row.matchId }}
-            className="flex items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card transition-colors hover:bg-secondary"
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card/60 p-4 transition-colors hover:bg-secondary/60"
           >
             <PersonAvatar
               path={row.other.avatar_url}

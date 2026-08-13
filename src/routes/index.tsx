@@ -42,13 +42,13 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-12">
-      <p className="font-display text-4xl tracking-tight text-heat">SHATTA</p>
+    <main className="mx-auto w-full max-w-lg px-6 pb-16 pt-14">
+      <p className="text-sm font-semibold tracking-[0.28em] text-muted-foreground">SHATTA</p>
 
-      <h1 className="mt-8 text-4xl leading-[1.05]">
+      <h1 className="mt-6 text-[2rem] font-semibold leading-[1.15]">
         The people around you are already interesting.
       </h1>
-      <p className="mt-4 text-base text-muted-foreground">
+      <p className="mt-4 text-base leading-relaxed text-muted-foreground">
         Same bar, same bus, same queue. SHATTA finds the strangers near you and lets one signal do
         the talking.
       </p>
@@ -62,28 +62,25 @@ function Landing() {
       <img
         src={heroImage}
         alt="Two strangers noticing each other across a warm, busy street at night"
-        className="mt-10 aspect-[4/5] w-full rounded-[2rem] object-cover shadow-card"
+        className="mt-12 aspect-[4/5] w-full rounded-2xl object-cover"
         loading="lazy"
       />
 
-      <section className="mt-10 space-y-4">
+      <section className="mt-12 space-y-1">
         {steps.map(({ icon: Icon, title, text }) => (
-          <div
-            key={title}
-            className="flex gap-4 rounded-3xl border border-border bg-card p-5 shadow-card"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-heat">
-              <Icon className="size-5 text-primary-foreground" />
+          <div key={title} className="flex gap-4 border-t border-border py-5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary/70">
+              <Icon className="size-4 text-primary" />
             </span>
             <div>
-              <h2 className="font-display text-lg">{title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+              <h2 className="text-base font-semibold">{title}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{text}</p>
             </div>
           </div>
         ))}
       </section>
 
-      <p className="mt-10 text-center text-xs text-muted-foreground">
+      <p className="mt-12 text-center text-xs leading-relaxed text-muted-foreground">
         Your exact location is never shown to anyone — only rough distance, and only while you're
         visible.
       </p>

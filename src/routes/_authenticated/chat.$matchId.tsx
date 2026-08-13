@@ -137,8 +137,8 @@ function ChatPage() {
               <p
                 className={
                   mine
-                    ? "max-w-[78%] rounded-3xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground"
-                    : "max-w-[78%] rounded-3xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-card-foreground"
+                    ? "max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+                    : "max-w-[78%] rounded-2xl rounded-bl-sm bg-card px-4 py-2.5 text-sm text-card-foreground"
                 }
               >
                 {m.content}
@@ -151,7 +151,7 @@ function ChatPage() {
 
       <form
         onSubmit={send}
-        className="sticky bottom-20 mx-4 mb-2 flex items-center gap-2 rounded-full border border-border bg-card p-2 shadow-card"
+        className="sticky bottom-20 mx-4 mb-2 flex items-center gap-2 rounded-full border border-border bg-card p-2"
       >
         <Input
           value={text}
