@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 
 const logoUrl = logoAsset.url;
-import { RadarBeacon, RadarBeaconInitial } from "@/components/RadarBeacon";
+
 
 
 export const Route = createFileRoute("/")({
