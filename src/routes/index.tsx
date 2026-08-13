@@ -26,11 +26,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const steps = [
-  { icon: MapPin, title: "Go live", text: "Turn on your radar and see who's within a few metres." },
-  { icon: Zap, title: "Signal", text: "Tap signal. Your name and photo drop on their screen." },
-  { icon: MessagesSquare, title: "Link up", text: "They signal back, the chat opens. Simple." },
+const demoBeacons = [
+  { label: "A", left: "68%", top: "34%" },
+  { label: "K", left: "32%", top: "58%" },
+  { label: "M", left: "58%", top: "72%" },
+  { label: "J", left: "24%", top: "30%" },
 ];
+
 
 function Landing() {
   const navigate = useNavigate();
