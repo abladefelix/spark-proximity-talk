@@ -127,3 +127,9 @@ export function parseColorToRgb(input: string): [number, number, number] | null 
   }
   return null;
 }
+
+export function toHexColor(input: string): string {
+  const rgb = parseColorToRgb(input);
+  if (!rgb) return "#ffb020";
+  return `#${rgb.map((n) => Math.round(n).toString(16).padStart(2, "0")).join("")}`;
+}
