@@ -93,72 +93,99 @@ export function ActiveChats() {
   const latest = rows[0];
   if (!latest) return null;
 
+  const behind = Math.min(rows.length - 1, 2);
 
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl border border-primary/30 bg-card/60">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
-      >
-        <div className="flex -space-x-3">
-          {rows.slice(0, 4).map((row) => (
-            <PersonAvatar
-              key={row.matchId}
-              path={row.avatar_url}
-              name={row.display_name}
-              username={row.username}
-              gender={row.gender}
-              className="size-8 shrink-0 ring-2 ring-card"
-            />
-          ))}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">
-            {rows.length === 1
-              ? (latest.display_name ?? latest.username)
-              : `${rows.length} chats unlocked`}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {latest.preview ?? "Chat unlocked — say hello"}
-          </p>
-        </div>
-        <ChevronDown
-          className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {expanded && (
-        <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
-          {rows.map((row) => (
-            <button
-              key={row.matchId}
-              type="button"
-              onClick={() => openChat(row.matchId)}
-              className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
-            >
-              <PersonAvatar
-                path={row.avatar_url}
-                name={row.display_name}
-                username={row.username}
-                gender={row.gender}
-                className="size-9 shrink-0"
+    <div className="mt-4">
+      {/* Stacked deck: peeking cards behind the top card */}
+      <div className="relative">
+        {!expanded &&
+          Array.from({ length: behind }).map((_, i) => {
+            const depth = behind - i; // 2 = furthest
+            return (
+              <div
+                key={`peek-${i}`}
+                aria-hidden
+                className="absolute inset-x-0 top-0 rounded-2xl border border-primary/20 bg-card/70 shadow-sm"
+                style={{
+                  height: "100%",
+                  transform: `translateY(${depth * 7}px) scale(${1 - depth * 0.045})`,
+                  opacity: 1 - depth * 0.25,
+                  zIndex: -depth,
+                }}
               />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {row.preview ?? "Chat unlocked — say hello"}
-                </p>
-              </div>
-              <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
-                <MessageCircle className="size-3.5" />
-                Open
+            );
+          })}
+
+        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-card shadow-md">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+          >
+            <PersonAvatar
+              path={latest.avatar_url}
+              name={latest.display_name}
+              username={latest.username}
+              gender={latest.gender}
+              className="size-9 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">
+                {latest.display_name ?? latest.username}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {latest.preview ?? "Chat unlocked — say hello"}
+              </p>
+            </div>
+            {rows.length > 1 && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                {rows.length}
               </span>
-            </button>
-          ))}
+            )}
+            <ChevronDown
+              className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {expanded && (
+            <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
+              {rows.map((row) => (
+                <button
+                  key={row.matchId}
+                  type="button"
+                  onClick={() => openChat(row.matchId)}
+                  className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+                >
+                  <PersonAvatar
+                    path={row.avatar_url}
+                    name={row.display_name}
+                    username={row.username}
+                    gender={row.gender}
+                    className="size-9 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {row.display_name ?? row.username}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {row.preview ?? "Chat unlocked — say hello"}
+                    </p>
+                  </div>
+                  <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+                    <MessageCircle className="size-3.5" />
+                    Open
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {!expanded && behind > 0 && <div style={{ height: behind * 7 }} />}
     </div>
   );
 }
+
 
