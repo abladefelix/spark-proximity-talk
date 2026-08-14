@@ -119,6 +119,7 @@ function RadarPage() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
+  const myIdRef = useRef<string | null>(null);
 
   // Keep my location fresh while the radar is open.
 
@@ -138,7 +139,13 @@ function RadarPage() {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
 
-      const me = (await supabase.auth.getUser()).data.user?.id;
+      // Use the locally cached session: a network round-trip here (getUser)
+      // can hang on flaky mobile networks and silently kill the heartbeat.
+      let me = myIdRef.current;
+      if (!me) {
+        me = (await supabase.auth.getSession()).data.session?.user?.id ?? null;
+        myIdRef.current = me;
+      }
       if (!me) return;
       const { error } = await supabase.from("locations").upsert(
         {
@@ -157,6 +164,23 @@ function RadarPage() {
       setGeoError(null);
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
+    };
+    const refreshFix = () => {
+      if (isNative) {
+        void Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          maximumAge: 60000,
+          timeout: 30000,
+        })
+          .then((position) => push(position.coords))
+          .catch(() => {});
+      } else if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => void push(position.coords),
+          () => {},
+          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+        );
+      }
     };
     const fail = (denied: boolean, unavailable = false) => {
       if (cancelled) return;
@@ -231,11 +255,13 @@ function RadarPage() {
     })();
 
     // Stationary phones stop emitting position updates, which would make the
-    // user look offline to everyone else. Re-publish the last fix periodically.
+    // user look offline to everyone else. Re-publish the last fix periodically,
+    // and ask for a fresh one when the watcher never delivered anything.
     heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords);
-    }, 30000);
+      else refreshFix();
+    }, 20000);
 
     // Backgrounded tabs and suspended apps stop the heartbeat, so the person
     // goes stale for everyone else. Re-publish (and refresh) on foreground.
@@ -243,21 +269,7 @@ function RadarPage() {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
       if (coords) void push(coords);
-      else if (!isNative && "geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => void push(position.coords),
-          () => {},
-          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
-        );
-      } else if (isNative) {
-        void Geolocation.getCurrentPosition({
-          enableHighAccuracy: false,
-          maximumAge: 60000,
-          timeout: 30000,
-        })
-          .then((position) => push(position.coords))
-          .catch(() => {});
-      }
+      refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
     document.addEventListener("visibilitychange", onWake);
@@ -283,7 +295,10 @@ function RadarPage() {
 
   const nearby = useQuery({
     queryKey: ["nearby", radius],
-    enabled: located,
+    // Runs even before our own fix lands: the server falls back to the last
+    // published location, so the radar is never blank just because the
+    // device watcher is slow.
+    enabled: true,
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("nearby_people", { radius_m: radius });
@@ -600,7 +615,7 @@ function RadarPage() {
           </button>
         </div>
       )}
-      {!geoError && located && people.length === 0 && !nearby.isLoading && (
+      {!geoError && people.length === 0 && !nearby.isLoading && (
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {settings.empty_radar_text} Widen your scan range in your profile.
         </p>
@@ -709,7 +724,7 @@ function RadarPage() {
 
 
 
-        {(!located || nearby.isLoading) && (
+        {nearby.isLoading && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
