@@ -209,7 +209,7 @@ export function ChatPanel({
         </div>
       </header>
 
-      <div ref={messagesRef} data-vaul-no-drag className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card px-4 pb-5 pt-6">
+      <div ref={messagesRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card px-4 pb-5 pt-6">
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center -space-x-3">
             <PersonAvatar
