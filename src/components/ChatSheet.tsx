@@ -27,9 +27,9 @@ function ChatBackdrop() {
   if (!css) return null;
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 opacity-25 blur-[2px] saturate-75 dark:opacity-20" style={{ background: css }} />
-      <div className="absolute inset-0 bg-card/60 dark:bg-card/65" />
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2.5rem]">
+      <div className="absolute inset-0 opacity-55 blur-[1px] saturate-90 dark:opacity-45" style={{ background: css }} />
+      <div className="absolute inset-0 bg-card/45 backdrop-blur-md dark:bg-card/50" />
     </div>
   );
 }
@@ -94,8 +94,9 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-colors duration-300" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y isolate flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/80 shadow-sheet backdrop-blur-2xl outline-none dark:bg-card/75 dark:shadow-sheet-dark">
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y isolate flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/55 shadow-sheet backdrop-blur-2xl outline-none dark:bg-card/45 dark:shadow-sheet-dark">
             <ChatBackdrop />
+            <div className="relative z-10 flex min-h-0 flex-1 flex-col">
             <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
             <DrawerPrimitive.Description className="sr-only">
               Swipe down anywhere to close and pick someone else.
@@ -113,6 +114,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
                 className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent"
               />
             )}
+            </div>
           </DrawerPrimitive.Content>
         </DrawerPrimitive.Portal>
       </DrawerPrimitive.Root>
