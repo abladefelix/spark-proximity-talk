@@ -230,9 +230,10 @@ export function ChatPanel({
         ref={messagesRef}
         data-scrollable
         data-selectable
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-transparent px-4 pb-2 pt-4"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-transparent px-4 pb-2 pt-4"
       >
-        <div className="mb-6 flex flex-col items-center text-center">
+        <div className="mt-auto" />
+        <div className="mb-2 flex flex-col items-center text-center">
           <PersonAvatar
             path={other?.avatar_url}
             name={other?.display_name}
@@ -241,9 +242,10 @@ export function ChatPanel({
             className="size-16 rounded-full ring-2 ring-card"
           />
           <p className="mt-3 text-sm font-medium leading-snug text-muted-foreground">
-            You both signalled — you were metres apart.
+            You both signalled nearby — say hello.
           </p>
         </div>
+
 
         {messages.map((m, index) => {
           const mine = m.sender_id === me;
