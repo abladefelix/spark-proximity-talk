@@ -93,6 +93,7 @@ function genderToken(gender: NearbyPerson["gender"]) {
 
 
 function RadarPage() {
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const { openChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
@@ -119,7 +120,7 @@ function RadarPage() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
-  const myIdRef = useRef<string | null>(null);
+  const myIdRef = useRef<string | null>(user.id);
 
   // Keep my location fresh while the radar is open.
 
@@ -137,6 +138,7 @@ function RadarPage() {
     const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
+      localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
 
       // Use the locally cached session: a network round-trip here (getUser)
       // can hang on flaky mobile networks and silently kill the heartbeat.
@@ -164,6 +166,21 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
+
+    // Do not leave the radar waiting for the native bridge. A previously
+    // confirmed fix is safe to re-publish immediately while iOS gets a fresh
+    // reading, and prevents a cold/resumed app from appearing offline.
+    const cachedLocation = localStorage.getItem("skan-last-location");
+    if (cachedLocation) {
+      try {
+        const parsed = JSON.parse(cachedLocation) as { latitude?: unknown; longitude?: unknown };
+        if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          void push({ latitude: parsed.latitude, longitude: parsed.longitude });
+        }
+      } catch {
+        localStorage.removeItem("skan-last-location");
+      }
+    }
     const refreshFix = () => {
       if (isNative) {
         void Geolocation.getCurrentPosition({
@@ -205,6 +222,21 @@ function RadarPage() {
 
     void (async () => {
       if (isNative) {
+        // Start the WKWebView provider in parallel. Capacitor's permission or
+        // position promise can remain pending after an iOS resume; waiting for
+        // it used to prevent both presence updates and nearby queries.
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => void push(position.coords),
+            () => {},
+            { enableHighAccuracy: false, maximumAge: 300000, timeout: 15000 },
+          );
+          browserWatch = navigator.geolocation.watchPosition(
+            (position) => void push(position.coords),
+            () => {},
+            { enableHighAccuracy: false, maximumAge: 300000, timeout: 30000 },
+          );
+        }
         try {
           let permission = await Geolocation.checkPermissions();
           if (permission.location === "prompt" || permission.location === "prompt-with-rationale") {
@@ -242,7 +274,7 @@ function RadarPage() {
           } catch {
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if ("geolocation" in navigator) {
+            if ("geolocation" in navigator && browserWatch === undefined) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
@@ -297,12 +329,16 @@ function RadarPage() {
     };
     document.addEventListener("visibilitychange", onWake);
     window.addEventListener("focus", onWake);
+    window.addEventListener("pageshow", onWake);
+    window.addEventListener("online", onWake);
 
     return () => {
       cancelled = true;
       clearInterval(heartbeat);
       document.removeEventListener("visibilitychange", onWake);
       window.removeEventListener("focus", onWake);
+      window.removeEventListener("pageshow", onWake);
+      window.removeEventListener("online", onWake);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
       if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
     };
