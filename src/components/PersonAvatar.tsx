@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAvatarUrl, initials } from "@/lib/avatars";
+import { getAvatarUrl } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 export type Gender = "male" | "female" | "other" | null | undefined;
@@ -78,10 +78,8 @@ export function PersonAvatar({ path, name, username, gender, className }: Props)
     >
       {url ? (
         <img src={url} alt={name ?? username} className="h-full w-full object-cover" />
-      ) : gender ? (
-        <GenderGlyph gender={gender} className="h-1/2 w-1/2" />
       ) : (
-        <span className="text-sm">{initials(name, username)}</span>
+        <GenderGlyph gender={gender ?? "other"} className="h-3/5 w-3/5" />
       )}
     </div>
   );
