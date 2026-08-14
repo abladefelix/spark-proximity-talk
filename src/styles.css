@@ -108,6 +108,8 @@
   );
   --shadow-heat: 0 8px 24px -14px oklch(0.65 0.16 46 / 0.45);
   --shadow-card: 0 8px 24px -20px oklch(0 0 0 / 0.25);
+  --shadow-sheet: 0 -16px 50px -18px oklch(0 0 0 / 0.35);
+  --shadow-sheet-dark: 0 -16px 50px -18px oklch(0 0 0 / 0.55);
 }
 
 .dark {
