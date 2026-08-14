@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Capacitor } from "@capacitor/core";
+import { Geolocation } from "@capacitor/geolocation";
 import { toast } from "sonner";
 import {
   Zap,
@@ -117,57 +119,27 @@ function RadarPage() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
 
-  // Only react to an explicit "denied" state. Native webviews often don't
-  // implement navigator.permissions, so we never block on it — we just try to
-  // read the position and show the prompt if the OS actually refuses.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-        if (cancelled || !status) return;
-        if (status.state === "denied") {
-          setPermDenied(true);
-          setAskLocation(true);
-        }
-        status.onchange = () => {
-          if (status.state === "granted") {
-            setAskLocation(false);
-            setPermDenied(false);
-            setRetryKey((k) => k + 1);
-          } else if (status.state === "denied") {
-            setPermDenied(true);
-            setAskLocation(true);
-          }
-        };
-      } catch {
-        /* permissions API unavailable — rely on the geolocation callbacks */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-
   // Keep my location fresh while the radar is open.
   useEffect(() => {
     if (askLocation) return;
-    if (!("geolocation" in navigator)) {
+    const isNative = Capacitor.isNativePlatform();
+    if (!isNative && !("geolocation" in navigator)) {
       setGeoError("This device can't share location.");
       return;
     }
 
     let cancelled = false;
-    const push = async (pos: GeolocationPosition) => {
+    let browserWatch: number | undefined;
+    let nativeWatch: string | undefined;
+    const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) return;
       const { error } = await supabase.from("locations").upsert(
         {
           user_id: me,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
+          lat: coords.latitude,
+          lng: coords.longitude,
           is_visible: visible,
           updated_at: new Date().toISOString(),
         },
@@ -181,8 +153,9 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
-    const fail = (err: GeolocationPositionError) => {
-      if (err.code === err.PERMISSION_DENIED) {
+    const fail = (denied: boolean) => {
+      if (cancelled) return;
+      if (denied) {
         setPermDenied(true);
         setAskLocation(true);
         setGeoError("Location permission is off. Turn it on to see who's around.");
@@ -191,20 +164,57 @@ function RadarPage() {
       setGeoError("Couldn't get your location yet — move somewhere with better signal.");
     };
 
-    // Fast first fix, then keep watching.
-    navigator.geolocation.getCurrentPosition((pos) => void push(pos), fail, {
-      enableHighAccuracy: false,
-      maximumAge: 60000,
-      timeout: 15000,
-    });
-    const watch = navigator.geolocation.watchPosition((pos) => void push(pos), fail, {
-      enableHighAccuracy: true,
-      maximumAge: 15000,
-      timeout: 30000,
-    });
+    void (async () => {
+      if (isNative) {
+        try {
+          let permission = await Geolocation.checkPermissions();
+          if (permission.location === "prompt" || permission.location === "prompt-with-rationale") {
+            permission = await Geolocation.requestPermissions();
+          }
+          if (permission.location !== "granted") {
+            fail(true);
+            return;
+          }
+
+          setAskLocation(false);
+          setPermDenied(false);
+          const position = await Geolocation.getCurrentPosition({
+            enableHighAccuracy: false,
+            maximumAge: 60000,
+            timeout: 15000,
+          });
+          await push(position.coords);
+          nativeWatch = await Geolocation.watchPosition(
+            { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 },
+            (position, error) => {
+              if (position) void push(position.coords);
+              else if (error) fail(error.code === "OS-PLUG-GLOC-0003");
+            },
+          );
+          if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
+        } catch (error) {
+          const message = error instanceof Error ? error.message.toLowerCase() : "";
+          fail(message.includes("permission") || message.includes("denied"));
+        }
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => void push(position.coords),
+        (error) => fail(error.code === error.PERMISSION_DENIED),
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 15000 },
+      );
+      browserWatch = navigator.geolocation.watchPosition(
+        (position) => void push(position.coords),
+        (error) => fail(error.code === error.PERMISSION_DENIED),
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 },
+      );
+    })();
+
     return () => {
       cancelled = true;
-      navigator.geolocation.clearWatch(watch);
+      if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
+      if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
     };
   }, [visible, queryClient, retryKey, askLocation]);
 
