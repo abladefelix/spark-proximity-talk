@@ -522,49 +522,97 @@ function RadarPage() {
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        style={{ touchAction: "none", cursor: zoom > 1.001 ? "grab" : "default" }}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
-        <div className="radar-grid absolute inset-0" />
-        <div className="absolute inset-[16%] rounded-full border border-border/70" />
-        <div className="absolute inset-[33%] rounded-full border border-border/50" />
-        <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
-        <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
-        <div className="radar-sweep absolute inset-0 rounded-full" />
-        <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
-        <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
-        <BrandMark
-          size={80}
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
-        />
+        <div
+          className="absolute inset-0 origin-center will-change-transform"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transition: gesture.current ? "none" : "transform 120ms ease-out",
+          }}
+        >
+          <div className="radar-grid absolute inset-0" />
+          <div className="absolute inset-[16%] rounded-full border border-border/70" />
+          <div className="absolute inset-[33%] rounded-full border border-border/50" />
+          <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+          <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+          <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+          <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+          <BrandMark
+            size={80}
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
+          />
 
-        {beacons.map(({ person, left, top }) => (
-          <button
-            key={person.id}
-            type="button"
-            onClick={() => setSelectedId(person.id)}
-            style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
-            aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
-          >
-            <RadarBeacon
-              sizePx={beaconSize}
-              verified={person.verified}
-              active={person.they_signaled && !person.match_id}
+          {beacons.map(({ person, left, top }) => (
+            <button
+              key={person.id}
+              type="button"
+              onClick={() => {
+                if (dragged.current) return;
+                setSelectedId(person.id);
+              }}
+              style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
+              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
             >
+              <RadarBeacon
+                sizePx={beaconSize}
+                verified={person.verified}
+                active={person.they_signaled && !person.match_id}
+              >
+                <PersonAvatar
+                  path={person.avatar_url}
+                  name={person.display_name}
+                  username={person.username}
+                  gender={person.gender}
+                  className="size-full"
+                />
+              </RadarBeacon>
+              {person.is_online && (
+                <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
+              )}
+            </button>
+          ))}
+        </div>
 
-              <PersonAvatar
-                path={person.avatar_url}
-                name={person.display_name}
-                username={person.username}
-                gender={person.gender}
-                className="size-full"
-              />
-            </RadarBeacon>
-            {person.is_online && (
-              <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
-            )}
+        <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+
+        <div className="absolute bottom-4 right-4 flex flex-col overflow-hidden rounded-full border border-border bg-card/80 backdrop-blur">
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() => stepZoom(1.4)}
+            className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Plus className="size-4" />
           </button>
-        ))}
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() => stepZoom(1 / 1.4)}
+            className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Minus className="size-4" />
+          </button>
+          {zoom > 1.001 && (
+            <button
+              type="button"
+              aria-label="Reset zoom"
+              onClick={() => {
+                setZoom(1);
+                setPan({ x: 0, y: 0 });
+              }}
+              className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Maximize2 className="size-3.5" />
+            </button>
+          )}
+        </div>
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
