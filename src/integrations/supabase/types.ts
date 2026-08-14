@@ -124,6 +124,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned: boolean
+          banned_at: string | null
+          banned_reason: string | null
           bio: string | null
           created_at: string
           display_name: string | null
@@ -136,6 +139,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          banned?: boolean
+          banned_at?: string | null
+          banned_reason?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -148,6 +154,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          banned?: boolean
+          banned_at?: string | null
+          banned_reason?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -157,6 +166,33 @@ export type Database = {
           updated_at?: string
           username?: string
           verified?: boolean
+        }
+        Relationships: []
+      }
+      reactivation_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -263,6 +299,14 @@ export type Database = {
     Functions: {
       admin_exists: { Args: never; Returns: boolean }
       admin_purge_stale_locations: { Args: never; Returns: number }
+      admin_review_reactivation: {
+        Args: { _approve: boolean; _id: string }
+        Returns: undefined
+      }
+      admin_set_ban: {
+        Args: { _banned: boolean; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
       admin_stats: {
         Args: never
         Returns: {

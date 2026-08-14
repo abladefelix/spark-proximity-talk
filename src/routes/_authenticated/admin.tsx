@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   BadgeCheck,
+  Ban,
   EyeOff,
+
   Flag,
   Loader2,
   MoreHorizontal,
@@ -113,7 +115,9 @@ function AdminPage() {
     queryFn: async () => {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url, verified, last_seen, created_at")
+        .select(
+          "id, username, display_name, bio, avatar_url, verified, banned, banned_reason, last_seen, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(200);
       const { data: roles } = await supabase.from("user_roles").select("user_id, role");
@@ -123,6 +127,31 @@ function AdminPage() {
       }));
     },
   });
+
+  const { data: appeals = [] } = useQuery({
+    queryKey: ["admin-appeals"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("reactivation_requests")
+        .select("id, user_id, message, status, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: true });
+      if (!rows?.length) return [];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, display_name")
+        .in(
+          "id",
+          rows.map((r) => r.user_id),
+        );
+      return rows.map((r) => ({
+        ...r,
+        person: (profiles ?? []).find((p) => p.id === r.user_id),
+      }));
+    },
+  });
+
 
   const { data: reports = [] } = useQuery({
     queryKey: ["admin-reports"],
@@ -187,6 +216,8 @@ function AdminPage() {
       "admin-people",
       "admin-reports",
       "admin-verifications",
+      "admin-appeals",
+
       "admin-access",
     ]) {
       queryClient.invalidateQueries({ queryKey: [key] });
@@ -305,6 +336,42 @@ function AdminPage() {
     refreshAll();
   }
 
+  async function setBanned(userId: string, banned: boolean) {
+    const reason = banned
+      ? (window.prompt("Reason for the ban (shown to them)") ?? "").trim()
+      : "";
+    if (banned && !reason) return;
+    const { error } = banned
+      ? await supabase.rpc("admin_set_ban", {
+          _user_id: userId,
+          _banned: true,
+          _reason: reason,
+        })
+      : await supabase.rpc("admin_set_ban", { _user_id: userId, _banned: false });
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(banned ? "Member banned" : "Member reactivated");
+    refreshAll();
+  }
+
+  async function reviewAppeal(id: string, approve: boolean) {
+    const { error } = await supabase.rpc("admin_review_reactivation", {
+      _id: id,
+      _approve: approve,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(approve ? "Reactivated" : "Appeal rejected");
+    refreshAll();
+  }
+
+
+
 
   if (accessLoading) {
     return (
@@ -396,7 +463,12 @@ function AdminPage() {
             Reports
             {reports.length > 0 ? ` (${reports.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="appeals" className="flex-1">
+            Appeals
+            {appeals.length > 0 ? ` (${appeals.length})` : ""}
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="people" className="mt-3">
           <div className="relative">
@@ -421,6 +493,11 @@ function AdminPage() {
                   <p className="flex items-center gap-1 truncate text-sm font-medium leading-tight">
                     {p.display_name ?? p.username}
                     {p.verified && <VerifiedBadge />}
+                    {p.banned && (
+                      <span className="rounded bg-destructive/15 px-1 text-[10px] font-semibold uppercase text-destructive">
+                        banned
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-[11px] leading-tight text-muted-foreground">
                     @{p.username}
@@ -440,6 +517,13 @@ function AdminPage() {
                     <DropdownMenuItem onSelect={() => void hideFromRadar(p.id)}>
                       <EyeOff className="size-4" /> Hide from radar
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={p.banned ? undefined : "text-destructive"}
+                      onSelect={() => void setBanned(p.id, !p.banned)}
+                    >
+                      <Ban className="size-4" /> {p.banned ? "Unban member" : "Ban member"}
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem onSelect={() => void wipeActivity(p.id)}>
                       <Trash2 className="size-4" /> Wipe signals & chats
                     </DropdownMenuItem>
@@ -549,6 +633,12 @@ function AdminPage() {
                     <DropdownMenuItem onSelect={() => void hideFromRadar(r.reported)}>
                       <EyeOff className="size-4" /> Hide from radar
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onSelect={() => void setBanned(r.reported, true)}
+                    >
+                      <Ban className="size-4" /> Ban member
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void wipeActivity(r.reported)}>
                       <Trash2 className="size-4" /> Wipe their activity
                     </DropdownMenuItem>
@@ -573,8 +663,43 @@ function AdminPage() {
             )}
           </ul>
         </TabsContent>
+
+        <TabsContent value="appeals" className="mt-3">
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {appeals.map((a) => (
+              <li key={a.id} className="flex items-center gap-2.5 px-2.5 py-2">
+                <PersonAvatar
+                  path={a.person?.avatar_url ?? null}
+                  name={a.person?.display_name ?? null}
+                  username={a.person?.username ?? "unknown"}
+                  className="size-8"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-tight">
+                    @{a.person?.username ?? "unknown"}
+                  </p>
+                  <p className="truncate text-[11px] leading-tight text-muted-foreground">
+                    {a.message}
+                  </p>
+                </div>
+                <Button size="sm" variant="heat" onClick={() => void reviewAppeal(a.id, true)}>
+                  Unban
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => void reviewAppeal(a.id, false)}>
+                  Reject
+                </Button>
+              </li>
+            ))}
+            {appeals.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">
+                No reactivation requests.
+              </li>
+            )}
+          </ul>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
