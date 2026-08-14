@@ -306,6 +306,7 @@ function RadarPage() {
       const { data } = await supabase.rpc("nearby_people", { radius_m: radius });
       queryClient.setQueryData(["nearby", radius], data ?? []);
       const updated = ((data ?? []) as NearbyPerson[]).find((p) => p.id === person.id);
+      setSelectedId(null);
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
         openChat(updated.match_id);
