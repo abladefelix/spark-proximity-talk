@@ -88,10 +88,6 @@ function RadarPage() {
     if (Number.isFinite(saved) && saved > 0) setRadiusPref(saved);
   }, []);
   const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
-  const setRadius = (v: number) => {
-    setRadiusPref(v);
-    localStorage.setItem("skan-radius", String(v));
-  };
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
