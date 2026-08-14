@@ -581,6 +581,7 @@ function AdminPage() {
   });
 
   return (
+    <>
     <div className="px-4 pb-10 pt-6">
       <div className="flex items-center justify-between gap-2">
         <h1 className="flex items-center gap-2 text-lg font-semibold">
@@ -1065,10 +1066,11 @@ function AdminPage() {
         </TabsContent>
       </Tabs>
     </div>
-      <UserDetailsDialog
-        userId={detailsUserId}
-        onOpenChange={(open) => !open && setDetailsUserId(null)}
-      />
+    <UserDetailsDialog
+      userId={detailsUserId}
+      onOpenChange={(open) => !open && setDetailsUserId(null)}
+    />
+    </>
   );
 }
 
