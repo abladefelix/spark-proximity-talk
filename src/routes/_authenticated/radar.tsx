@@ -592,37 +592,8 @@ function RadarPage() {
 
         <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
 
-        <div className="absolute bottom-4 right-4 flex flex-col overflow-hidden rounded-full border border-border bg-card/80 backdrop-blur">
-          <button
-            type="button"
-            aria-label="Zoom in"
-            onClick={() => stepZoom(1.4)}
-            className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Plus className="size-4" />
-          </button>
-          <button
-            type="button"
-            aria-label="Zoom out"
-            onClick={() => stepZoom(1 / 1.4)}
-            className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Minus className="size-4" />
-          </button>
-          {zoom > 1.001 && (
-            <button
-              type="button"
-              aria-label="Reset zoom"
-              onClick={() => {
-                setZoom(1);
-                setPan({ x: 0, y: 0 });
-              }}
-              className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Maximize2 className="size-3.5" />
-            </button>
-          )}
-        </div>
+
+
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
