@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
 import { useSettings } from "@/hooks/useAppSettings";
+import { signInWithIdentifier } from "@/lib/username-auth.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -37,6 +38,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  // Sign-in accepts either an email address or a username.
+  const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
   // While a sign-up is completing we must not auto-redirect on a transient session.
   const signingUp = useRef(false);
@@ -102,8 +105,15 @@ function AuthPage() {
         toast.success("Account created. Sign in to continue.");
         return;
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const id = identifier.trim();
+        if (id.includes("@")) {
+          const { error } = await supabase.auth.signInWithPassword({ email: id, password });
+          if (error) throw error;
+        } else {
+          const tokens = await signInWithIdentifier({ data: { identifier: id, password } });
+          const { error } = await supabase.auth.setSession(tokens);
+          if (error) throw error;
+        }
       }
       navigate({ to: "/radar" });
 
@@ -145,16 +155,34 @@ function AuthPage() {
             />
           </div>
         )}
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+        {mode === "signin" ? (
+          <div className="space-y-2">
+            <Label htmlFor="identifier">Username or email</Label>
+            <Input
+              id="identifier"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="kofi_vibes or you@email.com"
+              required
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoCapitalize="none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+        )}
         {mode !== "reset" && (
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
