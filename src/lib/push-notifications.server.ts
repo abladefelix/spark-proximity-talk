@@ -18,23 +18,23 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 
 function derToRawP256(der: Uint8Array): Uint8Array {
   let i = 0;
-  if (der[i] !== 0x30) throw new Error("Invalid DER signature: not a SEQUENCE");
+  if (der[i]! !== 0x30) throw new Error("Invalid DER signature: not a SEQUENCE");
   i++;
-  let len = der[i];
+  let len = der[i]!;
   i++;
   if (len & 0x80) {
     const bytes = len & 0x7f;
     len = 0;
     for (let b = 0; b < bytes; b++) {
-      len = (len << 8) | der[i];
+      len = (len << 8) | der[i]!;
       i++;
     }
   }
 
   function readInteger(): Uint8Array {
-    if (der[i] !== 0x02) throw new Error("Invalid DER signature: expected INTEGER");
+    if (der[i]! !== 0x02) throw new Error("Invalid DER signature: expected INTEGER");
     i++;
-    const nLen = der[i];
+    const nLen = der[i]!;
     i++;
     const n = der.slice(i, i + nLen);
     i += nLen;
