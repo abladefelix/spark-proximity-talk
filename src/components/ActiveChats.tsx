@@ -96,31 +96,30 @@ export function ActiveChats() {
   const behind = Math.min(rows.length - 1, 2);
 
   return (
-    <div className="mt-4">
+    <div className="relative z-10 mt-4">
       {/* Stacked deck: peeking cards behind the top card */}
-      <div className="relative">
+      <div className="relative isolate" style={{ paddingBottom: expanded ? 0 : behind * 8 }}>
         {!expanded &&
           Array.from({ length: behind }).map((_, i) => {
-            const depth = behind - i; // 2 = furthest
+            const depth = i + 1; // 1 = closest behind
             return (
               <div
                 key={`peek-${i}`}
                 aria-hidden
-                className="absolute inset-x-0 top-0 rounded-2xl border border-primary/20 bg-card/70 shadow-sm"
+                className="pointer-events-none absolute inset-x-0 top-0 h-[60px] rounded-2xl border border-border bg-card"
                 style={{
-                  height: "100%",
-                  transform: `translateY(${depth * 7}px) scale(${1 - depth * 0.045})`,
-                  opacity: 1 - depth * 0.25,
-                  zIndex: -depth,
+                  transform: `translateY(${depth * 8}px) scale(${1 - depth * 0.04})`,
+                  opacity: 1 - depth * 0.3,
+                  zIndex: 1,
                 }}
               />
             );
           })}
 
-        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-card shadow-md">
+        <div className="relative z-[2] overflow-hidden rounded-2xl border border-primary/30 bg-card shadow-md">
           <button
             type="button"
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => (rows.length > 1 ? setExpanded((v) => !v) : openChat(latest.matchId))}
             className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
           >
             <PersonAvatar
@@ -138,14 +137,18 @@ export function ActiveChats() {
                 {latest.preview ?? "Chat unlocked — say hello"}
               </p>
             </div>
-            {rows.length > 1 && (
-              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
-                {rows.length}
-              </span>
+            {rows.length > 1 ? (
+              <>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                  {rows.length}
+                </span>
+                <ChevronDown
+                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+                />
+              </>
+            ) : (
+              <MessageCircle className="size-4 shrink-0 text-primary" />
             )}
-            <ChevronDown
-              className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
-            />
           </button>
 
           {expanded && (
@@ -172,7 +175,7 @@ export function ActiveChats() {
                       {row.preview ?? "Chat unlocked — say hello"}
                     </p>
                   </div>
-                  <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
                     <MessageCircle className="size-3.5" />
                     Open
                   </span>
@@ -182,10 +185,9 @@ export function ActiveChats() {
           )}
         </div>
       </div>
-
-      {!expanded && behind > 0 && <div style={{ height: behind * 7 }} />}
     </div>
   );
 }
+
 
 
