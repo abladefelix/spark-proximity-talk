@@ -58,7 +58,7 @@ export function AccentProvider({ children }: { children: ReactNode }) {
 export function parseColorToHue(input: string): number | null {
   const rgb = parseColorToRgb(input);
   if (!rgb) return null;
-  const [r, g, b] = rgb.map((v) => {
+  const [r = 0, g = 0, b = 0] = rgb.map((v) => {
     const c = v / 255;
     return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
