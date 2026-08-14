@@ -210,6 +210,14 @@
   box-shadow: var(--shadow-card);
 }
 
+@utility shadow-sheet {
+  box-shadow: var(--shadow-sheet);
+}
+
+@utility shadow-sheet-dark {
+  box-shadow: var(--shadow-sheet-dark);
+}
+
 @keyframes skanaround-pulse {
   0% {
     transform: scale(0.7);
