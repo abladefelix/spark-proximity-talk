@@ -334,6 +334,39 @@ function AdminPage() {
     refreshAll();
   }
 
+  async function setBanned(userId: string, banned: boolean) {
+    const reason = banned
+      ? (window.prompt("Reason for the ban (shown to them)") ?? "").trim()
+      : "";
+    if (banned && !reason) return;
+    const { error } = await supabase.rpc("admin_set_ban", {
+      _user_id: userId,
+      _banned: banned,
+      _reason: banned ? reason : null,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(banned ? "Member banned" : "Member reactivated");
+    refreshAll();
+  }
+
+  async function reviewAppeal(id: string, approve: boolean) {
+    const { error } = await supabase.rpc("admin_review_reactivation", {
+      _id: id,
+      _approve: approve,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(approve ? "Reactivated" : "Appeal rejected");
+    refreshAll();
+  }
+
+
+
 
   if (accessLoading) {
     return (
