@@ -80,6 +80,21 @@ function Stat({
 function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const { data: accentHue } = useAccentHue();
+
+  async function setAccent(hue: number) {
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ accent_hue: hue })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
+    toast.success("Theme colour updated");
+  }
+
 
   const { data: access, isLoading: accessLoading } = useQuery({
     queryKey: ["admin-access"],
