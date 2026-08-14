@@ -17,20 +17,26 @@ export type Database = {
       app_settings: {
         Row: {
           accent_hue: number
+          app_name: string
           created_at: string
           id: string
+          logo_url: string | null
           updated_at: string
         }
         Insert: {
           accent_hue?: number
+          app_name?: string
           created_at?: string
           id?: string
+          logo_url?: string | null
           updated_at?: string
         }
         Update: {
           accent_hue?: number
+          app_name?: string
           created_at?: string
           id?: string
+          logo_url?: string | null
           updated_at?: string
         }
         Relationships: []
