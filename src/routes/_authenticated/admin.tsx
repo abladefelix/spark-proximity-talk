@@ -113,7 +113,9 @@ function AdminPage() {
     queryFn: async () => {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url, verified, last_seen, created_at")
+        .select(
+          "id, username, display_name, bio, avatar_url, verified, banned, banned_reason, last_seen, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(200);
       const { data: roles } = await supabase.from("user_roles").select("user_id, role");
@@ -123,6 +125,31 @@ function AdminPage() {
       }));
     },
   });
+
+  const { data: appeals = [] } = useQuery({
+    queryKey: ["admin-appeals"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("reactivation_requests")
+        .select("id, user_id, message, status, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: true });
+      if (!rows?.length) return [];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, display_name")
+        .in(
+          "id",
+          rows.map((r) => r.user_id),
+        );
+      return rows.map((r) => ({
+        ...r,
+        person: (profiles ?? []).find((p) => p.id === r.user_id),
+      }));
+    },
+  });
+
 
   const { data: reports = [] } = useQuery({
     queryKey: ["admin-reports"],
