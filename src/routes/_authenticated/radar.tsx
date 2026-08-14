@@ -177,10 +177,9 @@ function RadarPage() {
 
 
 
-  // Drop stale signals that were never returned.
-  useEffect(() => {
-    void supabase.rpc("purge_expired_signals");
-  }, []);
+  // Stale signal cleanup is a staff-only maintenance routine (see admin panel).
+
+
 
   const nearby = useQuery({
     queryKey: ["nearby", radius],
