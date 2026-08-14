@@ -96,12 +96,14 @@ function RadarPage() {
   const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
   const { data: maxRadius } = useMaxRadius();
+  const settings = useSettings();
   const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
-  const [radiusPref, setRadiusPref] = useState(500);
+  const [radiusPref, setRadiusPref] = useState(settings.default_radius_m);
   useEffect(() => {
-    const saved = Number(localStorage.getItem("skan-radius") ?? "500");
+    const saved = Number(localStorage.getItem("skan-radius") ?? "");
     if (Number.isFinite(saved) && saved > 0) setRadiusPref(saved);
-  }, []);
+    else setRadiusPref(settings.default_radius_m);
+  }, [settings.default_radius_m]);
   const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
