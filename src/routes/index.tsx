@@ -42,7 +42,7 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-6 pb-10 pt-6">
+    <main className="mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <Brand />
         <ThemeToggle />
