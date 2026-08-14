@@ -28,14 +28,14 @@ Files:
    - `APNS_KEY` — full `.p8` contents
    - `APNS_KEY_ID` — 10-char key ID
    - `APNS_TEAM_ID` — Apple Team ID
-   - `APNS_BUNDLE_ID` — defaults to `app.lovable.b0859620d8d149a093f5f6acf2710f99`
+   - `APNS_BUNDLE_ID` — defaults to `app.skanaround.mobile`
    - `APNS_PRODUCTION` — `true` for TestFlight/App Store builds, unset for dev
 3. Xcode: enable the Push Notifications capability (already in `App.entitlements`).
 
 ## Android setup (FCM)
 
 1. Firebase console → create/select a project → add an Android app with package
-   `app.lovable.b0859620d8d149a093f5f6acf2710f99`.
+   `app.skanaround.mobile`.
 2. Download `google-services.json` → place at `android/app/google-services.json`.
 3. Firebase → Project settings → Service accounts → **Generate new private key**.
 4. Add backend secret `FCM_SERVICE_ACCOUNT` — the entire service-account JSON as

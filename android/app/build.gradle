@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "app.lovable.b0859620d8d149a093f5f6acf2710f99"
+    namespace = "app.skanaround.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.lovable.b0859620d8d149a093f5f6acf2710f99"
+        applicationId "app.skanaround.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

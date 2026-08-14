@@ -1,4 +1,4 @@
-package app.lovable.b0859620d8d149a093f5f6acf2710f99;
+package app.skanaround.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

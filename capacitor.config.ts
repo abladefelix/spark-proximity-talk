@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "app.lovable.b0859620d8d149a093f5f6acf2710f99",
+  appId: "app.skanaround.mobile",
   appName: "SkanAround",
   webDir: "dist",
   server: {

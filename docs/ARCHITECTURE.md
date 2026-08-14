@@ -6,7 +6,7 @@ radar; a mutual signal unlocks a chat.
 ## Stack
 
 - **Web**: TanStack Start (React 19) + Vite 7, Tailwind v4 tokens in `src/styles.css`
-- **Backend**: Lovable Cloud (Postgres, Auth, Storage, Realtime)
+- **Backend**: Supabase (Postgres, Auth, Storage, Realtime)
 - **Native**: Capacitor shell for iOS + Android (`docs/MOBILE.md`)
 
 ## Data model (`public`)
