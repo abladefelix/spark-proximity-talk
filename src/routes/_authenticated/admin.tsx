@@ -34,6 +34,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
+import { EmailsTab } from "@/components/admin/EmailsTab";
 import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
 
 
@@ -606,6 +607,9 @@ function AdminPage() {
             Appeals
             {appeals.length > 0 ? ` (${appeals.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="emails" className="flex-1">
+            Emails
+          </TabsTrigger>
           <TabsTrigger value="insights" className="flex-1">
             Insights
           </TabsTrigger>
@@ -613,6 +617,10 @@ function AdminPage() {
             Backup
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="emails" className="mt-3">
+          <EmailsTab />
+        </TabsContent>
 
         <TabsContent value="insights" className="mt-3">
           <InsightsTab />
