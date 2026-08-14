@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET app_name = 'skanAround', updated_at = now() WHERE id = 'global';
