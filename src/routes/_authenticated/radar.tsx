@@ -118,8 +118,10 @@ function RadarPage() {
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
+  const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
 
   // Keep my location fresh while the radar is open.
+
   useEffect(() => {
     if (askLocation) return;
     const isNative = Capacitor.isNativePlatform();
@@ -131,8 +133,11 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
+      lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
+
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) return;
       const { error } = await supabase.from("locations").upsert(
@@ -225,12 +230,21 @@ function RadarPage() {
       );
     })();
 
+    // Stationary phones stop emitting position updates, which would make the
+    // user look offline to everyone else. Re-publish the last fix periodically.
+    heartbeat = setInterval(() => {
+      const coords = lastCoords.current;
+      if (coords) void push(coords);
+    }, 60000);
+
     return () => {
       cancelled = true;
+      if (heartbeat) clearInterval(heartbeat);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
       if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
     };
   }, [visible, queryClient, retryKey, askLocation]);
+
 
 
 
