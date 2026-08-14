@@ -5,21 +5,23 @@ const config: CapacitorConfig = {
   appName: "SkanAround",
   webDir: ".output/public",
   server: {
-    // Live URL — the native shell loads your published web app so updates are instant
-    // without resubmitting to the App Store. Swap this for a local dev IP when testing
-    // on an iPhone simulator or device via `npx cap run ios` with live reload.
-    // NOTE: no query string here — Capacitor uses this to decide which URLs are
-    // "internal". A query string makes every load look external and it opens in Safari.
+    // Live URL — the native shell loads the published web app so updates ship
+    // without resubmitting to the stores. No query string, and no `hostname`
+    // alongside `url`: setting both makes iOS treat the first load as an
+    // external link and hand it to Safari.
     url: "https://shatta.caymanirs.com",
-    hostname: "shatta.caymanirs.com",
+    androidScheme: "https",
+    iosScheme: "https",
     allowNavigation: [
       "shatta.caymanirs.com",
       "*.caymanirs.com",
       "*.lovable.app",
       "*.supabase.co",
+      "*.google.com",
     ],
     cleartext: true,
   },
+
 
   ios: {
     contentInset: "always",
