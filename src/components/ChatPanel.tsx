@@ -116,7 +116,21 @@ export function ChatPanel({
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
+    if (other?.id) {
+      sendPush({
+        data: {
+          kind: "message",
+          recipientId: other.id,
+          title: other.display_name ?? `@${other.username}` ?? "New message",
+          body: content,
+          relatedId: matchId,
+        },
+      }).catch(() => {
+        /* push failure is non-fatal */
+      });
+    }
   }
+
 
   const [pinning, setPinning] = useState(false);
 
