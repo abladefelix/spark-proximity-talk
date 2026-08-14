@@ -388,22 +388,20 @@ export function ChatPanel({
         >
           {uploading ? <LoaderCircle className="animate-spin" /> : <ImagePlus className="size-[22px]" />}
         </Button>
-        <div className="flex min-w-0 flex-1 items-center rounded-[22px] border border-border/50 bg-background/70 px-3.5 py-0.5 backdrop-blur-xl">
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={settings.chat_prompt_text}
-            className="min-h-[38px] max-h-[132px] flex-1 resize-none border-0 bg-transparent px-0 py-2 text-[15.5px] leading-snug placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
-            rows={1}
-            maxLength={settings.max_message_len}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-          />
-        </div>
+        <Textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={settings.chat_prompt_text}
+          className="min-h-[40px] max-h-[132px] min-w-0 flex-1 resize-none rounded-[20px] border border-border/50 bg-background/70 px-4 py-2 text-[15.5px] leading-snug shadow-none backdrop-blur-xl placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+          rows={1}
+          maxLength={settings.max_message_len}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
+        />
         <Button
           type="submit"
           variant="heat"
