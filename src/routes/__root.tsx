@@ -126,7 +126,7 @@ function RootShell({ children }: { children: ReactNode }) {
               "try{var t=localStorage.getItem('skanaround-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}",
           }}
         />
-        {children}
+        <div id="app-scroll">{children}</div>
         <Scripts />
       </body>
     </html>
