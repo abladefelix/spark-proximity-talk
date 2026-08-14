@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SHATTA</string>
-    <string name="title_activity_main">SHATTA</string>
+    <string name="app_name">skanAround</string>
+    <string name="title_activity_main">skanAround</string>
     <string name="package_name">app.lovable.b0859620d8d149a093f5f6acf2710f99</string>
     <string name="custom_url_scheme">app.lovable.b0859620d8d149a093f5f6acf2710f99</string>
 </resources>

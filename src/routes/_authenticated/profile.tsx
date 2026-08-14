@@ -25,12 +25,12 @@ import {
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Your SHATTA profile" },
+      { title: "Your skanAround profile" },
       {
         name: "description",
-        content: "Set the name, photo and line people see when you signal them on SHATTA.",
+        content: "Set the name, photo and line people see when you signal them on skanAround.",
       },
-      { property: "og:title", content: "Your SHATTA profile" },
+      { property: "og:title", content: "Your skanAround profile" },
       { property: "og:description", content: "The face people see when you signal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

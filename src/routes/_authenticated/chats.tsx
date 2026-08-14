@@ -7,12 +7,12 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
     meta: [
-      { title: "Your links — SHATTA chats" },
+      { title: "Your links — skanAround chats" },
       {
         name: "description",
-        content: "Every mutual signal you've made on SHATTA, and the conversations that followed.",
+        content: "Every mutual signal you've made on skanAround, and the conversations that followed.",
       },
-      { property: "og:title", content: "SHATTA chats" },
+      { property: "og:title", content: "skanAround chats" },
       { property: "og:description", content: "Your mutual matches and conversations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

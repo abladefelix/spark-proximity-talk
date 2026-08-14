@@ -39,7 +39,7 @@ const EMPTY: Draft = {
   s3_endpoint: "",
   s3_region: "auto",
   s3_bucket: "",
-  s3_prefix: "shatta-backups",
+  s3_prefix: "skanaround-backups",
   s3_access_key_id: "",
   s3_secret_access_key: "",
   gdrive_folder_id: "",
@@ -106,7 +106,7 @@ export function BackupTab() {
     try {
       const res = await run({ data: { destination: draft.destination } });
       if (res.payload) {
-        downloadBlob(res.objectKey ?? "shatta-backup.json", res.payload, "application/json");
+        downloadBlob(res.objectKey ?? "skanaround-backup.json", res.payload, "application/json");
       }
       await queryClient.invalidateQueries({ queryKey: ["backup-runs"] });
       await queryClient.invalidateQueries({ queryKey: ["backup-settings"] });
