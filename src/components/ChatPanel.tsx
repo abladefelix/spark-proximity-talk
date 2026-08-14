@@ -369,10 +369,18 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           type="submit"
           disabled={!text.trim()}
           aria-label="Send"
+          // iOS: the keyboard closing on blur can move the button out from
+          // under the finger before "click" fires, so commit on pointer down.
+          onPointerDown={(e) => {
+            if (!text.trim()) return;
+            e.preventDefault();
+            void send();
+          }}
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
         >
           <ArrowUp className="size-5" strokeWidth={2.5} />
         </button>
+
       </form>
     </div>
   );
