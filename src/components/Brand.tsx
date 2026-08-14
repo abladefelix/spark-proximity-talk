@@ -32,10 +32,64 @@ export function useBranding() {
   });
 }
 
+/**
+ * Renders the logo tinted with the current accent colour.
+ * The default mark is masked so it always picks up `--primary`;
+ * custom uploaded logos are shown as-is (their own colours).
+ */
+export function BrandMark({
+  size = 28,
+  className,
+  style,
+}: {
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { data } = useBranding();
+  const logo = data?.logo ?? DEFAULT_LOGO_URL;
+  const isCustom = Boolean(data?.logoPath);
+
+  if (isCustom) {
+    return (
+      <img
+        src={logo}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        style={{ width: size, height: size, ...style }}
+        className={className ? `object-contain ${className}` : "rounded object-contain"}
+      />
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={className}
+      style={{
+        width: size,
+        height: size,
+        display: "inline-block",
+        backgroundColor: "hsl(var(--primary))",
+        WebkitMaskImage: `url(${logo})`,
+        maskImage: `url(${logo})`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+        ...style,
+      }}
+    />
+  );
+}
+
 export function Brand({ className, size = 28 }: { className?: string; size?: number }) {
   const { data } = useBranding();
   const name = data?.name ?? DEFAULT_APP_NAME;
-  const logo = data?.logo ?? DEFAULT_LOGO_URL;
 
   return (
     <p
@@ -44,14 +98,7 @@ export function Brand({ className, size = 28 }: { className?: string; size?: num
         "flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground"
       }
     >
-      <img
-        src={logo}
-        alt=""
-        width={size}
-        height={size}
-        style={{ width: size, height: size }}
-        className="rounded object-contain"
-      />
+      <BrandMark size={size} />
       {name}
     </p>
   );
