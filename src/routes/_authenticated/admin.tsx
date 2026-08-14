@@ -347,21 +347,43 @@ function AdminPage() {
   });
 
   return (
-    <div className="px-5 pt-8">
-      <h1 className="flex items-center gap-2 text-xl font-semibold">
-        <ShieldCheck className="size-5 text-primary" /> Control
-      </h1>
-
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <StatCard icon={Users} label="People" value={Number(stats?.people ?? 0)} />
-        <StatCard icon={Radio} label="Online now" value={Number(stats?.online ?? 0)} />
-        <StatCard icon={BadgeCheck} label="Verified" value={Number(stats?.verified ?? 0)} />
-        <StatCard icon={Flag} label="Reports" value={Number(stats?.reports ?? 0)} />
-        <StatCard icon={Radio} label="Signals" value={Number(stats?.signals ?? 0)} />
-        <StatCard icon={Users} label="Matches" value={Number(stats?.matches ?? 0)} />
+    <div className="px-4 pb-10 pt-6">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="flex items-center gap-2 text-lg font-semibold">
+          <ShieldCheck className="size-4 text-primary" /> Control
+        </h1>
+        <div className="flex items-center gap-1">
+          <Button size="sm" variant="ghost" onClick={refreshAll} aria-label="Refresh">
+            <RefreshCw className="size-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="soft">
+                Maintenance
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => void purgeSignals()}>
+                Purge expired signals
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void purgeLocations()}>
+                Clear stale locations
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      <Tabs defaultValue="people" className="mt-6">
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        <Stat icon={Users} label="people" value={Number(stats?.people ?? 0)} />
+        <Stat icon={Radio} label="online" value={Number(stats?.online ?? 0)} />
+        <Stat icon={BadgeCheck} label="verified" value={Number(stats?.verified ?? 0)} />
+        <Stat icon={Radio} label="signals" value={Number(stats?.signals ?? 0)} />
+        <Stat icon={Users} label="matches" value={Number(stats?.matches ?? 0)} />
+        <Stat icon={Flag} label="reports" value={Number(stats?.reports ?? 0)} />
+      </div>
+
+      <Tabs defaultValue="people" className="mt-4">
         <TabsList className="w-full">
           <TabsTrigger value="people" className="flex-1">
             People
@@ -376,101 +398,106 @@ function AdminPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="people" className="mt-4 space-y-3">
+        <TabsContent value="people" className="mt-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search people"
-              className="pl-9"
+              className="h-9 pl-9"
             />
           </div>
-          {filtered.map((p) => (
-            <div key={p.id} className="rounded-2xl border border-border p-3">
-              <div className="flex items-center gap-3">
+          <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
+            {filtered.map((p) => (
+              <li key={p.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <PersonAvatar
                   path={p.avatar_url}
                   name={p.display_name}
                   username={p.username}
-                  className="size-11"
+                  className="size-8"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                  <p className="flex items-center gap-1 truncate text-sm font-medium leading-tight">
                     {p.display_name ?? p.username}
                     {p.verified && <VerifiedBadge />}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-[11px] leading-tight text-muted-foreground">
                     @{p.username}
                     {p.roles.length > 0 ? ` · ${p.roles.join(", ")}` : ""}
                   </p>
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="soft"
-                  onClick={() => void setVerified(p.id, !p.verified)}
-                >
-                  {p.verified ? "Unverify" : "Verify"}
-                </Button>
-                {isAdmin && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="soft"
-                      onClick={() =>
-                        void toggleRole(p.id, "moderator", p.roles.includes("moderator"))
-                      }
-                    >
-                      {p.roles.includes("moderator") ? "Remove mod" : "Make mod"}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="ghost" aria-label={`Actions for @${p.username}`}>
+                      <MoreHorizontal className="size-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="soft"
-                      onClick={() => void toggleRole(p.id, "admin", p.roles.includes("admin"))}
-                    >
-                      {p.roles.includes("admin") ? "Remove admin" : "Make admin"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive"
-                      onClick={() => void deleteProfile(p.id)}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">No one matches that.</p>
-          )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => void setVerified(p.id, !p.verified)}>
+                      <BadgeCheck className="size-4" /> {p.verified ? "Unverify" : "Verify"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void hideFromRadar(p.id)}>
+                      <EyeOff className="size-4" /> Hide from radar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void wipeActivity(p.id)}>
+                      <Trash2 className="size-4" /> Wipe signals & chats
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            void toggleRole(p.id, "moderator", p.roles.includes("moderator"))
+                          }
+                        >
+                          {p.roles.includes("moderator") ? "Remove mod" : "Make mod"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            void toggleRole(p.id, "admin", p.roles.includes("admin"))
+                          }
+                        >
+                          {p.roles.includes("admin") ? "Remove admin" : "Make admin"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onSelect={() => void deleteProfile(p.id)}
+                        >
+                          <Trash2 className="size-4" /> Delete profile
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">No one matches that.</li>
+            )}
+          </ul>
         </TabsContent>
 
-        <TabsContent value="verify" className="mt-4 space-y-3">
-          {verifications.map((v) => (
-            <div key={v.id} className="rounded-2xl border border-border p-3">
-              <div className="flex items-center gap-3">
+        <TabsContent value="verify" className="mt-3">
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {verifications.map((v) => (
+              <li key={v.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 {v.selfieUrl ? (
                   <img
                     src={v.selfieUrl}
                     alt={`Verification selfie from @${v.person?.username ?? "user"}`}
                     loading="lazy"
-                    width={64}
-                    height={64}
-                    className="size-16 rounded-xl object-cover"
+                    width={40}
+                    height={40}
+                    className="size-10 rounded-lg object-cover"
                   />
                 ) : (
-                  <div className="size-16 rounded-xl bg-muted" />
+                  <div className="size-10 rounded-lg bg-muted" />
                 )}
-                <p className="flex-1 truncate text-sm font-semibold">
+                <p className="min-w-0 flex-1 truncate text-sm font-medium">
                   @{v.person?.username ?? "unknown"}
                 </p>
-              </div>
-              <div className="mt-3 flex gap-2">
                 <Button
                   size="sm"
                   variant="heat"
@@ -480,48 +507,74 @@ function AdminPage() {
                 </Button>
                 <Button
                   size="sm"
-                  variant="soft"
+                  variant="ghost"
                   onClick={() => void reviewVerification(v.id, v.user_id, false)}
                 >
                   Reject
                 </Button>
-              </div>
-            </div>
-          ))}
-          {verifications.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">Nothing to review.</p>
-          )}
+              </li>
+            ))}
+            {verifications.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">Nothing to review.</li>
+            )}
+          </ul>
         </TabsContent>
 
-        <TabsContent value="reports" className="mt-4 space-y-3">
-          {reports.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-border p-3">
-              <p className="text-sm">
-                <span className="font-semibold">@{r.reportedProfile?.username ?? "unknown"}</span>{" "}
-                <span className="text-muted-foreground">
-                  reported by @{r.reporterProfile?.username ?? "unknown"}
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{r.reason}</p>
-              <div className="mt-3 flex gap-2">
-                <Button
-                  size="sm"
-                  variant="soft"
-                  onClick={() => void setVerified(r.reported, false)}
-                >
-                  <Ban className="mr-1 size-3.5" /> Unverify
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => void dismissReport(r.id)}>
-                  Dismiss
-                </Button>
-              </div>
-            </div>
-          ))}
-          {reports.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">No reports.</p>
-          )}
+        <TabsContent value="reports" className="mt-3">
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {reports.map((r) => (
+              <li key={r.id} className="flex items-center gap-2.5 px-2.5 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-tight">
+                    @{r.reportedProfile?.username ?? "unknown"}
+                    <span className="font-normal text-muted-foreground">
+                      {" "}
+                      · by @{r.reporterProfile?.username ?? "unknown"}
+                    </span>
+                  </p>
+                  <p className="truncate text-[11px] leading-tight text-muted-foreground">
+                    {r.reason}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="ghost" aria-label="Report actions">
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => void setVerified(r.reported, false)}>
+                      Unverify reported
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void hideFromRadar(r.reported)}>
+                      <EyeOff className="size-4" /> Hide from radar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void wipeActivity(r.reported)}>
+                      <Trash2 className="size-4" /> Wipe their activity
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onSelect={() => void deleteProfile(r.reported)}
+                      >
+                        Delete profile
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => void dismissReport(r.id)}>
+                      Dismiss report
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            ))}
+            {reports.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">No reports.</li>
+            )}
+          </ul>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
