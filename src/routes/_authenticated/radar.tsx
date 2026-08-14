@@ -29,7 +29,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import logoAsset from "@/assets/skanaround-logo.png";
 import { Brand, useBranding } from "@/components/Brand";
 
-const logoUrl = logoAsset.url;
+const logoUrl = logoAsset;
 
 
 
