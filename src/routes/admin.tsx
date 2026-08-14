@@ -13,6 +13,7 @@ import {
   Radio,
   RefreshCw,
   Search,
+  Eye,
   ShieldCheck,
   Trash2,
   Users,
@@ -36,6 +37,7 @@ import { useMaxRadius } from "@/hooks/useMaxRadius";
 import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 
+import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
@@ -113,6 +115,7 @@ function Stat({
 function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
   const { data: accentHue } = useAccentHue();
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
@@ -868,6 +871,9 @@ function AdminPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setDetailsUserId(p.id)}>
+                      <Eye className="size-4" /> View details
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void setVerified(p.id, !p.verified)}>
                       <BadgeCheck className="size-4" /> {p.verified ? "Unverify" : "Verify"}
                     </DropdownMenuItem>
@@ -984,6 +990,9 @@ function AdminPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setDetailsUserId(r.reported)}>
+                      <Eye className="size-4" /> View details
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void setVerified(r.reported, false)}>
                       Unverify reported
                     </DropdownMenuItem>
@@ -1056,6 +1065,10 @@ function AdminPage() {
         </TabsContent>
       </Tabs>
     </div>
+      <UserDetailsDialog
+        userId={detailsUserId}
+        onOpenChange={(open) => !open && setDetailsUserId(null)}
+      />
   );
 }
 
