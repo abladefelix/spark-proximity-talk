@@ -199,15 +199,19 @@ export function ChatPanel({
 
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
-      <header className="flex shrink-0 items-center gap-2 border-b border-border/40 bg-card/60 px-2 pb-2.5 pt-1 backdrop-blur-2xl">
+      <header
+        className="flex shrink-0 items-center gap-1 border-b border-border/40 bg-background/85 px-1.5 pb-2 backdrop-blur-2xl"
+        style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
+      >
         <button
           type="button"
           onClick={closeChat}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors active:bg-secondary"
-          aria-label="Close chat"
+          className="-mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-transform active:scale-90 active:bg-secondary/60"
+          aria-label="Back"
         >
-          <ChevronLeft className="size-6" />
+          <ChevronLeft className="size-7" strokeWidth={2.25} />
         </button>
+
         <PersonAvatar
           path={other?.avatar_url}
           name={other?.display_name}

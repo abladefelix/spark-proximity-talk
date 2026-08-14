@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChatPanel } from "@/components/ChatPanel";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,16 +48,28 @@ export function useChatSheet() {
 
 export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const [matchId, setMatchId] = useState<string | null>(null);
+  const pushedRef = useRef(false);
 
   const openChat = useCallback((id: string) => setMatchId(id), []);
-  const closeChat = useCallback(() => setMatchId(null), []);
+  const closeChat = useCallback(() => {
+    setMatchId(null);
+    // Drop the history entry we added so the next back press behaves normally.
+    if (pushedRef.current) {
+      pushedRef.current = false;
+      window.history.back();
+    }
+  }, []);
   const value = useMemo(() => ({ openChat, closeChat }), [openChat, closeChat]);
 
   // Hardware/browser back closes the chat instead of leaving the app.
   useEffect(() => {
     if (!matchId) return;
-    const onPop = () => setMatchId(null);
+    const onPop = () => {
+      pushedRef.current = false;
+      setMatchId(null);
+    };
     window.history.pushState({ chat: matchId }, "");
+    pushedRef.current = true;
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [matchId]);
@@ -72,7 +84,6 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="Chat"
           className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-4 duration-200"
-          style={{ paddingTop: "var(--safe-top)" }}
         >
           <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -87,3 +98,4 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
     </ChatSheetContext.Provider>
   );
 }
+
