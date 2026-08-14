@@ -18,17 +18,14 @@ const config: CapacitorConfig = {
       "*.lovable.app",
       "oauth.lovable.app",
       "*.lovable.dev",
-      "accounts.google.com",
-      "*.googleusercontent.com",
       "*.supabase.co",
-      "*.google.com",
     ],
     cleartext: true,
   },
 
 
   ios: {
-    contentInset: "always",
+    contentInset: "never",
     allowsLinkPreview: false,
   },
   android: {

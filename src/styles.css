@@ -171,9 +171,13 @@
 
   html,
   body {
-    height: 100%;
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
+    touch-action: none;
     -webkit-overflow-scrolling: auto;
   }
 
@@ -182,9 +186,6 @@
   }
 
   body {
-    position: fixed;
-    inset: 0;
-    width: 100%;
     background-color: var(--color-background);
     background-image: var(--gradient-night);
     background-attachment: fixed;
@@ -195,10 +196,13 @@
   }
 
   #app-scroll {
-    height: 100%;
-    width: 100%;
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
+    touch-action: none;
     -webkit-overflow-scrolling: auto;
   }
 
@@ -207,6 +211,15 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  img,
+  svg,
+  video {
+    -webkit-user-drag: none;
+    user-select: none;
   }
 
   input,
@@ -227,12 +240,28 @@
   }
 
   [data-scrollable] {
+    overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Prevent any horizontal scroll/bounce in the app shell. */
+  [data-app-shell] {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
 
+  [data-app-shell] > [data-scrollable] {
+    touch-action: pan-y;
+  }
 
+  /* Radar and other fixed pages should never scroll or bounce. */
+  [data-fixed-page] {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
 
   h1,
   h2,

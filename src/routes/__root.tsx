@@ -17,6 +17,35 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 
+function useNativeViewportLock() {
+  useEffect(() => {
+    const lastY = new WeakMap<EventTarget, number>();
+    const preventOverscroll = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const scrollable = target.closest("[data-scrollable]");
+      if (!scrollable) {
+        e.preventDefault();
+        return;
+      }
+      const el = scrollable as HTMLElement;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const atTop = el.scrollTop <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+      const prevY = lastY.get(e.target as EventTarget) ?? touch.clientY;
+      const goingDown = touch.clientY > prevY;
+      const goingUp = touch.clientY < prevY;
+      if ((atTop && goingDown) || (atBottom && goingUp)) {
+        e.preventDefault();
+      }
+      lastY.set(e.target as EventTarget, touch.clientY);
+    };
+    document.addEventListener("touchmove", preventOverscroll, { passive: false });
+    return () => document.removeEventListener("touchmove", preventOverscroll);
+  }, []);
+}
+
 
 function NotFoundComponent() {
   return (
@@ -140,6 +169,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  useNativeViewportLock();
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
