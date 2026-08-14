@@ -25,9 +25,6 @@ export function RadarBeacon({
   size = "md",
   sizePx,
 }: RadarBeaconProps) {
-  const px = sizePx ?? 40;
-  const tail = Math.max(6, Math.round(px * 0.28));
-
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
       {active && (
@@ -47,18 +44,16 @@ export function RadarBeacon({
         </>
       )}
 
-      {/* Pin tail: points down at the exact spot on the radar. */}
+      {/* Soft glow pooled under the icon so it reads as a light source on the radar. */}
       <span
         aria-hidden
-        style={{
-          width: tail,
-          height: tail,
-          bottom: -tail * 0.42,
-          clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
-        }}
         className={cn(
-          "absolute left-1/2 z-0 -translate-x-1/2",
-          verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary",
+          "pointer-events-none absolute inset-[-30%] z-0 rounded-full blur-md",
+          verified
+            ? "bg-[oklch(0.78_0.14_190)]/25"
+            : active
+              ? "bg-primary/25"
+              : "bg-primary/10",
         )}
       />
 

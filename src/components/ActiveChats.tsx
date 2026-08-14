@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle } from "lucide-react";
+import { ChevronDown, MessageCircle } from "lucide-react";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
@@ -18,6 +18,7 @@ type Row = {
 export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
+  const [expanded, setExpanded] = useState(false);
 
   const { data: rows = [] } = useQuery({
     queryKey: ["active-chats"],
@@ -81,34 +82,75 @@ export function ActiveChats() {
 
   if (rows.length === 0) return null;
 
+  const collapsible = rows.length > 2;
+  const shown = collapsible && !expanded ? [] : rows;
+
   return (
-    <div className="mt-4 space-y-2">
-      {rows.map((row) => (
+    <div className="mt-4 rounded-2xl border border-primary/30 bg-card/60">
+      {collapsible && (
         <button
-          key={row.matchId}
           type="button"
-          onClick={() => openChat(row.matchId)}
-          className="flex w-full text-left items-center gap-3 rounded-2xl border border-primary/40 bg-card/70 px-3 py-2.5 transition-colors hover:bg-secondary/60"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
         >
-          <PersonAvatar
-            path={row.avatar_url}
-            name={row.display_name}
-            username={row.username}
-            gender={row.gender}
-            className="size-10 shrink-0"
-          />
+          <div className="flex -space-x-3">
+            {rows.slice(0, 4).map((row) => (
+              <PersonAvatar
+                key={row.matchId}
+                path={row.avatar_url}
+                name={row.display_name}
+                username={row.username}
+                gender={row.gender}
+                className="size-8 shrink-0 ring-2 ring-card"
+              />
+            ))}
+          </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
+            <p className="truncate text-sm font-medium">{rows.length} chats unlocked</p>
             <p className="truncate text-xs text-muted-foreground">
-              {row.preview ?? "Chat unlocked — say hello"}
+              {expanded ? "Tap to collapse" : "Tap to see everyone"}
             </p>
           </div>
-          <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
-            <MessageCircle className="size-3.5" />
-            Open
-          </span>
+          <ChevronDown
+            className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
         </button>
-      ))}
+      )}
+
+      <div
+        className={
+          collapsible && expanded
+            ? "max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5"
+            : "space-y-1 p-1.5"
+        }
+      >
+        {shown.map((row) => (
+          <button
+            key={row.matchId}
+            type="button"
+            onClick={() => openChat(row.matchId)}
+            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+          >
+            <PersonAvatar
+              path={row.avatar_url}
+              name={row.display_name}
+              username={row.username}
+              gender={row.gender}
+              className="size-9 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {row.preview ?? "Chat unlocked — say hello"}
+              </p>
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+              <MessageCircle className="size-3.5" />
+              Open
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
