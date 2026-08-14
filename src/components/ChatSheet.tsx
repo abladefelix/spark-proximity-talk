@@ -71,7 +71,13 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const pushedRef = useRef(false);
   const viewport = useVisualViewport();
 
-  const openChat = useCallback((id: string) => setMatchId(id), []);
+  const openChat = useCallback((id: string) => {
+    setMatchId(id);
+    if (!pushedRef.current) {
+      window.history.pushState({ chat: id }, "");
+      pushedRef.current = true;
+    }
+  }, []);
   const closeChat = useCallback(() => {
     setMatchId(null);
     // Drop the history entry we added so the next back press behaves normally.
@@ -83,17 +89,16 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({ openChat, closeChat }), [openChat, closeChat]);
 
   // Hardware/browser back closes the chat instead of leaving the app.
+  // Registered once so it can never be torn down mid-gesture.
   useEffect(() => {
-    if (!matchId) return;
     const onPop = () => {
       pushedRef.current = false;
       setMatchId(null);
     };
-    window.history.pushState({ chat: matchId }, "");
-    pushedRef.current = true;
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [matchId]);
+  }, []);
+
 
   return (
     <ChatSheetContext.Provider value={value}>
