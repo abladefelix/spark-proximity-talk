@@ -339,11 +339,14 @@ function AdminPage() {
       ? (window.prompt("Reason for the ban (shown to them)") ?? "").trim()
       : "";
     if (banned && !reason) return;
-    const { error } = await supabase.rpc("admin_set_ban", {
-      _user_id: userId,
-      _banned: banned,
-      _reason: banned ? reason : undefined,
-    });
+    const { error } = banned
+      ? await supabase.rpc("admin_set_ban", {
+          _user_id: userId,
+          _banned: true,
+          _reason: reason,
+        })
+      : await supabase.rpc("admin_set_ban", { _user_id: userId, _banned: false });
+
     if (error) {
       toast.error(error.message);
       return;
