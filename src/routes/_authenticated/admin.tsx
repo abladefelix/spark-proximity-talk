@@ -98,7 +98,39 @@ function AdminPage() {
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
   const { data: maxRadius } = useMaxRadius();
+  const { data: chatTtl } = useChatTtlDays();
+  const [chatTtlDraft, setChatTtlDraft] = useState<string | null>(null);
   const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
+
+  async function saveChatTtl() {
+    const value = Math.round(Number(chatTtlDraft ?? chatTtl ?? 30));
+    if (!Number.isFinite(value) || value < 1) {
+      toast.error("Enter at least 1 day");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ chat_ttl_days: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-chat-ttl"] });
+    setChatTtlDraft(null);
+    toast.success("Chat history length updated");
+  }
+
+  async function purgeOldChats() {
+    const { data, error } = await supabase.rpc("purge_old_chats");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+    toast.success(`Removed ${data ?? 0} old messages`);
+  }
+
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [savingLogo, setSavingLogo] = useState(false);
 
