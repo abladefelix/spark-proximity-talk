@@ -486,6 +486,11 @@ function AdminPage() {
                   <p className="flex items-center gap-1 truncate text-sm font-medium leading-tight">
                     {p.display_name ?? p.username}
                     {p.verified && <VerifiedBadge />}
+                    {p.banned && (
+                      <span className="rounded bg-destructive/15 px-1 text-[10px] font-semibold uppercase text-destructive">
+                        banned
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-[11px] leading-tight text-muted-foreground">
                     @{p.username}
@@ -505,6 +510,13 @@ function AdminPage() {
                     <DropdownMenuItem onSelect={() => void hideFromRadar(p.id)}>
                       <EyeOff className="size-4" /> Hide from radar
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={p.banned ? undefined : "text-destructive"}
+                      onSelect={() => void setBanned(p.id, !p.banned)}
+                    >
+                      <Ban className="size-4" /> {p.banned ? "Unban member" : "Ban member"}
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem onSelect={() => void wipeActivity(p.id)}>
                       <Trash2 className="size-4" /> Wipe signals & chats
                     </DropdownMenuItem>
