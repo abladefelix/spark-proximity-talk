@@ -17,6 +17,33 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 
+function useNativeViewportLock() {
+  useEffect(() => {
+    // Prevent the whole page from being dragged/bounced in the mobile webview.
+    const preventOverscroll = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const scrollable = target.closest("[data-scrollable]");
+      if (!scrollable) {
+        e.preventDefault();
+        return;
+      }
+      // Allow scrolling inside scrollable containers, but stop the bounce at the edges.
+      const el = scrollable as HTMLElement;
+      const atTop = el.scrollTop <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+      const goingUp = e.touches[0].clientY > (target.dataset.lastY ? Number(target.dataset.lastY) : e.touches[0].clientY);
+      const goingDown = !goingUp;
+      if ((atTop && goingDown) || (atBottom && goingUp)) {
+        e.preventDefault();
+      }
+      target.dataset.lastY = String(e.touches[0].clientY);
+    };
+    document.addEventListener("touchmove", preventOverscroll, { passive: false });
+    return () => document.removeEventListener("touchmove", preventOverscroll);
+  }, []);
+}
+
 
 function NotFoundComponent() {
   return (
