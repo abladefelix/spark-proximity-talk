@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,18 +38,20 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  // While a sign-up is completing we must not auto-redirect on a transient session.
+  const signingUp = useRef(false);
 
   // A restored email session can land here when the native shell resumes.
   useEffect(() => {
     let active = true;
     const check = () => {
       supabase.auth.getSession().then(({ data }) => {
-        if (active && data.session) navigate({ to: "/radar" });
+        if (active && data.session && !signingUp.current) navigate({ to: "/radar" });
       });
     };
     check();
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/radar" });
+      if (session && !signingUp.current) navigate({ to: "/radar" });
     });
     window.addEventListener("focus", check);
     return () => {
@@ -73,6 +75,7 @@ function AuthPage() {
         return;
       }
       if (mode === "signup") {
+        signingUp.current = true;
         if (!settings.signups_enabled) {
           toast.error("New sign-ups are closed right now");
           return;
@@ -107,6 +110,7 @@ function AuthPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
+      signingUp.current = false;
       setBusy(false);
     }
   }
