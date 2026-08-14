@@ -32,6 +32,8 @@ import {
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
+import { InsightsTab } from "@/components/admin/InsightsTab";
+import { BackupTab } from "@/components/admin/BackupTab";
 import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
 
 
@@ -604,7 +606,22 @@ function AdminPage() {
             Appeals
             {appeals.length > 0 ? ` (${appeals.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="insights" className="flex-1">
+            Insights
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="flex-1">
+            Backup
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="insights" className="mt-3">
+          <InsightsTab />
+        </TabsContent>
+
+        <TabsContent value="backup" className="mt-3">
+          <BackupTab />
+        </TabsContent>
+
 
 
         <TabsContent value="people" className="mt-3">
