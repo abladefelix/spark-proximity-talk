@@ -115,10 +115,12 @@ function RadarPage() {
 
   // Keep my location fresh while the radar is open.
   useEffect(() => {
+    if (askLocation) return;
     if (!("geolocation" in navigator)) {
       setGeoError("This device can't share location.");
       return;
     }
+
     let cancelled = false;
     const push = async (pos: GeolocationPosition) => {
       if (cancelled) return;
