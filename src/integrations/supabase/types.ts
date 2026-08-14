@@ -41,6 +41,93 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_runs: {
+        Row: {
+          created_at: string
+          destination: string
+          error: string | null
+          id: string
+          object_key: string | null
+          size_bytes: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          error?: string | null
+          id?: string
+          object_key?: string | null
+          size_bytes?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          error?: string | null
+          id?: string
+          object_key?: string | null
+          size_bytes?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
+      backup_settings: {
+        Row: {
+          created_at: string
+          destination: string
+          gdrive_client_id: string | null
+          gdrive_client_secret: string | null
+          gdrive_folder_id: string | null
+          gdrive_refresh_token: string | null
+          id: string
+          last_run_at: string | null
+          s3_access_key_id: string | null
+          s3_bucket: string | null
+          s3_endpoint: string | null
+          s3_prefix: string | null
+          s3_region: string | null
+          s3_secret_access_key: string | null
+          schedule: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination?: string
+          gdrive_client_id?: string | null
+          gdrive_client_secret?: string | null
+          gdrive_folder_id?: string | null
+          gdrive_refresh_token?: string | null
+          id?: string
+          last_run_at?: string | null
+          s3_access_key_id?: string | null
+          s3_bucket?: string | null
+          s3_endpoint?: string | null
+          s3_prefix?: string | null
+          s3_region?: string | null
+          s3_secret_access_key?: string | null
+          schedule?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          gdrive_client_id?: string | null
+          gdrive_client_secret?: string | null
+          gdrive_folder_id?: string | null
+          gdrive_refresh_token?: string | null
+          id?: string
+          last_run_at?: string | null
+          s3_access_key_id?: string | null
+          s3_bucket?: string | null
+          s3_endpoint?: string | null
+          s3_prefix?: string | null
+          s3_region?: string | null
+          s3_secret_access_key?: string | null
+          schedule?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked: string
@@ -324,6 +411,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activity_report: {
+        Args: { _days?: number }
+        Returns: {
+          active_people: number
+          day: string
+          matches: number
+          messages: number
+          reports: number
+          signals: number
+          signups: number
+        }[]
+      }
       admin_exists: { Args: never; Returns: boolean }
       admin_purge_stale_locations: { Args: never; Returns: number }
       admin_review_reactivation: {
