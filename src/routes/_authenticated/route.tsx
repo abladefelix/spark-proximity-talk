@@ -22,8 +22,10 @@ function AuthedLayout() {
   return (
     <ChatSheetProvider>
       <PushManager userId={user?.id ?? null} />
-      <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
-        <Outlet />
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-none pb-24">
+          <Outlet />
+        </div>
         <BottomNav />
       </div>
     </ChatSheetProvider>

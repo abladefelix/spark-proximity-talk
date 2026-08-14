@@ -67,7 +67,7 @@ function ResetPasswordPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
+    <main className="mx-auto flex h-full w-full max-w-md flex-col justify-center overflow-y-auto overscroll-none px-6 py-12">
       <Link to="/" className="flex items-center gap-2">
         <Brand className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground" />
       </Link>
