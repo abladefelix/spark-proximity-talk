@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
