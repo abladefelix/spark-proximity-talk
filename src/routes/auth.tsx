@@ -40,6 +40,28 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Returning from the Google redirect (or resuming the native shell) can land
+  // here with a live session — go straight to the radar instead of waiting.
+  useEffect(() => {
+    let active = true;
+    const check = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (active && data.session) navigate({ to: "/radar" });
+      });
+    };
+    check();
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) navigate({ to: "/radar" });
+    });
+    window.addEventListener("focus", check);
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+      window.removeEventListener("focus", check);
+    };
+  }, [navigate]);
+
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
