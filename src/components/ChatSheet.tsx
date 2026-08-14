@@ -32,12 +32,14 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[88dvh] max-h-[760px] min-h-[520px] w-full max-w-lg flex-col overflow-hidden rounded-t-[2rem] border border-b-0 border-border bg-background shadow-2xl outline-none">
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg flex-col overflow-hidden rounded-t-[2rem] border border-b-0 border-border bg-background shadow-2xl outline-none">
             <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
             <DrawerPrimitive.Description className="sr-only">
               Swipe down to close and pick someone else.
             </DrawerPrimitive.Description>
-            <div className="mx-auto my-2 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/30" />
+            <div className="flex h-7 shrink-0 touch-none items-center justify-center" aria-hidden>
+              <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+            </div>
             {matchId && (
               <ChatPanel matchId={matchId} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background" />
             )}
