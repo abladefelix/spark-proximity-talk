@@ -82,6 +82,13 @@ function formatDistance(m: number) {
   return m < 950 ? `${Math.max(1, Math.round(m))} m away` : `${(m / 1000).toFixed(1)} km away`;
 }
 
+function genderToken(gender: NearbyPerson["gender"]) {
+  if (gender === "male") return "gender-male";
+  if (gender === "female") return "gender-female";
+  return "gender-other";
+}
+
+
 function RadarPage() {
   const navigate = useNavigate();
   const { openChat } = useChatSheet();
