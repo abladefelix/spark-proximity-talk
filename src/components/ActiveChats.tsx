@@ -1,0 +1,113 @@
+import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MessageCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { PersonAvatar } from "@/components/PersonAvatar";
+
+type Row = {
+  matchId: string;
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  gender: "male" | "female" | "other" | null;
+  preview: string | null;
+};
+
+export function ActiveChats() {
+  const queryClient = useQueryClient();
+
+  const { data: rows = [] } = useQuery({
+    queryKey: ["active-chats"],
+    refetchInterval: 15000,
+    queryFn: async (): Promise<Row[]> => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) return [];
+      const { data: matches } = await supabase
+        .from("matches")
+        .select("id, user_a, user_b, created_at")
+        .order("created_at", { ascending: false });
+      if (!matches?.length) return [];
+
+      const otherIds = matches.map((m) => (m.user_a === me ? m.user_b : m.user_a));
+      const [{ data: profiles }, { data: msgs }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url, gender")
+          .in("id", otherIds),
+        supabase
+          .from("messages")
+          .select("match_id, content, created_at")
+          .in(
+            "match_id",
+            matches.map((m) => m.id),
+          )
+          .order("created_at", { ascending: false }),
+      ]);
+
+      return matches.map((m) => {
+        const otherId = m.user_a === me ? m.user_b : m.user_a;
+        const p = profiles?.find((x) => x.id === otherId);
+        const last = msgs?.find((x) => x.match_id === m.id);
+        return {
+          matchId: m.id,
+          id: otherId,
+          username: p?.username ?? "someone",
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          gender: (p?.gender ?? null) as Row["gender"],
+          preview: last?.content ?? null,
+        };
+      });
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("radar-active-chats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["active-chats"] }),
+      )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["active-chats"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-2">
+      {rows.map((row) => (
+        <Link
+          key={row.matchId}
+          to="/chat/$matchId"
+          params={{ matchId: row.matchId }}
+          className="flex items-center gap-3 rounded-2xl border border-primary/40 bg-card/70 px-3 py-2.5 transition-colors hover:bg-secondary/60"
+        >
+          <PersonAvatar
+            path={row.avatar_url}
+            name={row.display_name}
+            username={row.username}
+            gender={row.gender}
+            className="size-10 shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {row.preview ?? "Chat unlocked — say hello"}
+            </p>
+          </div>
+          <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+            <MessageCircle className="size-3.5" />
+            Open
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
