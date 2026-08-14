@@ -5,6 +5,8 @@ interface RadarBeaconProps {
   className?: string;
   active?: boolean;
   size?: "sm" | "md" | "lg";
+  /** Explicit pixel size, overrides the `size` preset (used by the auto-zoom radar). */
+  sizePx?: number;
 }
 
 const sizeClasses = {
@@ -18,6 +20,7 @@ export function RadarBeacon({
   className,
   active,
   size = "md",
+  sizePx,
 }: RadarBeaconProps) {
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
@@ -29,15 +32,17 @@ export function RadarBeacon({
       )}
 
       <div
+        style={sizePx ? { width: sizePx, height: sizePx } : undefined}
         className={cn(
           "relative z-10 flex items-center justify-center overflow-hidden rounded-full bg-card ring-1 ring-border/60",
           active ? "beacon-glow" : "shadow-heat",
-          sizeClasses[size],
+          !sizePx && sizeClasses[size],
         )}
       >
 
         {children}
       </div>
+
 
       {active && (
         <span className="absolute -right-0.5 -top-0.5 z-20 size-2.5 rounded-full bg-primary ring-2 ring-background" />
