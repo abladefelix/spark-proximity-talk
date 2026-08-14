@@ -320,8 +320,8 @@ export function ChatPanel({
                     <p
                       className={`whitespace-pre-wrap break-words px-4 py-2.5 text-[15px] leading-snug ${
                         mine
-                          ? "rounded-[1.25rem] rounded-br-md bg-primary text-primary-foreground shadow-heat"
-                          : "rounded-[1.25rem] rounded-bl-md bg-card/90 text-card-foreground backdrop-blur"
+                          ? "rounded-[1.25rem] rounded-br-md bg-primary/95 text-primary-foreground shadow-heat"
+                          : "rounded-[1.25rem] rounded-bl-md border border-border/20 bg-card/60 text-card-foreground shadow-sm backdrop-blur-xl"
                       }`}
                     >
                       {m.content}
