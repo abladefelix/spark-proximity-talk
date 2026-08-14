@@ -423,11 +423,26 @@ function RadarPage() {
           </button>
         </div>
       )}
+      <div className="mt-4 flex items-center gap-3">
+        <Slider
+          value={[radius]}
+          min={MIN_RADIUS}
+          max={cap}
+          step={50}
+          onValueChange={([v]) => setRadius(v ?? radius)}
+          aria-label="Search range"
+          className="flex-1"
+        />
+        <span className="w-16 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+          {radius < 1000 ? `${radius} m` : `${(radius / 1000).toFixed(1)} km`}
+        </span>
+      </div>
       {!geoError && located && people.length === 0 && !nearby.isLoading && (
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          No one within {radius} m right now.
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          No one within {radius} m — drag the slider to scan wider.
         </p>
       )}
+
 
       <div className="flex flex-1 items-center justify-center py-8">
       <section
