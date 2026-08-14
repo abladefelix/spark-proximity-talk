@@ -50,7 +50,7 @@ export function useNotifications(myId: string | null) {
         { event: "INSERT", schema: "public", table: "signals", filter: `to_user=eq.${myId}` },
         async (payload) => {
           const from = (payload.new as { from_user: string }).from_user;
-          push("New signal on skanAround", `${await nameOf(from)} wants to chat.`);
+          push("New signal on SkanAround", `${await nameOf(from)} wants to chat.`);
           queryClient.invalidateQueries({ queryKey: ["nearby"] });
         },
       )

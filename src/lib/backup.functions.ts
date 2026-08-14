@@ -110,7 +110,7 @@ export const runBackup = createServerFn({ method: "POST" })
 
     const snapshot: Record<string, unknown> = {
       generated_at: new Date().toISOString(),
-      app: "skanAround",
+      app: "SkanAround",
     };
     for (const table of TABLES) {
       const { data: rows, error } = await admin.from(table).select("*").limit(50000);

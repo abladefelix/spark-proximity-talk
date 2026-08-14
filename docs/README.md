@@ -1,4 +1,4 @@
-# skanAround Documentation
+# SkanAround Documentation
 
 | Doc | Contents |
 | --- | --- |

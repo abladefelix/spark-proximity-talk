@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "skanAround — Proximity chat" },
+      { title: "SkanAround — Proximity chat" },
       {
         name: "description",
         content: "Discover people near you, send a signal, and chat when it's mutual.",

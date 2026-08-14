@@ -1,4 +1,4 @@
-# skanAround — Architecture
+# SkanAround — Architecture
 
 Proximity-based discovery and chat. People near each other appear as beacons on a
 radar; a mutual signal unlocks a chat.
