@@ -53,7 +53,7 @@ powershell -c "irm bun.sh/install.ps1 | iex"
 
 ## B. Clone the project
 
-If you have connected GitHub in Lovable, replace `<repo-url>` with your GitHub URL. If not, use the Lovable private storage URL shown in the project settings.
+Replace `<repo-url>` with your GitHub repository URL (or your private storage URL).
 
 ```bash
 # Pick a folder for your project
@@ -158,15 +158,13 @@ npx cap open android
 
 ## G. Push your local changes back to GitHub
 
-If you connected GitHub in Lovable, run:
+Run:
 
 ```bash
 git add .
 git commit -m "Update from VS Code"
 git push origin main
 ```
-
-Lovable will sync the changes back into the editor.
 
 ---
 
