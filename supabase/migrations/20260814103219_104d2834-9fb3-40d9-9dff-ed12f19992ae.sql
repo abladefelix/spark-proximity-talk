@@ -1,0 +1,1 @@
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS max_radius_m integer NOT NULL DEFAULT 2000;
