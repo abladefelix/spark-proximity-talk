@@ -358,7 +358,10 @@ function RadarPage() {
     // published location, so the radar is never blank just because the
     // device watcher is slow.
     enabled: true,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev,
+
     queryFn: async () => {
       const { data, error } = await supabase.rpc("nearby_people", { radius_m: radius });
       if (error) throw error;
