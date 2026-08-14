@@ -20,6 +20,7 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { RadarBeacon } from "@/components/RadarBeacon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
+import { IncomingSignals } from "@/components/IncomingSignals";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 import { Brand, useBranding } from "@/components/Brand";
@@ -269,6 +270,10 @@ function RadarPage() {
           <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
         </div>
       </div>
+
+      <IncomingSignals />
+
+
 
       <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
         <DialogContent className="max-w-xs rounded-3xl text-center">
