@@ -153,8 +153,14 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
 
   async function uploadPicture(file: File) {
     if (!me) return;
-    if (!file.type.startsWith("image/")) return toast.error("Choose an image file");
-    if (file.size > 10 * 1024 * 1024) return toast.error("Pictures must be under 10 MB");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Pictures must be under 10 MB");
+      return;
+    }
 
     setUploading(true);
     const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
