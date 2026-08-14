@@ -468,7 +468,7 @@ function RadarPage() {
 
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
