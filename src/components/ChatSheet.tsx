@@ -72,7 +72,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="Chat"
           className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-4 duration-200"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
+          style={{ paddingTop: "var(--safe-top)" }}
         >
           <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
