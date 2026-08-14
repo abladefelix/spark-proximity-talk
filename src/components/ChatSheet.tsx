@@ -27,8 +27,8 @@ function ChatBackdrop() {
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0 opacity-60 saturate-90 dark:opacity-50" style={{ background: css }} />
-      <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl dark:bg-background/70" />
+      <div className="absolute inset-0 opacity-50 dark:opacity-40" style={{ background: css }} />
+      <div className="absolute inset-0 bg-background/75 backdrop-blur-2xl" />
     </div>
   );
 }
@@ -46,30 +46,42 @@ export function useChatSheet() {
   return ctx;
 }
 
-/** Tracks the visual viewport so the chat sits above the keyboard instead of scrolling the header away. */
-function useVisualViewport() {
-  const [viewport, setViewport] = useState<{ top: number; height: string | number }>({ top: 0, height: "100%" });
+/**
+ * Keyboard-aware height. iOS shrinks visualViewport when the keyboard opens;
+ * we mirror that height so the composer sits right above the keyboard and the
+ * header stays pinned instead of scrolling away.
+ */
+function useKeyboardInset() {
+  const [inset, setInset] = useState(0);
 
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const update = () => setViewport({ top: vv.offsetTop, height: vv.height });
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        setInset(overlap > 80 ? overlap : 0);
+      });
+    };
     update();
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
     return () => {
+      cancelAnimationFrame(frame);
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
     };
   }, []);
 
-  return viewport;
+  return inset;
 }
 
 export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const [matchId, setMatchId] = useState<string | null>(null);
   const pushedRef = useRef(false);
-  const viewport = useVisualViewport();
+  const keyboard = useKeyboardInset();
 
   const openChat = useCallback((id: string) => {
     setMatchId(id);
@@ -78,18 +90,17 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       pushedRef.current = true;
     }
   }, []);
+
   const closeChat = useCallback(() => {
     setMatchId(null);
-    // Drop the history entry we added so the next back press behaves normally.
     if (pushedRef.current) {
       pushedRef.current = false;
       window.history.back();
     }
   }, []);
+
   const value = useMemo(() => ({ openChat, closeChat }), [openChat, closeChat]);
 
-  // Hardware/browser back closes the chat instead of leaving the app.
-  // Registered once so it can never be torn down mid-gesture.
   useEffect(() => {
     const onPop = () => {
       pushedRef.current = false;
@@ -98,7 +109,6 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
-
 
   return (
     <ChatSheetContext.Provider value={value}>
@@ -109,20 +119,15 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           role="dialog"
           aria-modal="true"
           aria-label="Chat"
-          className="fixed left-0 right-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-4 duration-200"
-          style={{ top: viewport.top, height: viewport.height }}
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-2 duration-200"
+          style={{ paddingBottom: keyboard }}
         >
           <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ChatPanel
-              key={matchId}
-              matchId={matchId}
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent"
-            />
+            <ChatPanel key={matchId} matchId={matchId} />
           </div>
         </div>
       )}
     </ChatSheetContext.Provider>
   );
 }
-

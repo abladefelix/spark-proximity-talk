@@ -1,17 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, ImagePlus, LoaderCircle, MapPin, Send } from "lucide-react";
+import { ArrowUp, ChevronLeft, ImagePlus, LoaderCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-
 
 type Message = {
   id: string;
@@ -27,21 +24,24 @@ type Message = {
 function lastSeenLabel(iso: string | null | undefined) {
   if (!iso) return "";
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 5) return "active now";
-  if (mins < 60) return `active ${mins}m ago`;
-  if (mins < 1440) return `active ${Math.round(mins / 60)}h ago`;
-  return "active recently";
+  if (mins < 5) return "Active now";
+  if (mins < 60) return `Active ${mins}m ago`;
+  if (mins < 1440) return `Active ${Math.round(mins / 60)}h ago`;
+  return "Active recently";
 }
 
-export function ChatPanel({
-  matchId,
-  className,
-}: {
-  matchId: string;
-  /** Optional element rendered before the avatar in the header (back arrow, grabber, etc.). */
-  leading?: React.ReactNode;
-  className?: string;
-}) {
+const dayLabel = (iso: string) => {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(Date.now() - 86400000);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+export function ChatPanel({ matchId, className }: { matchId: string; leading?: React.ReactNode; className?: string }) {
   const queryClient = useQueryClient();
   const { closeChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
@@ -49,10 +49,9 @@ export function ChatPanel({
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
@@ -88,13 +87,11 @@ export function ChatPanel({
         .order("created_at", { ascending: true });
       if (error) throw error;
       const rows = (data ?? []) as Message[];
-      const imagePaths = rows.filter((message) => message.kind === "image").map((message) => message.content);
+      const imagePaths = rows.filter((m) => m.kind === "image").map((m) => m.content);
       if (!imagePaths.length) return rows;
       const { data: signed } = await supabase.storage.from("chat-media").createSignedUrls(imagePaths, 3600);
       const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
-      return rows.map((message) =>
-        message.kind === "image" ? { ...message, mediaUrl: urls.get(message.content) } : message,
-      );
+      return rows.map((m) => (m.kind === "image" ? { ...m, mediaUrl: urls.get(m.content) } : m));
     },
   });
 
@@ -112,20 +109,27 @@ export function ChatPanel({
     };
   }, [matchId, queryClient]);
 
-  useEffect(() => {
-    const messageList = messagesRef.current;
-    if (!messageList) return;
-    messageList.scrollTo({ top: messageList.scrollHeight, behavior: "smooth" });
+  // Always keep the newest message in view.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages.length]);
+
+  // Grow the composer with its content, capped so the transcript keeps room.
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [text]);
 
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
     const content = text.trim();
     if (!content || !me) return;
     setText("");
-    const { error } = await supabase
-      .from("messages")
-      .insert({ match_id: matchId, sender_id: me, content });
+    const { error } = await supabase.from("messages").insert({ match_id: matchId, sender_id: me, content });
     if (error) {
       toast.error("Message didn't send");
       setText(content);
@@ -147,7 +151,6 @@ export function ChatPanel({
     }
   }
 
-
   async function uploadPicture(file: File) {
     if (!me) return;
     if (!file.type.startsWith("image/")) {
@@ -162,21 +165,17 @@ export function ChatPanel({
     setUploading(true);
     const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${matchId}/${me}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage.from("chat-media").upload(path, file, {
-      contentType: file.type,
-      upsert: false,
-    });
+    const { error: uploadError } = await supabase.storage
+      .from("chat-media")
+      .upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) {
       setUploading(false);
       toast.error("Picture didn't upload");
       return;
     }
-    const { error: messageError } = await supabase.from("messages").insert({
-      match_id: matchId,
-      sender_id: me,
-      kind: "image",
-      content: path,
-    });
+    const { error: messageError } = await supabase
+      .from("messages")
+      .insert({ match_id: matchId, sender_id: me, kind: "image", content: path });
     setUploading(false);
     if (messageError) {
       await supabase.storage.from("chat-media").remove([path]);
@@ -186,29 +185,20 @@ export function ChatPanel({
     queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
   }
 
-  const dayLabel = (iso: string) => {
-    const d = new Date(iso);
-    const today = new Date();
-    const yesterday = new Date(Date.now() - 86400000);
-    if (d.toDateString() === today.toDateString()) return "Today";
-    if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  };
-  const timeLabel = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const name = other?.display_name ?? other?.username ?? "Chat";
 
   return (
-    <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
+    <div className={className ?? "flex h-full min-h-0 flex-col"}>
+      {/* Header */}
       <header
-        className="relative flex shrink-0 items-center gap-2 px-2 pb-2.5"
+        className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background/70 px-1.5 pb-2 backdrop-blur-xl"
         style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
       >
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-background/80 backdrop-blur-2xl" />
         <button
           type="button"
           onClick={closeChat}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary transition-transform active:scale-90"
           aria-label="Back"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-primary transition active:scale-90"
         >
           <ChevronLeft className="size-7" strokeWidth={2.5} />
         </button>
@@ -223,7 +213,7 @@ export function ChatPanel({
           />
           <div className="min-w-0">
             <p className="flex items-center gap-1 truncate text-[16px] font-semibold leading-tight tracking-[-0.01em]">
-              {other?.display_name ?? other?.username ?? "Chat"}
+              {name}
               {other?.verified && <VerifiedBadge className="size-3.5" />}
             </p>
             <p className="truncate text-[11.5px] leading-tight text-muted-foreground">
@@ -233,14 +223,17 @@ export function ChatPanel({
         </div>
       </header>
 
+      {/* Transcript */}
       <div
-        ref={messagesRef}
+        ref={scrollRef}
         data-scrollable
         data-selectable
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-transparent px-3 pb-2 pt-3"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3 pt-4"
+        style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="mt-auto" />
-        <div className="mb-5 flex flex-col items-center px-8 text-center">
+
+        <div className="mb-6 flex flex-col items-center px-8 text-center">
           <PersonAvatar
             path={other?.avatar_url}
             name={other?.display_name}
@@ -248,9 +241,7 @@ export function ChatPanel({
             gender={other?.gender as import("@/components/PersonAvatar").Gender}
             className="size-16 rounded-full"
           />
-          <p className="mt-2.5 text-[15px] font-semibold leading-tight">
-            {other?.display_name ?? other?.username ?? ""}
-          </p>
+          <p className="mt-2.5 text-[15px] font-semibold leading-tight">{other ? name : ""}</p>
           <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
             You both signalled nearby — this conversation stays between you two.
           </p>
@@ -263,32 +254,29 @@ export function ChatPanel({
           const newDay =
             !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
           const grouped =
-            !newDay && prev?.sender_id === m.sender_id &&
+            !newDay &&
+            prev?.sender_id === m.sender_id &&
             new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000;
           const lastOfGroup =
             !next ||
             next.sender_id !== m.sender_id ||
             new Date(next.created_at).getTime() - new Date(m.created_at).getTime() >= 5 * 60000;
 
-          const corner = mine
-            ? `rounded-[22px] ${lastOfGroup ? "rounded-br-[8px]" : ""}`
-            : `rounded-[22px] ${lastOfGroup ? "rounded-bl-[8px]" : ""}`;
-          const skin = mine
-            ? "bg-primary text-primary-foreground shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-            : "bg-secondary text-foreground";
+          const corner = `rounded-[20px] ${lastOfGroup ? (mine ? "rounded-br-[7px]" : "rounded-bl-[7px]") : ""}`;
+          const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
 
           return (
             <div key={m.id} className="shrink-0">
               {newDay && (
                 <div className="my-4 flex justify-center">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
                     {dayLabel(m.created_at)}
                   </span>
                 </div>
               )}
 
               <div
-                className={`flex items-end gap-1.5 ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
+                className={`flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
               >
                 <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
                   {m.kind === "image" ? (
@@ -297,14 +285,9 @@ export function ChatPanel({
                         href={m.mediaUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className={`relative block overflow-hidden ${corner} bg-secondary`}
+                        className={`block overflow-hidden ${corner} bg-secondary`}
                       >
-                        <img
-                          src={m.mediaUrl}
-                          alt="Shared in chat"
-                          className="max-h-72 w-full object-cover"
-                          loading="lazy"
-                        />
+                        <img src={m.mediaUrl} alt="Shared in chat" className="max-h-72 w-full object-cover" loading="lazy" />
                       </a>
                     ) : (
                       <div className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}>
@@ -336,12 +319,12 @@ export function ChatPanel({
             </div>
           );
         })}
-        <div ref={bottomRef} />
       </div>
 
+      {/* Composer */}
       <form
         onSubmit={send}
-        className="z-10 flex shrink-0 items-end gap-2 bg-background/80 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl"
+        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background/70 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl"
       >
         <input
           ref={fileRef}
@@ -354,47 +337,43 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
-          className="size-10 shrink-0 rounded-full text-muted-foreground"
           aria-label="Upload a picture"
           disabled={uploading}
           onClick={() => fileRef.current?.click()}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
         >
-          {uploading ? <LoaderCircle className="animate-spin" /> : <ImagePlus className="size-[22px]" />}
-        </Button>
-        <Textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={settings.chat_prompt_text}
-          className="min-h-[40px] max-h-[132px] min-w-0 flex-1 resize-none rounded-[20px] border-0 bg-secondary px-4 py-2 text-[16px] leading-snug shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
-          rows={1}
-          maxLength={settings.max_message_len}
-          onFocus={() => {
-            window.setTimeout(() => {
-              messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight });
-            }, 250);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-        />
-        <Button
+          {uploading ? <LoaderCircle className="size-5 animate-spin" /> : <ImagePlus className="size-[22px]" />}
+        </button>
+
+        <div className="flex min-w-0 flex-1 items-end rounded-[20px] bg-secondary px-3.5 py-[7px]">
+          <textarea
+            ref={inputRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={settings.chat_prompt_text}
+            rows={1}
+            maxLength={settings.max_message_len}
+            className="max-h-[120px] w-full resize-none border-0 bg-transparent p-0 text-[16px] leading-[1.35] outline-none placeholder:text-muted-foreground/70"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+          />
+        </div>
+
+        <button
           type="submit"
-          size="icon"
           disabled={!text.trim()}
-          className="size-10 shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-30"
+          aria-label="Send"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
         >
-          <Send className="size-[18px]" />
-        </Button>
+          <ArrowUp className="size-5" strokeWidth={2.5} />
+        </button>
       </form>
     </div>
   );
 }
-
-
