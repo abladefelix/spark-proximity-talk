@@ -10,6 +10,7 @@ import { Brand } from "@/components/Brand";
 import { useSettings } from "@/hooks/useAppSettings";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in to SkanAround — Chat with people around you" },
