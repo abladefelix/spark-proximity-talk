@@ -430,7 +430,11 @@ function RadarPage() {
   const onPointerDown = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     dragged.current = false;
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    // Only capture when a gesture is actually possible, so vertical page
+    // scrolling keeps working at the default zoom level.
+    if (viewRef.current.zoom > 1.001 || pointers.current.size > 1) {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const prev = pointers.current.get(e.pointerId);
