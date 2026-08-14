@@ -574,33 +574,47 @@ function RadarPage() {
                 className="relative flex items-center justify-center"
                 style={{ width: beaconSize, height: beaconSize }}
               >
-                {/* soft glow pool */}
-                <span
-                  aria-hidden
-                  className={`absolute inset-0 rounded-full blur-md ${
-                    person.verified ? "bg-[oklch(0.78_0.14_190)]/35" : "bg-primary/30"
-                  }`}
-                />
-                {/* ping for people who signaled you */}
-                {person.they_signaled && !person.match_id && (
-                  <span
-                    aria-hidden
-                    className={`beacon-ping absolute inset-0 rounded-full border ${
-                      person.verified
-                        ? "border-[oklch(0.78_0.14_190)]/60"
-                        : "border-primary/60"
-                    }`}
-                  />
-                )}
-                {/* the dot */}
-                <span
-                  className={`relative z-10 rounded-full ring-2 ring-background heartbeat-glow ${
-                    person.verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary"
-                  }`}
-                  style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
-                />
-
+                {(() => {
+                  const token = genderToken(person.gender);
+                  const glowClass = {
+                    "gender-male": "bg-gender-male/30",
+                    "gender-female": "bg-gender-female/30",
+                    "gender-other": "bg-gender-other/30",
+                  }[token];
+                  const pingClass = {
+                    "gender-male": "border-gender-male/60",
+                    "gender-female": "border-gender-female/60",
+                    "gender-other": "border-gender-other/60",
+                  }[token];
+                  const dotClass = {
+                    "gender-male": "bg-gender-male text-gender-male",
+                    "gender-female": "bg-gender-female text-gender-female",
+                    "gender-other": "bg-gender-other text-gender-other",
+                  }[token];
+                  return (
+                    <>
+                      {/* soft glow pool */}
+                      <span
+                        aria-hidden
+                        className={`absolute inset-0 rounded-full blur-md ${glowClass}`}
+                      />
+                      {/* ping for people who signaled you */}
+                      {person.they_signaled && !person.match_id && (
+                        <span
+                          aria-hidden
+                          className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
+                        />
+                      )}
+                      {/* the dot */}
+                      <span
+                        className={`relative z-10 rounded-full ring-2 ring-background heartbeat-glow ${dotClass}`}
+                        style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
+                      />
+                    </>
+                  );
+                })()}
               </span>
+
             </button>
 
           ))}
