@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Radar } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useMaxRadius, DEFAULT_MAX_RADIUS } from "@/hooks/useMaxRadius";
+import { useSettings } from "@/hooks/useAppSettings";
 
 const MIN_RADIUS = 100;
 
@@ -11,13 +12,15 @@ function label(m: number) {
 
 export function ScanRangeSetting() {
   const { data: maxRadius } = useMaxRadius();
+  const settings = useSettings();
   const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
-  const [radius, setRadius] = useState(500);
+  const [radius, setRadius] = useState(settings.default_radius_m);
 
   useEffect(() => {
-    const saved = Number(localStorage.getItem("skan-radius") ?? "500");
+    const saved = Number(localStorage.getItem("skan-radius") ?? "");
     if (Number.isFinite(saved) && saved > 0) setRadius(saved);
-  }, []);
+    else setRadius(settings.default_radius_m);
+  }, [settings.default_radius_m]);
 
   const value = Math.min(Math.max(radius, MIN_RADIUS), cap);
 
