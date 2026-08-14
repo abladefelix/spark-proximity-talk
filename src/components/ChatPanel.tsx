@@ -237,7 +237,7 @@ export function ChatPanel({
             path={other?.avatar_url}
             name={other?.display_name}
             username={other?.username ?? "?"}
-            gender={other?.gender}
+            gender={other?.gender as import("@/components/PersonAvatar").Gender}
             className="size-16 rounded-full ring-2 ring-card"
           />
           <p className="mt-3 text-sm font-medium leading-snug text-muted-foreground">
