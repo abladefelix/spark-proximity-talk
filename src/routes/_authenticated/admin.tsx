@@ -633,6 +633,12 @@ function AdminPage() {
                     <DropdownMenuItem onSelect={() => void hideFromRadar(r.reported)}>
                       <EyeOff className="size-4" /> Hide from radar
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onSelect={() => void setBanned(r.reported, true)}
+                    >
+                      <Ban className="size-4" /> Ban member
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void wipeActivity(r.reported)}>
                       <Trash2 className="size-4" /> Wipe their activity
                     </DropdownMenuItem>
@@ -657,8 +663,43 @@ function AdminPage() {
             )}
           </ul>
         </TabsContent>
+
+        <TabsContent value="appeals" className="mt-3">
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {appeals.map((a) => (
+              <li key={a.id} className="flex items-center gap-2.5 px-2.5 py-2">
+                <PersonAvatar
+                  path={a.person?.avatar_url ?? null}
+                  name={a.person?.display_name ?? null}
+                  username={a.person?.username ?? "unknown"}
+                  className="size-8"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-tight">
+                    @{a.person?.username ?? "unknown"}
+                  </p>
+                  <p className="truncate text-[11px] leading-tight text-muted-foreground">
+                    {a.message}
+                  </p>
+                </div>
+                <Button size="sm" variant="heat" onClick={() => void reviewAppeal(a.id, true)}>
+                  Unban
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => void reviewAppeal(a.id, false)}>
+                  Reject
+                </Button>
+              </li>
+            ))}
+            {appeals.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">
+                No reactivation requests.
+              </li>
+            )}
+          </ul>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
