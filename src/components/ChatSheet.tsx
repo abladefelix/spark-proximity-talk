@@ -83,7 +83,8 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           role="dialog"
           aria-modal="true"
           aria-label="Chat"
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-4 duration-200"
+          className="fixed left-0 right-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-4 duration-200"
+          style={{ top: viewport.top, height: viewport.height }}
         >
           <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
