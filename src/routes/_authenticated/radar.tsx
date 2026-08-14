@@ -355,6 +355,98 @@ function RadarPage() {
     };
   }, [people, scopeSize, radius]);
 
+  // ---- Zoom & pan on the radar scope -------------------------------------
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 6;
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
+  viewRef.current = { zoom, pan };
+
+  const clampPan = (z: number, p: { x: number; y: number }) => {
+    const scope = scopeSize || 320;
+    const slack = (scope * (z - 1)) / 2 + scope * 0.08 * (z - 1);
+    return {
+      x: Math.max(-slack, Math.min(slack, p.x)),
+      y: Math.max(-slack, Math.min(slack, p.y)),
+    };
+  };
+
+  const zoomAt = (nextZoomRaw: number, px: number, py: number) => {
+    const { zoom: z, pan: p } = viewRef.current;
+    const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoomRaw));
+    if (next === z) return;
+    const k = next / z;
+    // Anchor the point under the cursor. Transform is translate(pan) scale(z)
+    // about the scope centre.
+    const c = (scopeSize || 320) / 2;
+    const ax = px - c;
+    const ay = py - c;
+    const nextPan = { x: ax - (ax - p.x) * k, y: ay - (ay - p.y) * k };
+    setZoom(next);
+    setPan(next <= 1.001 ? { x: 0, y: 0 } : clampPan(next, nextPan));
+  };
+  const zoomAtRef = useRef(zoomAt);
+  zoomAtRef.current = zoomAt;
+
+  useEffect(() => {
+    const el = scopeRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      const rect = el.getBoundingClientRect();
+      const { zoom: z } = viewRef.current;
+      zoomAtRef.current(z * Math.exp(-dy * 0.0018), e.clientX - rect.left, e.clientY - rect.top);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Pointer drag to pan, two-finger pinch to zoom.
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ dist: number; zoom: number } | null>(null);
+  const dragged = useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    dragged.current = false;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const prev = pointers.current.get(e.pointerId);
+    if (!prev) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = [...pointers.current.values()];
+    const el = scopeRef.current;
+    if (pts.length >= 2 && el) {
+      const [a, b] = pts as [{ x: number; y: number }, { x: number; y: number }];
+      const dist = Math.hypot(b.x - a.x, b.y - a.y);
+      if (!gesture.current) gesture.current = { dist, zoom: viewRef.current.zoom };
+      const rect = el.getBoundingClientRect();
+      zoomAtRef.current(
+        gesture.current.zoom * (dist / gesture.current.dist),
+        (a.x + b.x) / 2 - rect.left,
+        (a.y + b.y) / 2 - rect.top,
+      );
+      dragged.current = true;
+      return;
+    }
+    if (viewRef.current.zoom <= 1.001) return;
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    if (Math.abs(dx) + Math.abs(dy) > 1) dragged.current = true;
+    setPan((p) => clampPan(viewRef.current.zoom, { x: p.x + dx, y: p.y + dy }));
+  };
+  const endPointer = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) gesture.current = null;
+  };
+
+  const stepZoom = (factor: number) => {
+    const c = (scopeSize || 320) / 2;
+    zoomAtRef.current(viewRef.current.zoom * factor, c, c);
+  };
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
