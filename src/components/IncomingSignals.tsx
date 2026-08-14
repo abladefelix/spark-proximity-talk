@@ -85,13 +85,25 @@ export function IncomingSignals() {
       if (!match) throw new Error("Couldn't open the chat — try again");
       return match.id;
     },
-    onSuccess: (matchId) => {
+    onSuccess: (matchId, person) => {
       queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
       openChat(matchId);
+      sendPush({
+        data: {
+          kind: "match",
+          recipientId: person.from_user,
+          title: "It's mutual",
+          body: "Your chat on SHATTA is unlocked",
+          relatedId: matchId,
+        },
+      }).catch(() => {
+        /* push failure is non-fatal */
+      });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not accept"),
   });
+
 
   const decline = useMutation({
     mutationFn: async (person: Incoming) => {
