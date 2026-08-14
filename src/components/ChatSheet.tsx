@@ -121,14 +121,10 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
         noBodyStyles
         preventScrollRestoration={false}
         disablePreventScroll
-        modal={false}
       >
         <DrawerPrimitive.Portal>
-          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] transition-colors duration-300" />
-          <DrawerPrimitive.Content
-            data-vaul-no-drag={false}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(92dvh,800px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/40 shadow-sheet outline-none backdrop-blur-3xl dark:bg-card/30 dark:shadow-sheet-dark"
-          >
+          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px] transition-colors duration-300" />
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(92dvh,800px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/40 shadow-sheet outline-none backdrop-blur-3xl dark:bg-card/30 dark:shadow-sheet-dark">
             <ChatBackdrop />
             <div className="relative z-10 flex h-full flex-col overflow-hidden">
               <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
@@ -158,4 +154,3 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
     </ChatSheetContext.Provider>
   );
 }
-
