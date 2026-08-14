@@ -450,6 +450,29 @@ function AdminPage() {
         <Stat icon={Flag} label="reports" value={Number(stats?.reports ?? 0)} />
       </div>
 
+      {isAdmin && (
+        <div className="mt-3 rounded-xl border border-border px-3 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Accent colour</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {ACCENT_PRESETS.map((preset) => (
+              <button
+                key={preset.hue}
+                type="button"
+                aria-label={preset.name}
+                onClick={() => void setAccent(preset.hue)}
+                className={`size-7 rounded-full border transition ${
+                  Math.round(accentHue ?? DEFAULT_HUE) === preset.hue
+                    ? "border-foreground ring-2 ring-foreground/30"
+                    : "border-border"
+                }`}
+                style={{ background: accentSwatch(preset.hue) }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+
       <Tabs defaultValue="people" className="mt-4">
         <TabsList className="w-full">
           <TabsTrigger value="people" className="flex-1">
