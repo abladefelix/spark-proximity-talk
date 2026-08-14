@@ -701,7 +701,11 @@ function RadarPage() {
                 </div>
               ) : (
                 <>
-                  {selected.match_id ? (
+                  {!settings.chat_enabled ? (
+                    <Button variant="ghost" className="w-full" disabled>
+                      Chat is off right now
+                    </Button>
+                  ) : selected.match_id ? (
                     <Button
                       variant="heat"
                       className="w-full"
@@ -732,13 +736,15 @@ function RadarPage() {
                     >
                       <Ban className="size-3.5" /> Block
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5"
-                      onClick={() => setReporting(true)}
-                    >
-                      <Flag className="size-3.5" /> Report
-                    </button>
+                    {settings.reports_enabled && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5"
+                        onClick={() => setReporting(true)}
+                      >
+                        <Flag className="size-3.5" /> Report
+                      </button>
+                    )}
                   </div>
                 </>
               )}

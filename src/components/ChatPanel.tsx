@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useAppSettings";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -273,10 +274,10 @@ export function ChatPanel({
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Say something…"
+            placeholder={settings.chat_prompt_text}
             className="min-h-[44px] max-h-[160px] flex-1 resize-none border-0 bg-transparent py-3.5 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
-            maxLength={2000}
+            maxLength={settings.max_message_len}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
