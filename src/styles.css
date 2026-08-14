@@ -256,6 +256,27 @@
     touch-action: pan-y;
   }
 
+  /* Browser-only surfaces (admin console) scroll like a normal web page. */
+  body[data-web-page] {
+    position: static;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100dvh;
+    user-select: auto;
+    -webkit-user-select: auto;
+  }
+
+  body[data-web-page] #app-scroll {
+    position: static;
+    inset: auto;
+    width: auto;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    touch-action: auto;
+    overscroll-behavior: auto;
+  }
+
   /* Radar and other fixed pages should never scroll or bounce. */
   [data-fixed-page] {
     overflow: hidden;
