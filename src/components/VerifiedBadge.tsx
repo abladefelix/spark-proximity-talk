@@ -5,7 +5,7 @@ export function VerifiedBadge({ className }: { className?: string }) {
     <span
       aria-label="Verified profile"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full text-primary",
+        "inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-primary",
         "verified-glow",
         className,
       )}
