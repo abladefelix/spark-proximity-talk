@@ -41,9 +41,11 @@ export function ChatPanel({
   className?: string;
 }) {
   const queryClient = useQueryClient();
+  const sendPush = useServerFn(sendPushNotification);
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
