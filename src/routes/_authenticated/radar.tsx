@@ -27,7 +27,7 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import logoAsset from "@/assets/skanaround-logo.png";
-import { Brand, useBranding } from "@/components/Brand";
+import { Brand, BrandMark, useBranding } from "@/components/Brand";
 
 const logoUrl = logoAsset;
 
