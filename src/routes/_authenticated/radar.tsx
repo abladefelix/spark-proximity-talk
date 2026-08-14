@@ -453,10 +453,6 @@ function RadarPage() {
     if (pointers.current.size < 2) gesture.current = null;
   };
 
-  const stepZoom = (factor: number) => {
-    const c = (scopeSize || 320) / 2;
-    zoomAtRef.current(viewRef.current.zoom * factor, c, c);
-  };
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
