@@ -33,6 +33,8 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
 import { useMaxRadius } from "@/hooks/useMaxRadius";
+import { useChatTtlDays } from "@/hooks/useChatTtl";
+
 
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
