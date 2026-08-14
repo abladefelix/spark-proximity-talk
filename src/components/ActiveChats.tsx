@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle } from "lucide-react";
+import { ChevronDown, MessageCircle } from "lucide-react";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
@@ -18,6 +18,7 @@ type Row = {
 export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
+  const [expanded, setExpanded] = useState(false);
 
   const { data: rows = [] } = useQuery({
     queryKey: ["active-chats"],
@@ -82,14 +83,14 @@ export function ActiveChats() {
   if (rows.length === 0) return null;
 
   const collapsible = rows.length > 2;
-  const shown = collapsible && !open ? [] : rows;
+  const shown = collapsible && !expanded ? [] : rows;
 
   return (
     <div className="mt-4 rounded-2xl border border-primary/30 bg-card/60">
       {collapsible && (
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setExpanded((v) => !v)}
           className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
         >
           <div className="flex -space-x-3">
@@ -107,18 +108,18 @@ export function ActiveChats() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{rows.length} chats unlocked</p>
             <p className="truncate text-xs text-muted-foreground">
-              {open ? "Tap to collapse" : "Tap to see everyone"}
+              {expanded ? "Tap to collapse" : "Tap to see everyone"}
             </p>
           </div>
           <ChevronDown
-            className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+            className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
           />
         </button>
       )}
 
       <div
         className={
-          collapsible && open
+          collapsible && expanded
             ? "max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5"
             : "space-y-1 p-1.5"
         }
