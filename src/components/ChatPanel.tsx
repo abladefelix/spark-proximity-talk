@@ -286,7 +286,7 @@ export function ChatPanel({
       <form
         onSubmit={send}
         data-vaul-no-drag
-        className="z-10 mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] mt-2 shrink-0 rounded-[26px] border border-border/60 bg-card p-2 shadow-card"
+        className="z-10 mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] mt-2 shrink-0 rounded-[26px] border border-border/50 bg-card/70 p-2 shadow-card backdrop-blur-md"
       >
 
         <div className="flex items-end gap-1.5">
