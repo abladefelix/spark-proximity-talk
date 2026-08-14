@@ -95,8 +95,29 @@ function AdminPage() {
   const { data: accentHue } = useAccentHue();
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
+  const { data: maxRadius } = useMaxRadius();
+  const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [savingLogo, setSavingLogo] = useState(false);
+
+  async function saveMaxRadius() {
+    const value = Math.round(Number(maxRadiusDraft ?? maxRadius ?? 2000));
+    if (!Number.isFinite(value) || value < 100) {
+      toast.error("Enter a range of at least 100 m");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ max_radius_m: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-max-radius"] });
+    setMaxRadiusDraft(null);
+    toast.success("Maximum range updated");
+  }
 
   async function setAccent(hue: number) {
     const { error } = await supabase
@@ -110,6 +131,7 @@ function AdminPage() {
     await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
     toast.success("Theme colour updated");
   }
+
 
   async function saveAppName() {
     const name = (nameDraft ?? "").trim();
