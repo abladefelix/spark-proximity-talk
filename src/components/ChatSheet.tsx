@@ -61,7 +61,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-colors duration-300" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/80 shadow-[0_-16px_50px_-18px_rgba(0,0,0,0.35)] backdrop-blur-2xl outline-none dark:bg-card/75 dark:shadow-[0_-16px_50px_-18px_rgba(0,0,0,0.55)]">
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/80 shadow-sheet backdrop-blur-2xl outline-none dark:bg-card/75 dark:shadow-sheet-dark">
             <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
             <DrawerPrimitive.Description className="sr-only">
               Swipe down anywhere to close and pick someone else.
