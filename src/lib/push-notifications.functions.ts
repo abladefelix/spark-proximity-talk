@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { sendApnsNotification, shouldDeleteApnsToken } from "./push-notifications.server";
+
 
 export const registerPushToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
