@@ -72,7 +72,7 @@ export function BrandMark({
         width: size,
         height: size,
         display: "inline-block",
-        backgroundColor: "hsl(var(--primary))",
+        backgroundColor: "var(--primary)",
         WebkitMaskImage: `url(${logo})`,
         maskImage: `url(${logo})`,
         WebkitMaskRepeat: "no-repeat",
