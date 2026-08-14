@@ -230,12 +230,21 @@ function RadarPage() {
       );
     })();
 
+    // Stationary phones stop emitting position updates, which would make the
+    // user look offline to everyone else. Re-publish the last fix periodically.
+    heartbeat = setInterval(() => {
+      const coords = lastCoords.current;
+      if (coords) void push(coords);
+    }, 60000);
+
     return () => {
       cancelled = true;
+      if (heartbeat) clearInterval(heartbeat);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
       if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
     };
   }, [visible, queryClient, retryKey, askLocation]);
+
 
 
 
