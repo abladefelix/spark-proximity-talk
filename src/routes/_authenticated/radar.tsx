@@ -76,6 +76,8 @@ function RadarPage() {
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
 
