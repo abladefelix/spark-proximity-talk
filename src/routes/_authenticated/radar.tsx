@@ -27,6 +27,9 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import { Brand, BrandMark } from "@/components/Brand";
+import { Slider } from "@/components/ui/slider";
+import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
+
 
 
 
@@ -78,13 +81,25 @@ function RadarPage() {
   const { openChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
-  const radius = 500;
+  const { data: maxRadius } = useMaxRadius();
+  const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
+  const [radiusPref, setRadiusPref] = useState(500);
+  useEffect(() => {
+    const saved = Number(localStorage.getItem("skan-radius") ?? "500");
+    if (Number.isFinite(saved) && saved > 0) setRadiusPref(saved);
+  }, []);
+  const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
+  const setRadius = (v: number) => {
+    setRadiusPref(v);
+    localStorage.setItem("skan-radius", String(v));
+  };
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+
 
 
   const [reporting, setReporting] = useState(false);
@@ -408,11 +423,26 @@ function RadarPage() {
           </button>
         </div>
       )}
+      <div className="mt-4 flex items-center gap-3">
+        <Slider
+          value={[radius]}
+          min={MIN_RADIUS}
+          max={cap}
+          step={50}
+          onValueChange={([v]) => setRadius(v ?? radius)}
+          aria-label="Search range"
+          className="flex-1"
+        />
+        <span className="w-16 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+          {radius < 1000 ? `${radius} m` : `${(radius / 1000).toFixed(1)} km`}
+        </span>
+      </div>
       {!geoError && located && people.length === 0 && !nearby.isLoading && (
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          No one within {radius} m right now.
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          No one within {radius} m — drag the slider to scan wider.
         </p>
       )}
+
 
       <div className="flex flex-1 items-center justify-center py-8">
       <section
@@ -444,8 +474,10 @@ function RadarPage() {
           >
             <RadarBeacon
               sizePx={beaconSize}
+              verified={person.verified}
               active={person.they_signaled && !person.match_id}
             >
+
               <PersonAvatar
                 path={person.avatar_url}
                 name={person.display_name}

@@ -32,6 +32,8 @@ import {
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
+import { useMaxRadius } from "@/hooks/useMaxRadius";
+
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
@@ -95,8 +97,29 @@ function AdminPage() {
   const { data: accentHue } = useAccentHue();
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
+  const { data: maxRadius } = useMaxRadius();
+  const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [savingLogo, setSavingLogo] = useState(false);
+
+  async function saveMaxRadius() {
+    const value = Math.round(Number(maxRadiusDraft ?? maxRadius ?? 2000));
+    if (!Number.isFinite(value) || value < 100) {
+      toast.error("Enter a range of at least 100 m");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ max_radius_m: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-max-radius"] });
+    setMaxRadiusDraft(null);
+    toast.success("Maximum range updated");
+  }
 
   async function setAccent(hue: number) {
     const { error } = await supabase
@@ -110,6 +133,7 @@ function AdminPage() {
     await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
     toast.success("Theme colour updated");
   }
+
 
   async function saveAppName() {
     const name = (nameDraft ?? "").trim();
@@ -632,6 +656,28 @@ function AdminPage() {
           <p className="mt-1 text-[11px] text-muted-foreground">
             Accepts hex, rgb() or hsl(). The colour is matched to the closest accent tone.
           </p>
+
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Maximum search range
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={100}
+              step={100}
+              value={maxRadiusDraft ?? String(maxRadius ?? 2000)}
+              onChange={(e) => setMaxRadiusDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">metres</span>
+            <Button size="sm" onClick={() => void saveMaxRadius()}>
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Members can pick any range up to this cap on their radar.
+          </p>
+
 
         </div>
       )}
