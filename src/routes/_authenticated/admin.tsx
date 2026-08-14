@@ -633,6 +633,28 @@ function AdminPage() {
             Accepts hex, rgb() or hsl(). The colour is matched to the closest accent tone.
           </p>
 
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Maximum search range
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={100}
+              step={100}
+              value={maxRadiusDraft ?? String(maxRadius ?? 2000)}
+              onChange={(e) => setMaxRadiusDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">metres</span>
+            <Button size="sm" onClick={() => void saveMaxRadius()}>
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Members can pick any range up to this cap on their radar.
+          </p>
+
+
         </div>
       )}
 
