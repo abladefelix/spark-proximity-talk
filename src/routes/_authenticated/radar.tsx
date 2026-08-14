@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Zap, Check, LoaderCircle, Ban, Flag } from "lucide-react";
+import { Zap, Check, LoaderCircle, Ban, Flag, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -77,16 +77,50 @@ function RadarPage() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [askLocation, setAskLocation] = useState(false);
+  const [permDenied, setPermDenied] = useState(false);
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
 
+  // On arrival, if location isn't granted yet, ask for it up front.
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      if (!("geolocation" in navigator)) return;
+      try {
+        const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+        if (cancelled || !status) return;
+        if (status.state !== "granted") {
+          setPermDenied(status.state === "denied");
+          setAskLocation(true);
+        }
+        status.onchange = () => {
+          if (status.state === "granted") {
+            setAskLocation(false);
+            setPermDenied(false);
+            setRetryKey((k) => k + 1);
+          }
+        };
+      } catch {
+        setAskLocation(true);
+      }
+    };
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
   // Keep my location fresh while the radar is open.
   useEffect(() => {
+    if (askLocation) return;
     if (!("geolocation" in navigator)) {
       setGeoError("This device can't share location.");
       return;
     }
+
     let cancelled = false;
     const push = async (pos: GeolocationPosition) => {
       if (cancelled) return;
@@ -110,12 +144,15 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
-    const fail = (err: GeolocationPositionError) =>
-      setGeoError(
-        err.code === err.PERMISSION_DENIED
-          ? "Location permission is off. Turn it on to see who's around."
-          : "Couldn't get your location yet — move somewhere with better signal.",
-      );
+    const fail = (err: GeolocationPositionError) => {
+      if (err.code === err.PERMISSION_DENIED) {
+        setPermDenied(true);
+        setAskLocation(true);
+        setGeoError("Location permission is off. Turn it on to see who's around.");
+        return;
+      }
+      setGeoError("Couldn't get your location yet — move somewhere with better signal.");
+    };
 
     // Fast first fix, then keep watching.
     navigator.geolocation.getCurrentPosition((pos) => void push(pos), fail, {
@@ -132,7 +169,8 @@ function RadarPage() {
       cancelled = true;
       navigator.geolocation.clearWatch(watch);
     };
-  }, [visible, queryClient, retryKey]);
+  }, [visible, queryClient, retryKey, askLocation]);
+
 
 
   // Drop stale signals that were never returned.
@@ -231,6 +269,40 @@ function RadarPage() {
           <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
         </div>
       </div>
+
+      <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
+        <DialogContent className="max-w-xs rounded-3xl text-center">
+          <DialogHeader className="items-center">
+            <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
+              <MapPin className="size-7 text-primary" />
+            </span>
+            <DialogTitle>Turn on location</DialogTitle>
+            <DialogDescription>
+              {permDenied
+                ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
+                : "SHATTA needs your location to show people around you. Only distance is ever shared — never your exact spot."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              variant="heat"
+              className="w-full"
+              onClick={() => {
+                setPermDenied(false);
+                setAskLocation(false);
+                setRetryKey((k) => k + 1);
+              }}
+            >
+              {permDenied ? "Try again" : "Allow location"}
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setAskLocation(false)}>
+              Not now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
       {geoError && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
