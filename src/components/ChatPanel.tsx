@@ -395,6 +395,11 @@ export function ChatPanel({
           className="min-h-[40px] max-h-[132px] min-w-0 flex-1 resize-none rounded-[20px] border border-border/50 bg-background/70 px-4 py-2 text-[15.5px] leading-snug shadow-none backdrop-blur-xl placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
           rows={1}
           maxLength={settings.max_message_len}
+          onFocus={() => {
+            window.setTimeout(() => {
+              messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight });
+            }, 250);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
