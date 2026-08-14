@@ -8,6 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+  VERIFIED_BADGE_STYLES,
+  VerifiedBadgeMark,
+  type VerifiedBadgeStyle,
+} from "@/components/VerifiedBadge";
+import {
   APP_SETTINGS_DEFAULTS,
   FONT_OPTIONS,
   useAppSettings,

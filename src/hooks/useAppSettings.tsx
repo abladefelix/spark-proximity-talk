@@ -32,6 +32,8 @@ export const APP_SETTINGS_DEFAULTS = {
   color_other: "#f59e0b",
   default_theme: "dark",
   font_family: "Sora",
+  verified_badge_style: "check",
+  verified_badge_color: "#22c55e",
 } satisfies Partial<AppSettings>;
 
 export type AppSettingsValue = AppSettings & typeof APP_SETTINGS_DEFAULTS;
