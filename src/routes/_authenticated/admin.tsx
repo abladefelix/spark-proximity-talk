@@ -214,6 +214,8 @@ function AdminPage() {
       "admin-people",
       "admin-reports",
       "admin-verifications",
+      "admin-appeals",
+
       "admin-access",
     ]) {
       queryClient.invalidateQueries({ queryKey: [key] });
