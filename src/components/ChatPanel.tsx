@@ -265,23 +265,34 @@ export function ChatPanel({
               )}
 
               <div
-                className={`flex items-end gap-2 ${grouped ? "mt-1" : "mt-3"} ${mine ? "justify-end" : "justify-start"}`}
+                className={`flex items-start gap-2 ${grouped ? "mt-1" : "mt-4"} ${mine ? "justify-end" : "justify-start"}`}
               >
                 {!mine && (
-                  <div className="size-7 shrink-0">
+                  <div className="size-8 shrink-0">
                     {!grouped && (
                       <PersonAvatar
                         path={other?.avatar_url}
                         name={other?.display_name}
                         username={other?.username ?? "?"}
                         gender={other?.gender as import("@/components/PersonAvatar").Gender}
-                        className="size-7 rounded-full"
+                        className="size-8 rounded-full"
                       />
                     )}
                   </div>
                 )}
 
-                <div className={`flex max-w-[78%] flex-col ${mine ? "items-end" : "items-start"}`}>
+                <div className={`flex max-w-[76%] flex-col ${mine ? "items-end" : "items-start"}`}>
+                  {!grouped && (
+                    <div
+                      className={`mb-1 flex items-center gap-2 px-1 ${mine ? "flex-row-reverse" : ""}`}
+                    >
+                      <span className="text-[12px] font-semibold text-foreground">
+                        {mine ? "You" : (other?.display_name ?? other?.username ?? "Them")}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{timeLabel(m.created_at)}</span>
+                    </div>
+                  )}
+
                   {m.kind === "image" ? (
                     m.mediaUrl ? (
                       <a
@@ -309,8 +320,8 @@ export function ChatPanel({
                       rel="noreferrer"
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
                         mine
-                          ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-2xl rounded-bl-md bg-secondary text-secondary-foreground"
+                          ? "rounded-2xl rounded-tr-md bg-primary text-primary-foreground"
+                          : "rounded-2xl rounded-tl-md bg-secondary text-secondary-foreground"
                       }`}
                     >
                       <MapPin className="size-4" />
@@ -320,16 +331,13 @@ export function ChatPanel({
                     <p
                       className={`whitespace-pre-wrap break-words px-4 py-2.5 text-[15px] leading-snug ${
                         mine
-                          ? "rounded-[1.25rem] rounded-br-md bg-primary/95 text-primary-foreground shadow-heat"
-                          : "rounded-[1.25rem] rounded-bl-md border border-border/20 bg-card/60 text-card-foreground shadow-sm backdrop-blur-xl"
+                          ? `bg-primary text-primary-foreground shadow-heat ${grouped ? "rounded-2xl" : "rounded-2xl rounded-tr-md"}`
+                          : `border border-border/20 bg-secondary/80 text-secondary-foreground backdrop-blur-xl ${grouped ? "rounded-2xl" : "rounded-2xl rounded-tl-md"}`
                       }`}
                     >
                       {m.content}
                     </p>
                   )}
-                  <span className="mt-1 px-1 text-[10px] text-muted-foreground">
-                    {timeLabel(m.created_at)}
-                  </span>
                 </div>
               </div>
             </div>
