@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
 import {
   notificationPermission,
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 
 function ProfilePage() {
+  const settings = useSettings();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState("");
