@@ -235,15 +235,44 @@ function RadarPage() {
     heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords);
-    }, 60000);
+    }, 30000);
+
+    // Backgrounded tabs and suspended apps stop the heartbeat, so the person
+    // goes stale for everyone else. Re-publish (and refresh) on foreground.
+    const onWake = () => {
+      if (document.visibilityState !== "visible") return;
+      const coords = lastCoords.current;
+      if (coords) void push(coords);
+      else if (!isNative && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => void push(position.coords),
+          () => {},
+          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+        );
+      } else if (isNative) {
+        void Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          maximumAge: 60000,
+          timeout: 30000,
+        })
+          .then((position) => push(position.coords))
+          .catch(() => {});
+      }
+      queryClient.invalidateQueries({ queryKey: ["nearby"] });
+    };
+    document.addEventListener("visibilitychange", onWake);
+    window.addEventListener("focus", onWake);
 
     return () => {
       cancelled = true;
       if (heartbeat) clearInterval(heartbeat);
+      document.removeEventListener("visibilitychange", onWake);
+      window.removeEventListener("focus", onWake);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
       if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
     };
   }, [visible, queryClient, retryKey, askLocation]);
+
 
 
 
@@ -277,6 +306,7 @@ function RadarPage() {
       const { data } = await supabase.rpc("nearby_people", { radius_m: radius });
       queryClient.setQueryData(["nearby", radius], data ?? []);
       const updated = ((data ?? []) as NearbyPerson[]).find((p) => p.id === person.id);
+      setSelectedId(null);
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
         openChat(updated.match_id);

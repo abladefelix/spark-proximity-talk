@@ -76,19 +76,29 @@ export function IncomingSignals() {
         .from("signals")
         .insert({ from_user: me, to_user: person.from_user });
       if (error && !error.message.includes("duplicate")) throw error;
-      const { data: matches } = await supabase.from("matches").select("id, user_a, user_b");
-      const match = matches?.find(
-        (m) =>
-          (m.user_a === me && m.user_b === person.from_user) ||
-          (m.user_b === me && m.user_a === person.from_user),
-      );
-      if (!match) throw new Error("Couldn't open the chat — try again");
-      return match.id;
+
+      // The match row is created by a trigger; give it a moment if needed.
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data: matches } = await supabase.from("matches").select("id, user_a, user_b");
+        const match = matches?.find(
+          (m) =>
+            (m.user_a === me && m.user_b === person.from_user) ||
+            (m.user_b === me && m.user_a === person.from_user),
+        );
+        if (match) return match.id;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      throw new Error("Couldn't open the chat — try again");
     },
     onSuccess: (matchId, person) => {
+      // Drop the card immediately so the queue closes before the chat opens.
+      queryClient.setQueryData<Incoming[]>(["incoming-signals"], (prev) =>
+        (prev ?? []).filter((p) => p.id !== person.id),
+      );
       queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
       openChat(matchId);
+
       sendPush({
         data: {
           kind: "match",
