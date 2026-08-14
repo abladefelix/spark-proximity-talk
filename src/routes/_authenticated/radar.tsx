@@ -88,13 +88,18 @@ function RadarPage() {
     let cancelled = false;
     const push = async (pos: GeolocationPosition) => {
       if (cancelled) return;
-      const { error } = await supabase.from("locations").upsert({
-        user_id: (await supabase.auth.getUser()).data.user?.id as string,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        is_visible: visible,
-        updated_at: new Date().toISOString(),
-      });
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) return;
+      const { error } = await supabase.from("locations").upsert(
+        {
+          user_id: me,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          is_visible: visible,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
       if (error) {
         setGeoError(error.message);
         return;
@@ -103,16 +108,30 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
-    const watch = navigator.geolocation.watchPosition(
-      (pos) => void push(pos),
-      () => setGeoError("Location permission is off. Turn it on to see who's around."),
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 },
-    );
+    const fail = (err: GeolocationPositionError) =>
+      setGeoError(
+        err.code === err.PERMISSION_DENIED
+          ? "Location permission is off. Turn it on to see who's around."
+          : "Couldn't get your location yet — move somewhere with better signal.",
+      );
+
+    // Fast first fix, then keep watching.
+    navigator.geolocation.getCurrentPosition((pos) => void push(pos), fail, {
+      enableHighAccuracy: false,
+      maximumAge: 60000,
+      timeout: 15000,
+    });
+    const watch = navigator.geolocation.watchPosition((pos) => void push(pos), fail, {
+      enableHighAccuracy: true,
+      maximumAge: 15000,
+      timeout: 30000,
+    });
     return () => {
       cancelled = true;
       navigator.geolocation.clearWatch(watch);
     };
-  }, [visible, queryClient]);
+  }, [visible, queryClient, retryKey]);
+
 
   // Drop stale signals that were never returned.
   useEffect(() => {
