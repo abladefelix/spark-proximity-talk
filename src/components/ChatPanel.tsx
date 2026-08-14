@@ -200,7 +200,7 @@ export function ChatPanel({
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
       <header
-        className="flex shrink-0 items-center gap-1 bg-background/85 px-1.5 pb-2 shadow-[0_1px_0_0_hsl(var(--border)/0.5)] backdrop-blur-2xl"
+        className="flex shrink-0 items-center gap-1 border-b border-border/40 bg-background/85 px-1.5 pb-2 backdrop-blur-2xl"
         style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
       >
         <button
