@@ -19,7 +19,7 @@ import { AppSettingsProvider } from "@/hooks/useAppSettings";
 
 function useNativeViewportLock() {
   useEffect(() => {
-    // Prevent the whole page from being dragged/bounced in the mobile webview.
+    const lastY = new WeakMap<EventTarget, number>();
     const preventOverscroll = (e: TouchEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
@@ -28,16 +28,17 @@ function useNativeViewportLock() {
         e.preventDefault();
         return;
       }
-      // Allow scrolling inside scrollable containers, but stop the bounce at the edges.
       const el = scrollable as HTMLElement;
       const atTop = el.scrollTop <= 0;
       const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
-      const goingUp = e.touches[0].clientY > (target.dataset.lastY ? Number(target.dataset.lastY) : e.touches[0].clientY);
-      const goingDown = !goingUp;
+      const touch = e.touches[0];
+      const prevY = lastY.get(e.target as EventTarget) ?? touch.clientY;
+      const goingDown = touch.clientY > prevY;
+      const goingUp = touch.clientY < prevY;
       if ((atTop && goingDown) || (atBottom && goingUp)) {
         e.preventDefault();
       }
-      target.dataset.lastY = String(e.touches[0].clientY);
+      lastY.set(e.target as EventTarget, touch.clientY);
     };
     document.addEventListener("touchmove", preventOverscroll, { passive: false });
     return () => document.removeEventListener("touchmove", preventOverscroll);
