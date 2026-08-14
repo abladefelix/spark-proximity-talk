@@ -3,7 +3,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Zap, Check, LoaderCircle, Ban, Flag, MapPin } from "lucide-react";
+import {
+  Zap,
+  Check,
+  LoaderCircle,
+  Ban,
+  Flag,
+  MapPin,
+  Plus,
+  Minus,
+  Maximize2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -355,6 +365,98 @@ function RadarPage() {
     };
   }, [people, scopeSize, radius]);
 
+  // ---- Zoom & pan on the radar scope -------------------------------------
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 6;
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
+  viewRef.current = { zoom, pan };
+
+  const clampPan = (z: number, p: { x: number; y: number }) => {
+    const scope = scopeSize || 320;
+    const slack = (scope * (z - 1)) / 2 + scope * 0.08 * (z - 1);
+    return {
+      x: Math.max(-slack, Math.min(slack, p.x)),
+      y: Math.max(-slack, Math.min(slack, p.y)),
+    };
+  };
+
+  const zoomAt = (nextZoomRaw: number, px: number, py: number) => {
+    const { zoom: z, pan: p } = viewRef.current;
+    const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoomRaw));
+    if (next === z) return;
+    const k = next / z;
+    // Anchor the point under the cursor. Transform is translate(pan) scale(z)
+    // about the scope centre.
+    const c = (scopeSize || 320) / 2;
+    const ax = px - c;
+    const ay = py - c;
+    const nextPan = { x: ax - (ax - p.x) * k, y: ay - (ay - p.y) * k };
+    setZoom(next);
+    setPan(next <= 1.001 ? { x: 0, y: 0 } : clampPan(next, nextPan));
+  };
+  const zoomAtRef = useRef(zoomAt);
+  zoomAtRef.current = zoomAt;
+
+  useEffect(() => {
+    const el = scopeRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      const rect = el.getBoundingClientRect();
+      const { zoom: z } = viewRef.current;
+      zoomAtRef.current(z * Math.exp(-dy * 0.0018), e.clientX - rect.left, e.clientY - rect.top);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Pointer drag to pan, two-finger pinch to zoom.
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ dist: number; zoom: number } | null>(null);
+  const dragged = useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    dragged.current = false;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const prev = pointers.current.get(e.pointerId);
+    if (!prev) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = [...pointers.current.values()];
+    const el = scopeRef.current;
+    if (pts.length >= 2 && el) {
+      const [a, b] = pts as [{ x: number; y: number }, { x: number; y: number }];
+      const dist = Math.hypot(b.x - a.x, b.y - a.y);
+      if (!gesture.current) gesture.current = { dist, zoom: viewRef.current.zoom };
+      const rect = el.getBoundingClientRect();
+      zoomAtRef.current(
+        gesture.current.zoom * (dist / gesture.current.dist),
+        (a.x + b.x) / 2 - rect.left,
+        (a.y + b.y) / 2 - rect.top,
+      );
+      dragged.current = true;
+      return;
+    }
+    if (viewRef.current.zoom <= 1.001) return;
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    if (Math.abs(dx) + Math.abs(dy) > 1) dragged.current = true;
+    setPan((p) => clampPan(viewRef.current.zoom, { x: p.x + dx, y: p.y + dy }));
+  };
+  const endPointer = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) gesture.current = null;
+  };
+
+  const stepZoom = (factor: number) => {
+    const c = (scopeSize || 320) / 2;
+    zoomAtRef.current(viewRef.current.zoom * factor, c, c);
+  };
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
@@ -430,49 +532,97 @@ function RadarPage() {
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        style={{ touchAction: "none", cursor: zoom > 1.001 ? "grab" : "default" }}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
-        <div className="radar-grid absolute inset-0" />
-        <div className="absolute inset-[16%] rounded-full border border-border/70" />
-        <div className="absolute inset-[33%] rounded-full border border-border/50" />
-        <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
-        <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
-        <div className="radar-sweep absolute inset-0 rounded-full" />
-        <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
-        <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
-        <BrandMark
-          size={80}
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
-        />
+        <div
+          className="absolute inset-0 origin-center will-change-transform"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transition: gesture.current ? "none" : "transform 120ms ease-out",
+          }}
+        >
+          <div className="radar-grid absolute inset-0" />
+          <div className="absolute inset-[16%] rounded-full border border-border/70" />
+          <div className="absolute inset-[33%] rounded-full border border-border/50" />
+          <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+          <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+          <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+          <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+          <BrandMark
+            size={80}
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
+          />
 
-        {beacons.map(({ person, left, top }) => (
-          <button
-            key={person.id}
-            type="button"
-            onClick={() => setSelectedId(person.id)}
-            style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
-            aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
-          >
-            <RadarBeacon
-              sizePx={beaconSize}
-              verified={person.verified}
-              active={person.they_signaled && !person.match_id}
+          {beacons.map(({ person, left, top }) => (
+            <button
+              key={person.id}
+              type="button"
+              onClick={() => {
+                if (dragged.current) return;
+                setSelectedId(person.id);
+              }}
+              style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
+              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
             >
+              <RadarBeacon
+                sizePx={beaconSize}
+                verified={person.verified}
+                active={person.they_signaled && !person.match_id}
+              >
+                <PersonAvatar
+                  path={person.avatar_url}
+                  name={person.display_name}
+                  username={person.username}
+                  gender={person.gender}
+                  className="size-full"
+                />
+              </RadarBeacon>
+              {person.is_online && (
+                <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
+              )}
+            </button>
+          ))}
+        </div>
 
-              <PersonAvatar
-                path={person.avatar_url}
-                name={person.display_name}
-                username={person.username}
-                gender={person.gender}
-                className="size-full"
-              />
-            </RadarBeacon>
-            {person.is_online && (
-              <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
-            )}
+        <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+
+        <div className="absolute bottom-4 right-4 flex flex-col overflow-hidden rounded-full border border-border bg-card/80 backdrop-blur">
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() => stepZoom(1.4)}
+            className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Plus className="size-4" />
           </button>
-        ))}
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() => stepZoom(1 / 1.4)}
+            className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Minus className="size-4" />
+          </button>
+          {zoom > 1.001 && (
+            <button
+              type="button"
+              aria-label="Reset zoom"
+              onClick={() => {
+                setZoom(1);
+                setPan({ x: 0, y: 0 });
+              }}
+              className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Maximize2 className="size-3.5" />
+            </button>
+          )}
+        </div>
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
