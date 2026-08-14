@@ -126,7 +126,7 @@ function RootShell({ children }: { children: ReactNode }) {
               "try{var t=localStorage.getItem('skanaround-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}",
           }}
         />
-        {children}
+        <div id="app-scroll">{children}</div>
         <Scripts />
       </body>
     </html>
@@ -143,8 +143,31 @@ function RootComponent() {
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
-    return () => sub.subscription.unsubscribe();
+
+    // Native shells (and backgrounded tabs) can come back with a session that
+    // was established outside this document — re-read it instead of waiting
+    // for a full app relaunch.
+    const recheck = () => {
+      if (document.visibilityState !== "visible") return;
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          router.invalidate();
+          queryClient.invalidateQueries();
+        }
+      });
+    };
+    document.addEventListener("visibilitychange", recheck);
+    window.addEventListener("focus", recheck);
+    window.addEventListener("pageshow", recheck);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", recheck);
+      window.removeEventListener("focus", recheck);
+      window.removeEventListener("pageshow", recheck);
+    };
   }, [router, queryClient]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
