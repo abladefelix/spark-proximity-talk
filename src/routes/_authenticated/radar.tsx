@@ -26,10 +26,8 @@ import { ActiveChats } from "@/components/ActiveChats";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
-import logoAsset from "@/assets/skanaround-logo.png";
-import { Brand, useBranding } from "@/components/Brand";
+import { Brand, BrandMark } from "@/components/Brand";
 
-const logoUrl = logoAsset;
 
 
 
@@ -234,7 +232,7 @@ function RadarPage() {
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: branding } = useBranding();
+  
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
   async function blockPerson(person: NearbyPerson) {
@@ -430,11 +428,9 @@ function RadarPage() {
         <div className="radar-sweep absolute inset-0 rounded-full" />
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
-        <img
-          src={branding?.logo ?? logoUrl}
-          alt=""
-          className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.08]"
-          aria-hidden="true"
+        <BrandMark
+          size={80}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
         />
 
         {beacons.map(({ person, left, top }) => (
