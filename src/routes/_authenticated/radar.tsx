@@ -255,11 +255,13 @@ function RadarPage() {
     })();
 
     // Stationary phones stop emitting position updates, which would make the
-    // user look offline to everyone else. Re-publish the last fix periodically.
+    // user look offline to everyone else. Re-publish the last fix periodically,
+    // and ask for a fresh one when the watcher never delivered anything.
     heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords);
-    }, 30000);
+      else refreshFix();
+    }, 20000);
 
     // Backgrounded tabs and suspended apps stop the heartbeat, so the person
     // goes stale for everyone else. Re-publish (and refresh) on foreground.
@@ -267,21 +269,7 @@ function RadarPage() {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
       if (coords) void push(coords);
-      else if (!isNative && "geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => void push(position.coords),
-          () => {},
-          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
-        );
-      } else if (isNative) {
-        void Geolocation.getCurrentPosition({
-          enableHighAccuracy: false,
-          maximumAge: 60000,
-          timeout: 30000,
-        })
-          .then((position) => push(position.coords))
-          .catch(() => {});
-      }
+      refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
     document.addEventListener("visibilitychange", onWake);
