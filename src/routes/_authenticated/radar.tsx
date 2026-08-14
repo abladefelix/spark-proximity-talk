@@ -77,9 +77,41 @@ function RadarPage() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [askLocation, setAskLocation] = useState(false);
+  const [permDenied, setPermDenied] = useState(false);
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
+
+  // On arrival, if location isn't granted yet, ask for it up front.
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      if (!("geolocation" in navigator)) return;
+      try {
+        const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+        if (cancelled || !status) return;
+        if (status.state !== "granted") {
+          setPermDenied(status.state === "denied");
+          setAskLocation(true);
+        }
+        status.onchange = () => {
+          if (status.state === "granted") {
+            setAskLocation(false);
+            setPermDenied(false);
+            setRetryKey((k) => k + 1);
+          }
+        };
+      } catch {
+        setAskLocation(true);
+      }
+    };
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   // Keep my location fresh while the radar is open.
   useEffect(() => {
