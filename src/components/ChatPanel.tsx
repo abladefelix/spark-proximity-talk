@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ImagePlus, LoaderCircle, MapPin, Send } from "lucide-react";
+import { ImagePlus, LoaderCircle, MapPin, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
+import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,15 +27,14 @@ type Message = {
 function lastSeenLabel(iso: string | null | undefined) {
   if (!iso) return "";
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 5) return " · active now";
-  if (mins < 60) return ` · active ${mins}m ago`;
-  if (mins < 1440) return ` · active ${Math.round(mins / 60)}h ago`;
-  return "";
+  if (mins < 5) return "active now";
+  if (mins < 60) return `active ${mins}m ago`;
+  if (mins < 1440) return `active ${Math.round(mins / 60)}h ago`;
+  return "active recently";
 }
 
 export function ChatPanel({
   matchId,
-  leading,
   className,
 }: {
   matchId: string;
@@ -43,6 +43,7 @@ export function ChatPanel({
   className?: string;
 }) {
   const queryClient = useQueryClient();
+  const { closeChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
   const settings = useSettings();
   const [text, setText] = useState("");
@@ -70,7 +71,7 @@ export function ChatPanel({
       const otherId = match.user_a === me ? match.user_b : match.user_a;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, bio, verified, last_seen")
+        .select("id, username, display_name, avatar_url, bio, verified, last_seen, gender")
         .eq("id", otherId)
         .maybeSingle();
       return profile;
@@ -117,8 +118,8 @@ export function ChatPanel({
     messageList.scrollTo({ top: messageList.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
+  async function send(e?: React.FormEvent) {
+    e?.preventDefault();
     const content = text.trim();
     if (!content || !me) return;
     setText("");
@@ -139,7 +140,6 @@ export function ChatPanel({
           title: other.display_name ?? other.username ?? "New message",
           body: content,
           relatedId: matchId,
-
         },
       }).catch(() => {
         /* push failure is non-fatal */
@@ -198,22 +198,30 @@ export function ChatPanel({
     new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
   return (
-    <div className={className ?? "flex min-h-screen min-w-0 flex-col bg-transparent"}>
-      <header className="flex shrink-0 items-center gap-3 border-b border-border/40 px-4 pb-3 pt-1">
-        {leading}
+    <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
+      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 px-4 pb-2 pt-0.5">
+        <button
+          type="button"
+          onClick={closeChat}
+          className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary"
+          aria-label="Close chat"
+        >
+          <X className="size-5" />
+        </button>
         <PersonAvatar
           path={other?.avatar_url}
           name={other?.display_name}
           username={other?.username ?? "?"}
-          className="size-10 rounded-full"
+          gender={other?.gender}
+          className="size-9 rounded-full"
         />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 truncate text-[15px] font-semibold leading-tight">
             {other?.display_name ?? other?.username ?? "Chat"}
-            {other?.verified && <VerifiedBadge />}
+            {other?.verified && <VerifiedBadge className="size-3.5" />}
           </p>
           <p className="truncate text-[11px] text-muted-foreground">
-            {other ? `@${other.username}${lastSeenLabel(other.last_seen)}` : ""}
+            {other ? lastSeenLabel(other.last_seen) : ""}
           </p>
         </div>
       </header>
@@ -222,13 +230,14 @@ export function ChatPanel({
         ref={messagesRef}
         data-scrollable
         data-selectable
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-transparent px-3 pb-4 pt-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-transparent px-4 pb-2 pt-4"
       >
         <div className="mb-6 flex flex-col items-center text-center">
           <PersonAvatar
             path={other?.avatar_url}
             name={other?.display_name}
             username={other?.username ?? "?"}
+            gender={other?.gender}
             className="size-16 rounded-full ring-2 ring-card"
           />
           <p className="mt-3 text-sm font-medium leading-snug text-muted-foreground">
@@ -265,13 +274,14 @@ export function ChatPanel({
                         path={other?.avatar_url}
                         name={other?.display_name}
                         username={other?.username ?? "?"}
+                        gender={other?.gender}
                         className="size-7 rounded-full"
                       />
                     )}
                   </div>
                 )}
 
-                <div className={`flex max-w-[76%] flex-col ${mine ? "items-end" : "items-start"}`}>
+                <div className={`flex max-w-[78%] flex-col ${mine ? "items-end" : "items-start"}`}>
                   {m.kind === "image" ? (
                     m.mediaUrl ? (
                       <a
@@ -283,7 +293,7 @@ export function ChatPanel({
                         <img
                           src={m.mediaUrl}
                           alt="Shared in chat"
-                          className="max-h-72 w-full object-cover"
+                          className="max-h-64 w-full object-cover"
                           loading="lazy"
                         />
                       </a>
@@ -310,8 +320,8 @@ export function ChatPanel({
                     <p
                       className={`whitespace-pre-wrap break-words px-4 py-2.5 text-[15px] leading-snug ${
                         mine
-                          ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground shadow-heat"
-                          : "rounded-2xl rounded-bl-md bg-secondary/90 text-secondary-foreground backdrop-blur"
+                          ? "rounded-[1.25rem] rounded-br-md bg-primary text-primary-foreground shadow-heat"
+                          : "rounded-[1.25rem] rounded-bl-md bg-card/90 text-card-foreground backdrop-blur"
                       }`}
                     >
                       {m.content}
@@ -331,7 +341,7 @@ export function ChatPanel({
       <form
         onSubmit={send}
         data-vaul-no-drag
-        className="z-10 flex shrink-0 items-end gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+        className="z-10 flex shrink-0 items-end gap-2 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
         <input
           ref={fileRef}
@@ -344,18 +354,18 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <div className="flex min-w-0 flex-1 items-end gap-1 rounded-full border border-border/50 bg-card/70 py-1 pl-4 pr-1 shadow-card backdrop-blur-md">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border/50 bg-card/60 py-1.5 pl-4 pr-1.5 shadow-card backdrop-blur-xl">
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={settings.chat_prompt_text}
-            className="min-h-[40px] max-h-[140px] flex-1 resize-none border-0 bg-transparent px-0 py-2.5 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[40px] max-h-[140px] flex-1 resize-none border-0 bg-transparent px-0 py-2 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
             maxLength={settings.max_message_len}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                send(e);
+                send();
               }
             }}
           />
