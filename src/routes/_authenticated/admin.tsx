@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -78,6 +80,21 @@ function Stat({
 function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const { data: accentHue } = useAccentHue();
+
+  async function setAccent(hue: number) {
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ accent_hue: hue })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
+    toast.success("Theme colour updated");
+  }
+
 
   const { data: access, isLoading: accessLoading } = useQuery({
     queryKey: ["admin-access"],
@@ -449,6 +466,29 @@ function AdminPage() {
         <Stat icon={Users} label="matches" value={Number(stats?.matches ?? 0)} />
         <Stat icon={Flag} label="reports" value={Number(stats?.reports ?? 0)} />
       </div>
+
+      {isAdmin && (
+        <div className="mt-3 rounded-xl border border-border px-3 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Accent colour</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {ACCENT_PRESETS.map((preset) => (
+              <button
+                key={preset.hue}
+                type="button"
+                aria-label={preset.name}
+                onClick={() => void setAccent(preset.hue)}
+                className={`size-7 rounded-full border transition ${
+                  Math.round(accentHue ?? DEFAULT_HUE) === preset.hue
+                    ? "border-foreground ring-2 ring-foreground/30"
+                    : "border-border"
+                }`}
+                style={{ background: accentSwatch(preset.hue) }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
 
       <Tabs defaultValue="people" className="mt-4">
         <TabsList className="w-full">

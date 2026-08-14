@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          accent_hue: number
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          accent_hue?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_hue?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked: string
