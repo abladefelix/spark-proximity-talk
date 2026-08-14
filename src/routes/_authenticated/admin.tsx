@@ -744,35 +744,53 @@ function AdminPage() {
 
 
       <Tabs defaultValue="people" className="mt-4">
-        <TabsList className="w-full">
-          <TabsTrigger value="people" className="flex-1">
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="inline-flex w-max min-w-full justify-start gap-1">
+          <TabsTrigger value="people"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             People
           </TabsTrigger>
-          <TabsTrigger value="verify" className="flex-1">
+          <TabsTrigger value="verify"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Verify
             {verifications.length > 0 ? ` (${verifications.length})` : ""}
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1">
+          <TabsTrigger value="reports"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Reports
             {reports.length > 0 ? ` (${reports.length})` : ""}
           </TabsTrigger>
-          <TabsTrigger value="appeals" className="flex-1">
+          <TabsTrigger value="appeals"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Appeals
             {appeals.length > 0 ? ` (${appeals.length})` : ""}
           </TabsTrigger>
-          <TabsTrigger value="emails" className="flex-1">
+          <TabsTrigger value="emails"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Emails
           </TabsTrigger>
-          <TabsTrigger value="insights" className="flex-1">
+          <TabsTrigger value="insights"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Insights
           </TabsTrigger>
-          <TabsTrigger value="backup" className="flex-1">
+          <TabsTrigger value="backup"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             Backup
           </TabsTrigger>
-          <TabsTrigger value="app" className="flex-1">
+          <TabsTrigger value="app"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
             App
           </TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="app" className="mt-3">
           <AppTab />
