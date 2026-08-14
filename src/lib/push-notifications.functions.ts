@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { sendApnsNotification, shouldDeleteApnsToken } from "./push-notifications.server";
+
 
 export const registerPushToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -81,7 +81,10 @@ export const sendPushNotification = createServerFn({ method: "POST" })
 
     if (!valid) return { sent: false, reason: "not-authorized" };
 
+    const { sendApnsNotification, shouldDeleteApnsToken } = await import("./push-notifications.server");
+
     const { data: tokens } = await supabaseAdmin
+
       .from("push_tokens")
       .select("token")
       .eq("user_id", data.recipientId);
@@ -110,3 +113,4 @@ export const sendPushNotification = createServerFn({ method: "POST" })
     const reasons = results.map((r) => r.reason).filter(Boolean);
     return { sent: anySent, reason: anySent ? undefined : reasons.join(", ") };
   });
+
