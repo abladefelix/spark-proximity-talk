@@ -262,6 +262,50 @@ function AdminPage() {
     refreshAll();
   }
 
+  async function hideFromRadar(userId: string) {
+    const { error } = await supabase
+      .from("locations")
+      .update({ is_visible: false })
+      .eq("user_id", userId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Hidden from radar");
+    refreshAll();
+  }
+
+  async function wipeActivity(userId: string) {
+    const { error } = await supabase.rpc("admin_wipe_user_activity", { _user_id: userId });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Signals, matches and chats wiped");
+    refreshAll();
+  }
+
+  async function purgeSignals() {
+    const { error } = await supabase.rpc("purge_expired_signals");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Expired signals purged");
+    refreshAll();
+  }
+
+  async function purgeLocations() {
+    const { data, error } = await supabase.rpc("admin_purge_stale_locations");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Cleared ${data ?? 0} stale locations`);
+    refreshAll();
+  }
+
+
   if (accessLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
