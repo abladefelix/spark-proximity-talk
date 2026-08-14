@@ -43,7 +43,7 @@ export const getBackupSettings = createServerFn({ method: "POST" })
       s3_endpoint: s.s3_endpoint ?? "",
       s3_region: s.s3_region ?? "auto",
       s3_bucket: s.s3_bucket ?? "",
-      s3_prefix: s.s3_prefix ?? "shatta-backups",
+      s3_prefix: s.s3_prefix ?? "skanaround-backups",
       s3_access_key_id: s.s3_access_key_id ?? "",
       gdrive_folder_id: s.gdrive_folder_id ?? "",
       gdrive_client_id: s.gdrive_client_id ?? "",
@@ -110,7 +110,7 @@ export const runBackup = createServerFn({ method: "POST" })
 
     const snapshot: Record<string, unknown> = {
       generated_at: new Date().toISOString(),
-      app: "SHATTA",
+      app: "skanAround",
     };
     for (const table of TABLES) {
       const { data: rows, error } = await admin.from(table).select("*").limit(50000);
@@ -120,7 +120,7 @@ export const runBackup = createServerFn({ method: "POST" })
 
     const body = JSON.stringify(snapshot, null, 2);
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const key = `${(settings?.s3_prefix || "shatta-backups").replace(/\/+$/, "")}/shatta-backup-${stamp}.json`;
+    const key = `${(settings?.s3_prefix || "skanaround-backups").replace(/\/+$/, "")}/skanaround-backup-${stamp}.json`;
     const size = new TextEncoder().encode(body).length;
 
     let objectKey: string | null = null;

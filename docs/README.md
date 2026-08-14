@@ -1,4 +1,4 @@
-# SHATTA Documentation
+# skanAround Documentation
 
 | Doc | Contents |
 | --- | --- |

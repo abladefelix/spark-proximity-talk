@@ -11,12 +11,12 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reset your SHATTA password" },
+      { title: "Reset your skanAround password" },
       {
         name: "description",
-        content: "Choose a new password for your SHATTA account and get back on the radar.",
+        content: "Choose a new password for your skanAround account and get back on the radar.",
       },
-      { property: "og:title", content: "Reset your SHATTA password" },
+      { property: "og:title", content: "Reset your skanAround password" },
       {
         property: "og:description",
         content: "Set a new password and return to signalling people nearby.",

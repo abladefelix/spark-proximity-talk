@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>SHATTA</string>
+	<string>skanAround</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -32,11 +32,11 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>SHATTA needs camera access so you can take a profile photo or verification selfie.</string>
+	<string>skanAround needs camera access so you can take a profile photo or verification selfie.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>SHATTA uses your location to show people nearby on the radar. Your location stays private and is never shared without a match.</string>
+	<string>skanAround uses your location to show people nearby on the radar. Your location stays private and is never shared without a match.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>SHATTA needs photo library access so you can choose a profile picture.</string>
+	<string>skanAround needs photo library access so you can choose a profile picture.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

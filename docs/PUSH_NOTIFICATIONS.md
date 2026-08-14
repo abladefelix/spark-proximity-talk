@@ -1,6 +1,6 @@
 # Push Notifications (APNs + FCM)
 
-SHATTA sends push for three events: a new **signal**, a mutual **match**, and a
+skanAround sends push for three events: a new **signal**, a mutual **match**, and a
 new chat **message**.
 
 ## Pipeline

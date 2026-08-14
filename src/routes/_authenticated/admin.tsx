@@ -49,16 +49,16 @@ import {
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin control — SHATTA" },
+      { title: "Admin control — skanAround" },
       {
         name: "description",
         content:
-          "Moderation and control panel for SHATTA: people, roles, verification, reports and activity.",
+          "Moderation and control panel for skanAround: people, roles, verification, reports and activity.",
       },
-      { property: "og:title", content: "Admin control — SHATTA" },
+      { property: "og:title", content: "Admin control — skanAround" },
       {
         property: "og:description",
-        content: "Moderate people, roles, verification and reports on SHATTA.",
+        content: "Moderate people, roles, verification and reports on skanAround.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

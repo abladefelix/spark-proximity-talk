@@ -32,7 +32,7 @@ export async function driveUpload(
   mimeType = "application/json",
 ): Promise<{ id: string }> {
   const token = await getAccessToken(cfg);
-  const boundary = `shatta${crypto.randomUUID()}`;
+  const boundary = `skanaround${crypto.randomUUID()}`;
   const metadata = {
     name,
     ...(cfg.folderId ? { parents: [cfg.folderId] } : {}),

@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * SHATTA design system — warm street.
+ * skanAround design system — warm street.
  * Deep charcoal-brown night base, hot orange + gold accents.
  * All colors are oklch tokens. Never hardcode colors in components.
  */
@@ -192,7 +192,7 @@
   box-shadow: var(--shadow-card);
 }
 
-@keyframes shatta-pulse {
+@keyframes skanaround-pulse {
   0% {
     transform: scale(0.7);
     opacity: 0.55;
@@ -204,7 +204,7 @@
 }
 
 @utility pulse-ring {
-  animation: shatta-pulse 2.8s ease-out infinite;
+  animation: skanaround-pulse 2.8s ease-out infinite;
 }
 
 @utility radar-grid {
@@ -214,7 +214,7 @@
   background-size: 12.5% 12.5%;
 }
 
-@keyframes shatta-sweep {
+@keyframes skanaround-sweep {
   to {
     transform: rotate(360deg);
   }
@@ -227,7 +227,7 @@
     transparent 55deg,
     transparent 360deg
   );
-  animation: shatta-sweep 5s linear infinite;
+  animation: skanaround-sweep 5s linear infinite;
 }
 
 @keyframes beacon-ping {

@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SHATTA — Proximity chat" },
+      { title: "skanAround — Proximity chat" },
       {
         name: "description",
         content: "Discover people near you, send a signal, and chat when it's mutual.",
@@ -122,7 +122,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('shatta-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}",
+              "try{var t=localStorage.getItem('skanaround-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}",
           }}
         />
         {children}

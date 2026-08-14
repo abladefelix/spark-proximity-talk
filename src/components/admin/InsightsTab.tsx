@@ -87,7 +87,7 @@ export function InsightsTab() {
             size="sm"
             variant="outline"
             className="h-7 px-2 text-xs"
-            onClick={() => exportCsv(`shatta-activity-${stamp}.csv`, rows)}
+            onClick={() => exportCsv(`skanaround-activity-${stamp}.csv`, rows)}
           >
             <Sheet className="mr-1 size-3.5" /> CSV
           </Button>
@@ -95,7 +95,7 @@ export function InsightsTab() {
             size="sm"
             variant="outline"
             className="h-7 px-2 text-xs"
-            onClick={() => exportJson(`shatta-activity-${stamp}.json`, { days, rows })}
+            onClick={() => exportJson(`skanaround-activity-${stamp}.json`, { days, rows })}
           >
             <FileJson className="mr-1 size-3.5" /> JSON
           </Button>
@@ -105,7 +105,7 @@ export function InsightsTab() {
             className="h-7 px-2 text-xs"
             onClick={() =>
               exportPdf(
-                `shatta-activity-${stamp}.pdf`,
+                `skanaround-activity-${stamp}.pdf`,
                 `Activity report — last ${days} days`,
                 rows,
                 totals as Row,
