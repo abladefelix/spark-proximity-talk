@@ -468,7 +468,7 @@ function RadarPage() {
 
 
   return (
-    <main className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-5 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+    <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-5 pt-[calc(0.75rem+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
