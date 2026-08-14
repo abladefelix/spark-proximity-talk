@@ -5,13 +5,16 @@ const config: CapacitorConfig = {
   appName: "SHATTA",
   webDir: "dist",
   server: {
-    // Points the native shell at the live app so iOS/Android always run the
-    // latest build. Swap to your published domain before shipping to stores.
-    url: "https://b0859620-d8d1-49a0-93f5-f6acf2710f99.lovableproject.com?forceHideBadge=true",
+    // Live URL — the native shell loads your published web app so updates are instant
+    // without resubmitting to the App Store. Swap this for a local dev IP when testing
+    // on an iPhone simulator or device via `npx cap run ios` with live reload.
+    url: "https://shatta.caymanirs.com?forceHideBadge=true",
     cleartext: true,
   },
   ios: {
     contentInset: "always",
+    allowsLinkPreview: false,
+    scrollEnabled: "false",
   },
   plugins: {
     SplashScreen: {
