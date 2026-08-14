@@ -251,3 +251,32 @@
     0 0 22px -4px color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
+@keyframes verified-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+}
+
+@keyframes verified-echo-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility verified-glow {
+  animation: verified-glow-pulse 2.6s ease-in-out infinite;
+}
+
+@utility verified-echo {
+  animation: verified-echo-pulse 2.6s ease-in-out infinite;
+}
+
+
