@@ -559,27 +559,42 @@ function RadarPage() {
                 if (dragged.current) return;
                 setSelectedId(person.id);
               }}
-              style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
+              style={{ left, top, opacity: person.is_online ? 1 : 0.5 }}
               aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
+              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
             >
-              <RadarBeacon
-                sizePx={beaconSize}
-                verified={person.verified}
-                active={person.they_signaled && !person.match_id}
+              <span
+                className="relative flex items-center justify-center"
+                style={{ width: beaconSize, height: beaconSize }}
               >
-                <PersonAvatar
-                  path={person.avatar_url}
-                  name={person.display_name}
-                  username={person.username}
-                  gender={person.gender}
-                  className="size-full"
+                {/* soft glow pool */}
+                <span
+                  aria-hidden
+                  className={`absolute inset-0 rounded-full blur-md ${
+                    person.verified ? "bg-[oklch(0.78_0.14_190)]/35" : "bg-primary/30"
+                  }`}
                 />
-              </RadarBeacon>
-              {person.is_online && (
-                <span className="absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-background bg-emerald-500" />
-              )}
+                {/* ping for people who signaled you */}
+                {person.they_signaled && !person.match_id && (
+                  <span
+                    aria-hidden
+                    className={`beacon-ping absolute inset-0 rounded-full border ${
+                      person.verified
+                        ? "border-[oklch(0.78_0.14_190)]/60"
+                        : "border-primary/60"
+                    }`}
+                  />
+                )}
+                {/* the dot */}
+                <span
+                  className={`relative z-10 rounded-full ring-2 ring-background ${
+                    person.verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary"
+                  }`}
+                  style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
+                />
+              </span>
             </button>
+
           ))}
         </div>
 
