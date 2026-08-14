@@ -257,7 +257,7 @@ export function ChatPanel({
             new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000;
 
           return (
-            <div key={m.id}>
+            <div key={m.id} className="shrink-0">
               {newDay && (
                 <div className="my-4 flex justify-center">
                   <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur">
