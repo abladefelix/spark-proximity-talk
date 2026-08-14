@@ -134,7 +134,6 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
@@ -173,7 +172,18 @@ function RadarPage() {
           timeout: 30000,
         })
           .then((position) => push(position.coords))
-          .catch(() => {});
+          .catch(() => {
+            // A remotely hosted Capacitor app can occasionally lose the native
+            // plugin callback after resume. WKWebView location remains usable,
+            // so fall back instead of silently letting presence expire.
+            if ("geolocation" in navigator) {
+              navigator.geolocation.getCurrentPosition(
+                (position) => void push(position.coords),
+                () => {},
+                { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+              );
+            }
+          });
       } else if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => void push(position.coords),
@@ -230,7 +240,20 @@ function RadarPage() {
             });
             await push(position.coords);
           } catch {
-            // Keep waiting for watchPosition rather than showing a false error.
+            // Keep the native watcher, but also start the WebView provider. On
+            // iOS it can recover when a plugin callback is lost after resume.
+            if ("geolocation" in navigator) {
+              navigator.geolocation.getCurrentPosition(
+                (position) => void push(position.coords),
+                () => {},
+                { enableHighAccuracy: false, maximumAge: 300000, timeout: 30000 },
+              );
+              browserWatch = navigator.geolocation.watchPosition(
+                (position) => void push(position.coords),
+                () => {},
+                { enableHighAccuracy: false, maximumAge: 300000, timeout: 60000 },
+              );
+            }
           }
         } catch (error) {
           const message = error instanceof Error ? error.message.toLowerCase() : "";
@@ -257,7 +280,7 @@ function RadarPage() {
     // Stationary phones stop emitting position updates, which would make the
     // user look offline to everyone else. Re-publish the last fix periodically,
     // and ask for a fresh one when the watcher never delivered anything.
-    heartbeat = setInterval(() => {
+    const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords);
       else refreshFix();
@@ -277,7 +300,7 @@ function RadarPage() {
 
     return () => {
       cancelled = true;
-      if (heartbeat) clearInterval(heartbeat);
+      clearInterval(heartbeat);
       document.removeEventListener("visibilitychange", onWake);
       window.removeEventListener("focus", onWake);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
