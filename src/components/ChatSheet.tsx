@@ -27,7 +27,7 @@ function ChatBackdrop() {
   if (!css) return null;
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2.5rem]">
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2rem]">
       <div className="absolute inset-0 opacity-60 saturate-90 dark:opacity-50" style={{ background: css }} />
       <div className="absolute inset-0 bg-card/20 backdrop-blur-2xl dark:bg-card/25" />
     </div>
@@ -124,7 +124,10 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px] transition-colors duration-300" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(92dvh,800px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/30 bg-card/25 shadow-sheet outline-none backdrop-blur-3xl dark:bg-card/20 dark:shadow-sheet-dark">
+          <DrawerPrimitive.Content
+            style={{ height: "calc(100dvh - env(safe-area-inset-top) - 10px)" }}
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[820px] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2rem] border border-border/30 bg-card/25 shadow-sheet outline-none backdrop-blur-3xl dark:bg-card/20 dark:shadow-sheet-dark"
+          >
             <ChatBackdrop />
             <div className="relative z-10 flex h-full flex-col overflow-hidden">
               <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
