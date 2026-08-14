@@ -29,9 +29,10 @@ function useNativeViewportLock() {
         return;
       }
       const el = scrollable as HTMLElement;
+      const touch = e.touches[0];
+      if (!touch) return;
       const atTop = el.scrollTop <= 0;
       const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
-      const touch = e.touches[0];
       const prevY = lastY.get(e.target as EventTarget) ?? touch.clientY;
       const goingDown = touch.clientY > prevY;
       const goingUp = touch.clientY < prevY;
