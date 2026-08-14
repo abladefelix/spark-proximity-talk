@@ -4,13 +4,15 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import { useServerFn } from "@tanstack/react-start";
 import { useChatSheet } from "@/components/ChatSheet";
 import { registerPushToken } from "@/lib/push-notifications.functions";
+import { useSettings } from "@/hooks/useAppSettings";
 
 export function usePushNotifications(userId: string | null) {
   const { openChat } = useChatSheet();
   const register = useServerFn(registerPushToken);
+  const settings = useSettings();
 
   useEffect(() => {
-    if (!userId || !Capacitor.isNativePlatform()) return;
+    if (!userId || !settings.push_enabled || !Capacitor.isNativePlatform()) return;
 
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
@@ -58,5 +60,5 @@ export function usePushNotifications(userId: string | null) {
       unmounted = true;
       listeners.forEach((l) => l.then((h) => h.remove()));
     };
-  }, [userId, openChat, register]);
+  }, [userId, settings.push_enabled, openChat, register]);
 }
