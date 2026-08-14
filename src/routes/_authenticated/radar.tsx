@@ -538,7 +538,10 @@ function RadarPage() {
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
-        style={{ touchAction: "none", cursor: zoom > 1.001 ? "grab" : "default" }}
+        style={{
+          touchAction: zoom > 1.001 ? "none" : "pan-y",
+          cursor: zoom > 1.001 ? "grab" : "default",
+        }}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
