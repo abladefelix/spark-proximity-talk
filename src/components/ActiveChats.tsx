@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle } from "lucide-react";
+import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
 
@@ -17,6 +17,7 @@ type Row = {
 
 export function ActiveChats() {
   const queryClient = useQueryClient();
+  const { openChat } = useChatSheet();
 
   const { data: rows = [] } = useQuery({
     queryKey: ["active-chats"],
@@ -83,11 +84,11 @@ export function ActiveChats() {
   return (
     <div className="mt-4 space-y-2">
       {rows.map((row) => (
-        <Link
+        <button
           key={row.matchId}
-          to="/chat/$matchId"
-          params={{ matchId: row.matchId }}
-          className="flex items-center gap-3 rounded-2xl border border-primary/40 bg-card/70 px-3 py-2.5 transition-colors hover:bg-secondary/60"
+          type="button"
+          onClick={() => openChat(row.matchId)}
+          className="flex w-full text-left items-center gap-3 rounded-2xl border border-primary/40 bg-card/70 px-3 py-2.5 transition-colors hover:bg-secondary/60"
         >
           <PersonAvatar
             path={row.avatar_url}
@@ -106,7 +107,7 @@ export function ActiveChats() {
             <MessageCircle className="size-3.5" />
             Open
           </span>
-        </Link>
+        </button>
       ))}
     </div>
   );

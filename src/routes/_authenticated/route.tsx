@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -18,9 +19,11 @@ function AuthedLayout() {
   useNotifications(user?.id ?? null);
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
-      <Outlet />
-      <BottomNav />
-    </div>
+    <ChatSheetProvider>
+      <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
+        <Outlet />
+        <BottomNav />
+      </div>
+    </ChatSheetProvider>
   );
 }

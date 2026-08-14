@@ -22,6 +22,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
+import { useChatSheet } from "@/components/ChatSheet";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 import { Brand, useBranding } from "@/components/Brand";
@@ -73,6 +74,7 @@ function formatDistance(m: number) {
 
 function RadarPage() {
   const navigate = useNavigate();
+  const { openChat } = useChatSheet();
   const queryClient = useQueryClient();
   const radius = 500;
   const [visible, setVisible] = useState(true);
@@ -207,7 +209,7 @@ function RadarPage() {
       const updated = ((data ?? []) as NearbyPerson[]).find((p) => p.id === person.id);
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
-        navigate({ to: "/chat/$matchId", params: { matchId: updated.match_id } });
+        openChat(updated.match_id);
       } else {
         toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
       }
@@ -523,12 +525,7 @@ function RadarPage() {
                     <Button
                       variant="heat"
                       className="w-full"
-                      onClick={() =>
-                        navigate({
-                          to: "/chat/$matchId",
-                          params: { matchId: selected.match_id as string },
-                        })
-                      }
+                      onClick={() => openChat(selected.match_id as string)}
                     >
                       Chat
                     </Button>
