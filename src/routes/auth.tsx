@@ -91,12 +91,19 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("You're in. Turn on your radar!");
+        // Send them to the sign-in form instead of assuming a session exists.
+        await supabase.auth.signOut();
+        setPassword("");
+        setUsername("");
+        setMode("signin");
+        toast.success("Account created. Sign in to continue.");
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
       navigate({ to: "/radar" });
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
