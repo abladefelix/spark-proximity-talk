@@ -586,6 +586,44 @@ function AdminPage() {
               />
             ))}
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              type="color"
+              aria-label="Pick custom colour"
+              className="size-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+              onChange={(e) => setCustomColor(e.target.value)}
+              value={parseColorToRgb(customColor) ? toHexColor(customColor) : "#ffb020"}
+            />
+            <Input
+              value={customColor}
+              onChange={(e) => setCustomColor(e.target.value)}
+              placeholder="rgb(255, 176, 32) or #ffb020"
+              className="h-9 w-56"
+            />
+            <div
+              className="size-7 rounded-full border border-border"
+              style={{
+                background: accentSwatch(parseColorToHue(customColor) ?? DEFAULT_HUE),
+              }}
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                const hue = parseColorToHue(customColor);
+                if (hue === null) {
+                  toast.error("Enter a valid colour, e.g. rgb(255, 176, 32) or #ffb020");
+                  return;
+                }
+                void setAccent(hue);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Accepts hex, rgb() or hsl(). The colour is matched to the closest accent tone.
+          </p>
+
         </div>
       )}
 
