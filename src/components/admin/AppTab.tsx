@@ -8,6 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+  VERIFIED_BADGE_STYLES,
+  VerifiedBadgeMark,
+  type VerifiedBadgeStyle,
+} from "@/components/VerifiedBadge";
+import {
   APP_SETTINGS_DEFAULTS,
   FONT_OPTIONS,
   useAppSettings,
@@ -213,6 +218,42 @@ export function AppTab() {
             </Field>
           ))}
         </div>
+
+        <Field label="Verified badge icon">
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(VERIFIED_BADGE_STYLES) as VerifiedBadgeStyle[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => set("verified_badge_style", s)}
+                className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs capitalize ${
+                  value.verified_badge_style === s
+                    ? "border-primary bg-primary/10"
+                    : "border-border"
+                }`}
+              >
+                <VerifiedBadgeMark style={s} color={value.verified_badge_color} className="size-4" />
+                {s}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field label="Verified badge colour">
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              aria-label="Verified badge colour"
+              className="size-8 shrink-0 cursor-pointer rounded border border-border bg-transparent"
+              value={value.verified_badge_color}
+              onChange={(e) => set("verified_badge_color", e.target.value)}
+            />
+            <Input
+              value={value.verified_badge_color}
+              onChange={(e) => set("verified_badge_color", e.target.value)}
+            />
+          </div>
+        </Field>
 
         <Field label="Font">
           <div className="flex flex-wrap gap-2">

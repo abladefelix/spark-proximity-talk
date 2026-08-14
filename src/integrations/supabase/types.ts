@@ -46,6 +46,8 @@ export type Database = {
           terms_text: string
           updated_at: string
           verification_enabled: boolean
+          verified_badge_color: string
+          verified_badge_style: string
           welcome_text: string
         }
         Insert: {
@@ -79,6 +81,8 @@ export type Database = {
           terms_text?: string
           updated_at?: string
           verification_enabled?: boolean
+          verified_badge_color?: string
+          verified_badge_style?: string
           welcome_text?: string
         }
         Update: {
@@ -112,6 +116,8 @@ export type Database = {
           terms_text?: string
           updated_at?: string
           verification_enabled?: boolean
+          verified_badge_color?: string
+          verified_badge_style?: string
           welcome_text?: string
         }
         Relationships: []

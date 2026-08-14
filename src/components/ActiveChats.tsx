@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, MessageCircle } from "lucide-react";
+import { ChevronDown, MessageCircle, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
@@ -95,6 +96,29 @@ export function ActiveChats() {
 
   const behind = Math.min(rows.length - 1, 2);
 
+  async function removeChat(matchId: string) {
+    const { error } = await supabase.from("matches").delete().eq("id", matchId);
+    if (error) {
+      toast.error("Could not remove chat");
+      return;
+    }
+    toast.success("Chat removed");
+    queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+  }
+
+  async function clearAll() {
+    const ids = rows.map((r) => r.matchId);
+    if (!ids.length) return;
+    const { error } = await supabase.from("matches").delete().in("id", ids);
+    if (error) {
+      toast.error("Could not clear chats");
+      return;
+    }
+    setExpanded(false);
+    toast.success("All chats cleared");
+    queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+  }
+
   return (
     <div className="relative z-10 mt-4">
       {/* Stacked deck: peeking cards behind the top card */}
@@ -117,6 +141,7 @@ export function ActiveChats() {
           })}
 
         <div className="relative z-[2] overflow-hidden rounded-2xl border border-primary/30 bg-card shadow-md">
+          <div className="flex items-center">
           <button
             type="button"
             onClick={() => (rows.length > 1 ? setExpanded((v) => !v) : openChat(latest.matchId))}
@@ -150,15 +175,27 @@ export function ActiveChats() {
               <MessageCircle className="size-4 shrink-0 text-primary" />
             )}
           </button>
+          <button
+            type="button"
+            aria-label="Remove chat"
+            onClick={() => removeChat(latest.matchId)}
+            className="mr-2 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+          </div>
 
           {expanded && (
             <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
               {rows.map((row) => (
-                <button
+                <div
                   key={row.matchId}
+                  className="flex w-full items-center gap-1 rounded-xl transition-colors hover:bg-secondary/60"
+                >
+                <button
                   type="button"
                   onClick={() => openChat(row.matchId)}
-                  className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+                  className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left"
                 >
                   <PersonAvatar
                     path={row.avatar_url}
@@ -180,7 +217,24 @@ export function ActiveChats() {
                     Open
                   </span>
                 </button>
+                <button
+                  type="button"
+                  aria-label={`Remove chat with ${row.display_name ?? row.username}`}
+                  onClick={() => removeChat(row.matchId)}
+                  className="mr-1.5 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                >
+                  <X className="size-4" />
+                </button>
+                </div>
               ))}
+              <button
+                type="button"
+                onClick={clearAll}
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+              >
+                <Trash2 className="size-3.5" />
+                Clear all chats
+              </button>
             </div>
           )}
         </div>
