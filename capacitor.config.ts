@@ -15,6 +15,11 @@ const config: CapacitorConfig = {
     contentInset: "always",
     allowsLinkPreview: false,
   },
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false,
+  },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,

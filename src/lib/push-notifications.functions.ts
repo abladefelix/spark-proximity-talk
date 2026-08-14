@@ -82,18 +82,18 @@ export const sendPushNotification = createServerFn({ method: "POST" })
     if (!valid) return { sent: false, reason: "not-authorized" };
 
     const { sendApnsNotification, shouldDeleteApnsToken } = await import("./push-notifications.server");
+    const { sendFcmNotification, shouldDeleteFcmToken } = await import("./fcm.server");
 
     const { data: tokens } = await supabaseAdmin
-
       .from("push_tokens")
-      .select("token")
+      .select("token, platform")
       .eq("user_id", data.recipientId);
 
     if (!tokens?.length) return { sent: false, reason: "no-tokens" };
 
     const results = await Promise.all(
-      tokens.map(async ({ token }) => {
-        const res = await sendApnsNotification({
+      tokens.map(async ({ token, platform }) => {
+        const payload = {
           token,
           title: data.title,
           body: data.body,
@@ -101,8 +101,13 @@ export const sendPushNotification = createServerFn({ method: "POST" })
             data.kind === "signal"
               ? { kind: "signal" }
               : { kind: data.kind, relatedId: relationId ?? "" },
-        });
-        if (!res.sent && shouldDeleteApnsToken(res.reason)) {
+        };
+        const isAndroid = platform === "android";
+        const res = isAndroid
+          ? await sendFcmNotification(payload)
+          : await sendApnsNotification(payload);
+        const fatal = isAndroid ? shouldDeleteFcmToken(res.reason) : shouldDeleteApnsToken(res.reason);
+        if (!res.sent && fatal) {
           await supabaseAdmin.from("push_tokens").delete().eq("token", token);
         }
         return res;
