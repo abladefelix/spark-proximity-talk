@@ -271,6 +271,10 @@ function RadarPage() {
         </div>
       </div>
 
+      <IncomingSignals />
+
+
+
       <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
         <DialogContent className="max-w-xs rounded-3xl text-center">
           <DialogHeader className="items-center">
