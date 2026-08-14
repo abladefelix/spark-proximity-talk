@@ -10,9 +10,6 @@ import {
   Ban,
   Flag,
   MapPin,
-  Plus,
-  Minus,
-  Maximize2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
