@@ -10,9 +10,6 @@ import {
   Ban,
   Flag,
   MapPin,
-  Plus,
-  Minus,
-  Maximize2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -453,10 +450,6 @@ function RadarPage() {
     if (pointers.current.size < 2) gesture.current = null;
   };
 
-  const stepZoom = (factor: number) => {
-    const c = (scopeSize || 320) / 2;
-    zoomAtRef.current(viewRef.current.zoom * factor, c, c);
-  };
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
@@ -592,37 +585,8 @@ function RadarPage() {
 
         <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
 
-        <div className="absolute bottom-4 right-4 flex flex-col overflow-hidden rounded-full border border-border bg-card/80 backdrop-blur">
-          <button
-            type="button"
-            aria-label="Zoom in"
-            onClick={() => stepZoom(1.4)}
-            className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Plus className="size-4" />
-          </button>
-          <button
-            type="button"
-            aria-label="Zoom out"
-            onClick={() => stepZoom(1 / 1.4)}
-            className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Minus className="size-4" />
-          </button>
-          {zoom > 1.001 && (
-            <button
-              type="button"
-              aria-label="Reset zoom"
-              onClick={() => {
-                setZoom(1);
-                setPan({ x: 0, y: 0 });
-              }}
-              className="flex size-8 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Maximize2 className="size-3.5" />
-            </button>
-          )}
-        </div>
+
+
 
         {(!located || nearby.isLoading) && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
