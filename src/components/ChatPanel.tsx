@@ -121,9 +121,10 @@ export function ChatPanel({
         data: {
           kind: "message",
           recipientId: other.id,
-          title: other.display_name ?? `@${other.username}` ?? "New message",
+          title: other.display_name ?? other.username ?? "New message",
           body: content,
           relatedId: matchId,
+
         },
       }).catch(() => {
         /* push failure is non-fatal */
