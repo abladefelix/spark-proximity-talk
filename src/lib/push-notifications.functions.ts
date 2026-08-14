@@ -81,10 +81,10 @@ export const sendPushNotification = createServerFn({ method: "POST" })
 
     if (!valid) return { sent: false, reason: "not-authorized" };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { sendApnsNotification, shouldDeleteApnsToken } = await import("./push-notifications.server");
 
     const { data: tokens } = await supabaseAdmin
+
       .from("push_tokens")
       .select("token")
       .eq("user_id", data.recipientId);
