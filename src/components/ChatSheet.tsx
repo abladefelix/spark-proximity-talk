@@ -39,7 +39,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
             </DrawerPrimitive.Description>
             <div className="mx-auto my-2 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/30" />
             {matchId && (
-              <ChatPanel matchId={matchId} className="flex min-h-0 flex-1 flex-col bg-background" />
+              <ChatPanel matchId={matchId} className="absolute inset-x-0 bottom-0 top-5 flex min-h-0 flex-col overflow-hidden bg-background" />
             )}
           </DrawerPrimitive.Content>
         </DrawerPrimitive.Portal>
