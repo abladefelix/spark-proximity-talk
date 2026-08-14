@@ -90,9 +90,9 @@ export function ActiveChats() {
   const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
   const rows = allRows.filter((r) => r.lastAt >= cutoff);
 
-  if (rows.length === 0) return null;
-
   const latest = rows[0];
+  if (!latest) return null;
+
 
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-primary/30 bg-card/60">
