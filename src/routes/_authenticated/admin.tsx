@@ -81,6 +81,9 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const { data: accentHue } = useAccentHue();
+  const { data: branding } = useBranding();
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [savingLogo, setSavingLogo] = useState(false);
 
   async function setAccent(hue: number) {
     const { error } = await supabase
@@ -94,6 +97,62 @@ function AdminPage() {
     await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
     toast.success("Theme colour updated");
   }
+
+  async function saveAppName() {
+    const name = (nameDraft ?? "").trim();
+    if (!name) return;
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ app_name: name })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    setNameDraft(null);
+    toast.success("App name updated");
+  }
+
+  async function uploadLogo(file: File) {
+    setSavingLogo(true);
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `logo-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("branding").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (upErr) {
+      setSavingLogo(false);
+      toast.error(upErr.message);
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ logo_url: path })
+      .eq("id", "global");
+    setSavingLogo(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    toast.success("Logo updated");
+  }
+
+  async function resetLogo() {
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ logo_url: null })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    toast.success("Logo reset");
+  }
+
 
 
   const { data: access, isLoading: accessLoading } = useQuery({
