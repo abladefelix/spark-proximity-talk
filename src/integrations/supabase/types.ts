@@ -262,6 +262,7 @@ export type Database = {
     }
     Functions: {
       admin_exists: { Args: never; Returns: boolean }
+      admin_purge_stale_locations: { Args: never; Returns: number }
       admin_stats: {
         Args: never
         Returns: {
@@ -274,6 +275,10 @@ export type Database = {
           signals: number
           verified: number
         }[]
+      }
+      admin_wipe_user_activity: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
