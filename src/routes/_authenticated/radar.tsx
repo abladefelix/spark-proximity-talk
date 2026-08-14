@@ -34,13 +34,13 @@ import { Brand, BrandMark } from "@/components/Brand";
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
     meta: [
-      { title: "Radar — Who's around you on skanAround" },
+      { title: "Radar — Who's around you on SkanAround" },
       {
         name: "description",
         content:
           "See people sharing your spot right now, send a signal and unlock the chat when it's mutual.",
       },
-      { property: "og:title", content: "skanAround Radar" },
+      { property: "og:title", content: "SkanAround Radar" },
       { property: "og:description", content: "People near you, right now." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -219,7 +219,7 @@ function RadarPage() {
             kind: "signal",
             recipientId: person.id,
             title: person.display_name ?? `@${person.username}`,
-            body: "wants to chat on skanAround",
+            body: "wants to chat on SkanAround",
           },
         }).catch(() => {
           /* push failure is non-fatal */
@@ -261,7 +261,7 @@ function RadarPage() {
     }
     setReason("");
     setReporting(false);
-    toast.success("Report sent. Thanks for keeping skanAround safe.");
+    toast.success("Report sent. Thanks for keeping SkanAround safe.");
   }
 
   const scopeRef = useRef<HTMLElement | null>(null);
@@ -372,7 +372,7 @@ function RadarPage() {
             <DialogDescription>
               {permDenied
                 ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
-                : "skanAround needs your location to show people around you. Only distance is ever shared — never your exact spot."}
+                : "SkanAround needs your location to show people around you. Only distance is ever shared — never your exact spot."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-col">

@@ -11,16 +11,16 @@ import { Brand } from "@/components/Brand";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in to skanAround — Chat with people around you" },
+      { title: "Sign in to SkanAround — Chat with people around you" },
       {
         name: "description",
         content:
-          "Create your skanAround account or sign in to see who is nearby, send a signal and start chatting.",
+          "Create your SkanAround account or sign in to see who is nearby, send a signal and start chatting.",
       },
-      { property: "og:title", content: "Sign in to skanAround" },
+      { property: "og:title", content: "Sign in to SkanAround" },
       {
         property: "og:description",
-        content: "Join skanAround and meet the people sharing your spot right now.",
+        content: "Join SkanAround and meet the people sharing your spot right now.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

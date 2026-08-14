@@ -10,13 +10,13 @@ import { Brand } from "@/components/Brand";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "skanAround — Chat with the people right around you" },
+      { title: "SkanAround — Chat with the people right around you" },
       {
         name: "description",
         content:
-          "skanAround shows you who is close by right now. Send a signal, and if they signal back your chat unlocks. No usernames to hunt for.",
+          "SkanAround shows you who is close by right now. Send a signal, and if they signal back your chat unlocks. No usernames to hunt for.",
       },
-      { property: "og:title", content: "skanAround — Chat with the people right around you" },
+      { property: "og:title", content: "SkanAround — Chat with the people right around you" },
       {
         property: "og:description",
         content: "Proximity chat. Signal someone nearby, match, and link up.",
@@ -65,7 +65,7 @@ function Landing() {
         </section>
 
 
-        <h1 className="sr-only">skanAround — chat with the people right around you</h1>
+        <h1 className="sr-only">SkanAround — chat with the people right around you</h1>
 
         <Button asChild variant="heat" size="lg" className="w-full">
           <Link to="/auth">Start signalling</Link>
