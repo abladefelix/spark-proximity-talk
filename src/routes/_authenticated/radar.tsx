@@ -138,7 +138,13 @@ function RadarPage() {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
 
-      const me = (await supabase.auth.getUser()).data.user?.id;
+      // Use the locally cached session: a network round-trip here (getUser)
+      // can hang on flaky mobile networks and silently kill the heartbeat.
+      let me = myIdRef.current;
+      if (!me) {
+        me = (await supabase.auth.getSession()).data.session?.user?.id ?? null;
+        myIdRef.current = me;
+      }
       if (!me) return;
       const { error } = await supabase.from("locations").upsert(
         {
@@ -157,6 +163,23 @@ function RadarPage() {
       setGeoError(null);
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
+    };
+    const refreshFix = () => {
+      if (isNative) {
+        void Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          maximumAge: 60000,
+          timeout: 30000,
+        })
+          .then((position) => push(position.coords))
+          .catch(() => {});
+      } else if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => void push(position.coords),
+          () => {},
+          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+        );
+      }
     };
     const fail = (denied: boolean, unavailable = false) => {
       if (cancelled) return;
