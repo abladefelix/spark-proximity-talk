@@ -232,6 +232,23 @@ function RadarPage() {
         </div>
       </div>
 
+      {geoError && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
+          <span>{geoError}</span>
+          <button
+            type="button"
+            onClick={() => setRetryKey((k) => k + 1)}
+            className="shrink-0 rounded-full border border-border px-3 py-1 font-medium text-foreground"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {!geoError && located && people.length === 0 && !nearby.isLoading && (
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          No one within {radius} m right now.
+        </p>
+      )}
 
       <div className="flex flex-1 items-center justify-center py-8">
       <section
