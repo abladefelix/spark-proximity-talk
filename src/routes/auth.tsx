@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
+import { useSettings } from "@/hooks/useAppSettings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const settings = useSettings();
   const [mode, setMode] = useState<"signin" | "signup" | "reset">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +52,10 @@ function AuthPage() {
         return;
       }
       if (mode === "signup") {
+        if (!settings.signups_enabled) {
+          toast.error("New sign-ups are closed right now");
+          return;
+        }
         const clean = username.trim().toLowerCase().replace(/\s+/g, "_");
         if (clean.length < 3) {
           toast.error("Pick a username with at least 3 characters");
@@ -105,7 +111,7 @@ function AuthPage() {
       <p className="mt-2 text-sm text-muted-foreground">
         {mode === "reset"
           ? "Enter your email and we'll send you a link to set a new password."
-          : "Strangers close by. One signal. If it's mutual, you chat."}
+          : settings.tagline}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -172,13 +178,15 @@ function AuthPage() {
         Continue with Google
       </Button>
 
-      <button
-        type="button"
-        className="mt-8 text-sm text-muted-foreground underline-offset-4 hover:underline"
-        onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-      >
-        {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
-      </button>
+      {(settings.signups_enabled || mode === "signup") && (
+        <button
+          type="button"
+          className="mt-8 text-sm text-muted-foreground underline-offset-4 hover:underline"
+          onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+        >
+          {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
+        </button>
+      )}
     </main>
   );
 }
