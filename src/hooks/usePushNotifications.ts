@@ -25,7 +25,7 @@ export function usePushNotifications(userId: string | null) {
       PushNotifications.addListener("registration", async ({ value }) => {
         if (unmounted || !value) return;
         try {
-          await register({ data: { token: value, platform: "ios" } });
+          await register({ data: { token: value, platform: Capacitor.getPlatform() } });
         } catch (e) {
           console.error("[Push] token registration failed", e);
         }
