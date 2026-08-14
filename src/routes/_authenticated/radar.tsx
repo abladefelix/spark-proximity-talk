@@ -35,6 +35,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
+import { useSettings } from "@/hooks/useAppSettings";
 
 
 
@@ -522,8 +523,7 @@ function RadarPage() {
       )}
       {!geoError && located && people.length === 0 && !nearby.isLoading && (
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          No one within {radius < 1000 ? `${radius} m` : `${(radius / 1000).toFixed(1)} km`} — widen
-          your scan range in your profile.
+          {settings.empty_radar_text} Widen your scan range in your profile.
         </p>
       )}
 
@@ -620,7 +620,9 @@ function RadarPage() {
           ))}
         </div>
 
-        <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+        {settings.radar_sweep_enabled && (
+          <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+        )}
 
 
 
