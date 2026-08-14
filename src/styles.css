@@ -177,6 +177,10 @@
     -webkit-overflow-scrolling: auto;
   }
 
+  html {
+    background-color: var(--color-background);
+  }
+
   body {
     position: fixed;
     inset: 0;
