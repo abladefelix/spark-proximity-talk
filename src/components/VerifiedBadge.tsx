@@ -19,7 +19,7 @@ export function VerifiedBadgeMark({
 }: {
   style: VerifiedBadgeStyle;
   color: string;
-  className?: string;
+  className?: string | undefined;
 }) {
   const path = VERIFIED_BADGE_STYLES[style] ?? VERIFIED_BADGE_STYLES.check;
   const filled = style !== "check";
@@ -46,7 +46,7 @@ export function VerifiedBadgeMark({
   );
 }
 
-export function VerifiedBadge({ className }: { className?: string }) {
+export function VerifiedBadge({ className }: { className?: string | undefined }) {
   const settings = useSettings();
   return (
     <VerifiedBadgeMark
