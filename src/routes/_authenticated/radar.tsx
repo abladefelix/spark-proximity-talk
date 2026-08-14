@@ -153,7 +153,7 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
-    const fail = (denied: boolean) => {
+    const fail = (denied: boolean, unavailable = false) => {
       if (cancelled) return;
       if (denied) {
         setPermDenied(true);
@@ -161,7 +161,7 @@ function RadarPage() {
         setGeoError("Location permission is off. Turn it on to see who's around.");
         return;
       }
-      setGeoError("Couldn't get your location yet — move somewhere with better signal.");
+      if (unavailable) setGeoError("Turn on Location Services to use the radar.");
     };
 
     void (async () => {
@@ -178,36 +178,50 @@ function RadarPage() {
 
           setAskLocation(false);
           setPermDenied(false);
-          const position = await Geolocation.getCurrentPosition({
-            enableHighAccuracy: false,
-            maximumAge: 60000,
-            timeout: 15000,
-          });
-          await push(position.coords);
           nativeWatch = await Geolocation.watchPosition(
-            { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 },
+            { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
             (position, error) => {
               if (position) void push(position.coords);
-              else if (error) fail(error.code === "OS-PLUG-GLOC-0003");
+              else if (error) {
+                const denied = error.code === "OS-PLUG-GLOC-0003";
+                const unavailable = error.code === "OS-PLUG-GLOC-0007";
+                fail(denied, unavailable);
+              }
             },
           );
           if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
+
+          // A cached fix makes startup instant when available. A timeout here is
+          // not an error: the watcher above remains active until iOS gets a fix.
+          try {
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: false,
+              maximumAge: 300000,
+              timeout: 60000,
+            });
+            await push(position.coords);
+          } catch {
+            // Keep waiting for watchPosition rather than showing a false error.
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message.toLowerCase() : "";
-          fail(message.includes("permission") || message.includes("denied"));
+          fail(
+            message.includes("permission") || message.includes("denied"),
+            message.includes("location services") || message.includes("disabled"),
+          );
         }
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => void push(position.coords),
-        (error) => fail(error.code === error.PERMISSION_DENIED),
-        { enableHighAccuracy: false, maximumAge: 60000, timeout: 15000 },
+        (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
+        { enableHighAccuracy: false, maximumAge: 300000, timeout: 60000 },
       );
       browserWatch = navigator.geolocation.watchPosition(
         (position) => void push(position.coords),
-        (error) => fail(error.code === error.PERMISSION_DENIED),
-        { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 },
+        (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
+        { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
       );
     })();
 
