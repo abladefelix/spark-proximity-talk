@@ -22,7 +22,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
-import { Brand } from "@/components/Brand";
+import { Brand, useBranding } from "@/components/Brand";
 
 const logoUrl = logoAsset.url;
 
@@ -156,6 +156,7 @@ function RadarPage() {
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { data: branding } = useBranding();
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
   async function blockPerson(person: NearbyPerson) {
