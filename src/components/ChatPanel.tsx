@@ -274,7 +274,7 @@ export function ChatPanel({
                         path={other?.avatar_url}
                         name={other?.display_name}
                         username={other?.username ?? "?"}
-                        gender={other?.gender}
+                        gender={other?.gender as import("@/components/PersonAvatar").Gender}
                         className="size-7 rounded-full"
                       />
                     )}
