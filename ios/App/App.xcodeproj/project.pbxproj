@@ -71,10 +71,12 @@
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
-				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
-				504EC3131FED79650016851F /* Info.plist */,
-				2FAD9762203C412B000D30F8 /* config.xml */,
-				50B271D01FEDC1A000F3C39B /* public */,
+			504EC3101FED79650016851F /* LaunchScreen.storyboard */,
+			504EC3131FED79650016851F /* Info.plist */,
+			5F0D6E3F2B3A4A1B8C7D9E0F /* App.entitlements */,
+			2FAD9762203C412B000D30F8 /* config.xml */,
+			50B271D01FEDC1A000F3C39B /* public */,
+
 			);
 			path = App;
 			sourceTree = "<group>";
