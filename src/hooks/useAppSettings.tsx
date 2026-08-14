@@ -98,6 +98,21 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   }, [settings.color_male, settings.color_female, settings.color_other]);
 
   useEffect(() => {
+    // Only the two default families ship in the blocking <link>; any other
+    // admin-picked family is fetched lazily so cold start stays fast.
+    const family = settings.font_family;
+    if (family && family !== "Sora" && family !== "Manrope") {
+      const id = `font-${family.replace(/\s+/g, "-")}`;
+      if (!document.getElementById(id)) {
+        const link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+          family,
+        ).replace(/%20/g, "+")}:wght@400;500;600;700&display=swap`;
+        document.head.appendChild(link);
+      }
+    }
     document.documentElement.style.setProperty(
       "--font-sans-active",
       `"${settings.font_family}", ui-sans-serif, system-ui, sans-serif`,
