@@ -46,9 +46,30 @@ export function useChatSheet() {
   return ctx;
 }
 
+/** Tracks the visual viewport so the chat sits above the keyboard instead of scrolling the header away. */
+function useVisualViewport() {
+  const [viewport, setViewport] = useState<{ top: number; height: string | number }>({ top: 0, height: "100%" });
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setViewport({ top: vv.offsetTop, height: vv.height });
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  return viewport;
+}
+
 export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const [matchId, setMatchId] = useState<string | null>(null);
   const pushedRef = useRef(false);
+  const viewport = useVisualViewport();
 
   const openChat = useCallback((id: string) => setMatchId(id), []);
   const closeChat = useCallback(() => {
