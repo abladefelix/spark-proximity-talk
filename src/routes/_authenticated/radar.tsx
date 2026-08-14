@@ -272,6 +272,7 @@ function RadarPage() {
         </div>
       </div>
 
+      <ActiveChats />
       <IncomingSignals />
 
 
