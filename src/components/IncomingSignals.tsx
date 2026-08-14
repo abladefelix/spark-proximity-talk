@@ -22,6 +22,8 @@ type Incoming = {
 export function IncomingSignals() {
   const { openChat } = useChatSheet();
   const queryClient = useQueryClient();
+  const sendPush = useServerFn(sendPushNotification);
+
 
   const { data: incoming = [] } = useQuery({
     queryKey: ["incoming-signals"],
