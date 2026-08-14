@@ -49,6 +49,7 @@ export function ChatPanel({
   const [me, setMe] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
 
@@ -111,7 +112,9 @@ export function ChatPanel({
   }, [matchId, queryClient]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messageList = messagesRef.current;
+    if (!messageList) return;
+    messageList.scrollTo({ top: messageList.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
 
   async function send(e: React.FormEvent) {
@@ -206,7 +209,7 @@ export function ChatPanel({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card px-4 pb-5 pt-6">
+      <div ref={messagesRef} data-vaul-no-drag className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card px-4 pb-5 pt-6">
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center -space-x-3">
             <PersonAvatar
