@@ -17,11 +17,13 @@ type SettingsInput = {
 };
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (!data) throw new Error("Forbidden");
+  const { data } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .limit(1);
+  if (!data?.length) throw new Error("Forbidden");
 }
 
 export const getBackupSettings = createServerFn({ method: "POST" })

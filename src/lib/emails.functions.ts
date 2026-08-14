@@ -2,8 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function assertStaff(context: { supabase: any; userId: string }) {
-  const { data } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-  if (!data) throw new Error("Forbidden");
+  const { data } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .in("role", ["admin", "moderator"])
+    .limit(1);
+  if (!data?.length) throw new Error("Forbidden");
 }
 
 export type PendingEmail = {
