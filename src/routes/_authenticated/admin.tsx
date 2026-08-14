@@ -93,6 +93,7 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const { data: accentHue } = useAccentHue();
+  const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [savingLogo, setSavingLogo] = useState(false);
