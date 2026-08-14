@@ -3,7 +3,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Zap, Check, LoaderCircle, Ban, Flag, MapPin } from "lucide-react";
+import {
+  Zap,
+  Check,
+  LoaderCircle,
+  Ban,
+  Flag,
+  MapPin,
+  Plus,
+  Minus,
+  Maximize2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
