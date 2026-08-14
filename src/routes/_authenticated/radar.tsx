@@ -459,8 +459,10 @@ function RadarPage() {
           >
             <RadarBeacon
               sizePx={beaconSize}
+              verified={person.verified}
               active={person.they_signaled && !person.match_id}
             >
+
               <PersonAvatar
                 path={person.avatar_url}
                 name={person.display_name}
