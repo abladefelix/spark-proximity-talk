@@ -410,6 +410,8 @@ function RadarPage() {
     const el = scopeRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      // Let the page scroll normally unless the user is deliberately zooming.
+      if (!e.ctrlKey && viewRef.current.zoom <= 1.001) return;
       e.preventDefault();
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
       const rect = el.getBoundingClientRect();
@@ -428,7 +430,11 @@ function RadarPage() {
   const onPointerDown = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     dragged.current = false;
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    // Only capture when a gesture is actually possible, so vertical page
+    // scrolling keeps working at the default zoom level.
+    if (viewRef.current.zoom > 1.001 || pointers.current.size > 1) {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const prev = pointers.current.get(e.pointerId);
@@ -462,7 +468,7 @@ function RadarPage() {
 
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
@@ -538,7 +544,10 @@ function RadarPage() {
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
-        style={{ touchAction: "none", cursor: zoom > 1.001 ? "grab" : "default" }}
+        style={{
+          touchAction: zoom > 1.001 ? "none" : "pan-y",
+          cursor: zoom > 1.001 ? "grab" : "default",
+        }}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
