@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           accent_hue: number
           app_name: string
+          chat_backgrounds: Json
           chat_enabled: boolean
           chat_prompt_text: string
           chat_ttl_days: number
@@ -53,6 +54,7 @@ export type Database = {
         Insert: {
           accent_hue?: number
           app_name?: string
+          chat_backgrounds?: Json
           chat_enabled?: boolean
           chat_prompt_text?: string
           chat_ttl_days?: number
@@ -88,6 +90,7 @@ export type Database = {
         Update: {
           accent_hue?: number
           app_name?: string
+          chat_backgrounds?: Json
           chat_enabled?: boolean
           chat_prompt_text?: string
           chat_ttl_days?: number
@@ -323,6 +326,7 @@ export type Database = {
           banned_at: string | null
           banned_reason: string | null
           bio: string | null
+          chat_background: string | null
           created_at: string
           display_name: string | null
           gender: string | null
@@ -338,6 +342,7 @@ export type Database = {
           banned_at?: string | null
           banned_reason?: string | null
           bio?: string | null
+          chat_background?: string | null
           created_at?: string
           display_name?: string | null
           gender?: string | null
@@ -353,6 +358,7 @@ export type Database = {
           banned_at?: string | null
           banned_reason?: string | null
           bio?: string | null
+          chat_background?: string | null
           created_at?: string
           display_name?: string | null
           gender?: string | null
