@@ -118,8 +118,10 @@ function RadarPage() {
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
+  const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
 
   // Keep my location fresh while the radar is open.
+
   useEffect(() => {
     if (askLocation) return;
     const isNative = Capacitor.isNativePlatform();
