@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Zap } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
+import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { PersonAvatar } from "@/components/PersonAvatar";
+
 
 type Incoming = {
   id: string;
@@ -19,6 +22,8 @@ type Incoming = {
 export function IncomingSignals() {
   const { openChat } = useChatSheet();
   const queryClient = useQueryClient();
+  const sendPush = useServerFn(sendPushNotification);
+
 
   const { data: incoming = [] } = useQuery({
     queryKey: ["incoming-signals"],
@@ -80,13 +85,25 @@ export function IncomingSignals() {
       if (!match) throw new Error("Couldn't open the chat — try again");
       return match.id;
     },
-    onSuccess: (matchId) => {
+    onSuccess: (matchId, person) => {
       queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
       openChat(matchId);
+      sendPush({
+        data: {
+          kind: "match",
+          recipientId: person.from_user,
+          title: "It's mutual",
+          body: "Your chat on SHATTA is unlocked",
+          relatedId: matchId,
+        },
+      }).catch(() => {
+        /* push failure is non-fatal */
+      });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not accept"),
   });
+
 
   const decline = useMutation({
     mutationFn: async (person: Incoming) => {

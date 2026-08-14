@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,6 +21,7 @@ function AuthedLayout() {
 
   return (
     <ChatSheetProvider>
+      <PushManager userId={user?.id ?? null} />
       <div className="mx-auto min-h-screen w-full max-w-lg pb-24">
         <Outlet />
         <BottomNav />
@@ -27,3 +29,9 @@ function AuthedLayout() {
     </ChatSheetProvider>
   );
 }
+
+function PushManager({ userId }: { userId: string | null }) {
+  usePushNotifications(userId);
+  return null;
+}
+

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Zap, Check, LoaderCircle, Ban, Flag, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,11 +24,13 @@ import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useChatSheet } from "@/components/ChatSheet";
+import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 import { Brand, useBranding } from "@/components/Brand";
 
 const logoUrl = logoAsset.url;
+
 
 
 export const Route = createFileRoute("/_authenticated/radar")({
@@ -75,6 +78,7 @@ function formatDistance(m: number) {
 function RadarPage() {
   const navigate = useNavigate();
   const { openChat } = useChatSheet();
+  const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
   const radius = 500;
   const [visible, setVisible] = useState(true);
@@ -83,6 +87,7 @@ function RadarPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
@@ -211,10 +216,21 @@ function RadarPage() {
         openChat(updated.match_id);
       } else {
         toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
+        await sendPush({
+          data: {
+            kind: "signal",
+            recipientId: person.id,
+            title: person.display_name ?? `@${person.username}`,
+            body: "wants to chat on SHATTA",
+          },
+        }).catch(() => {
+          /* push failure is non-fatal */
+        });
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send signal"),
   });
+
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
