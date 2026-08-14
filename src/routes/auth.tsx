@@ -31,7 +31,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -41,6 +41,14 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Check your email for the reset link");
+        return;
+      }
       if (mode === "signup") {
         const clean = username.trim().toLowerCase().replace(/\s+/g, "_");
         if (clean.length < 3) {
@@ -92,10 +100,12 @@ function AuthPage() {
         <Brand className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground" />
       </Link>
       <h1 className="mt-6 text-3xl leading-tight">
-        {mode === "signup" ? "Join the block" : "Welcome back"}
+        {mode === "signup" ? "Join the block" : mode === "reset" ? "Reset password" : "Welcome back"}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Strangers close by. One signal. If it's mutual, you chat.
+        {mode === "reset"
+          ? "Enter your email and we'll send you a link to set a new password."
+          : "Strangers close by. One signal. If it's mutual, you chat."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -121,6 +131,7 @@ function AuthPage() {
             required
           />
         </div>
+        {mode !== "reset" && (
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
           <Input
@@ -132,9 +143,19 @@ function AuthPage() {
             required
           />
         </div>
+        )}
         <Button type="submit" variant="heat" size="lg" className="w-full" disabled={busy}>
-          {mode === "signup" ? "Create account" : "Sign in"}
+          {mode === "signup" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}
         </Button>
+        {mode === "signin" && (
+          <button
+            type="button"
+            className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            onClick={() => setMode("reset")}
+          >
+            Forgot your password?
+          </button>
+        )}
       </form>
 
       <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
