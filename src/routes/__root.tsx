@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
+import { AppSettingsProvider } from "@/hooks/useAppSettings";
 
 
 function NotFoundComponent() {
