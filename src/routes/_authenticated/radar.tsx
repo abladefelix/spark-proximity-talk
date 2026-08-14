@@ -27,7 +27,6 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import { Brand, BrandMark } from "@/components/Brand";
-import { Slider } from "@/components/ui/slider";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
 
 

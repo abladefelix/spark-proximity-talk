@@ -25,9 +25,6 @@ export function RadarBeacon({
   size = "md",
   sizePx,
 }: RadarBeaconProps) {
-  const px = sizePx ?? 40;
-  const tail = Math.max(6, Math.round(px * 0.28));
-
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
       {active && (
