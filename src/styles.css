@@ -61,6 +61,8 @@
 
 :root {
   --radius: 0.9rem;
+  /* Status-bar clearance. Some native webviews report a 0 inset, so keep a floor. */
+  --safe-top: max(env(safe-area-inset-top, 0px), 2.75rem);
   color-scheme: light;
   --background: oklch(0.985 0.004 80);
   --foreground: oklch(0.22 0.012 60);
@@ -260,6 +262,7 @@
   body[data-web-page] {
     user-select: auto;
     -webkit-user-select: auto;
+    --safe-top: 0px;
   }
 
   /* html/body stay pinned; the shell itself becomes the scroll container. */
