@@ -246,29 +246,44 @@ function ChatPage() {
 
       <form
         onSubmit={send}
-        className="sticky bottom-20 mx-4 mb-2 flex items-center gap-2 rounded-full border border-border bg-card p-2"
+        className="sticky bottom-20 z-40 mx-4 mb-3 rounded-[28px] border border-border/60 bg-card/95 p-2 shadow-card backdrop-blur"
       >
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="rounded-full text-muted-foreground"
-          aria-label="Share a meet-up pin"
-          disabled={pinning}
-          onClick={sharePin}
-        >
-          <MapPin className="size-4" />
-        </Button>
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Say something…"
-          className="border-0 bg-transparent focus-visible:ring-0"
-          maxLength={2000}
-        />
-        <Button type="submit" variant="heat" size="icon" className="rounded-full">
-          <SendHorizonal className="size-4" />
-        </Button>
+        <div className="flex items-end gap-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-10 shrink-0 rounded-full text-muted-foreground"
+            aria-label="Share a meet-up pin"
+            disabled={pinning}
+            onClick={sharePin}
+          >
+            <MapPin className="size-[18px]" />
+          </Button>
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Say something…"
+            className="min-h-[44px] max-h-[160px] flex-1 resize-none border-0 bg-transparent py-3.5 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+            rows={1}
+            maxLength={2000}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(e);
+              }
+            }}
+          />
+          <Button
+            type="submit"
+            variant="heat"
+            size="icon"
+            disabled={!text.trim()}
+            className="size-10 shrink-0 rounded-full"
+          >
+            <Send className="size-[18px]" />
+          </Button>
+        </div>
       </form>
     </div>
   );
