@@ -9,7 +9,7 @@ type SignInOptions = {
 
 export const cloudAuth = {
   auth: {
-    signInWithOAuth: async (provider: "google" | "apple" | "microsoft" | "lovable", opts?: SignInOptions) => {
+    signInWithOAuth: async (provider: "google" | "apple" | "microsoft", opts?: SignInOptions) => {
       const result = await cloudAuthClient.signInWithOAuth(provider, {
         ...opts,
         extraParams: {
