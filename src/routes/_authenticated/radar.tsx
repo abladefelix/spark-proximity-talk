@@ -144,12 +144,15 @@ function RadarPage() {
       setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
-    const fail = (err: GeolocationPositionError) =>
-      setGeoError(
-        err.code === err.PERMISSION_DENIED
-          ? "Location permission is off. Turn it on to see who's around."
-          : "Couldn't get your location yet — move somewhere with better signal.",
-      );
+    const fail = (err: GeolocationPositionError) => {
+      if (err.code === err.PERMISSION_DENIED) {
+        setPermDenied(true);
+        setAskLocation(true);
+        setGeoError("Location permission is off. Turn it on to see who's around.");
+        return;
+      }
+      setGeoError("Couldn't get your location yet — move somewhere with better signal.");
+    };
 
     // Fast first fix, then keep watching.
     navigator.geolocation.getCurrentPosition((pos) => void push(pos), fail, {
@@ -166,7 +169,8 @@ function RadarPage() {
       cancelled = true;
       navigator.geolocation.clearWatch(watch);
     };
-  }, [visible, queryClient, retryKey]);
+  }, [visible, queryClient, retryKey, askLocation]);
+
 
 
   // Drop stale signals that were never returned.
