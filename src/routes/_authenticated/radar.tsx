@@ -587,11 +587,12 @@ function RadarPage() {
                 )}
                 {/* the dot */}
                 <span
-                  className={`relative z-10 rounded-full ring-2 ring-background ${
+                  className={`relative z-10 rounded-full ring-2 ring-background heartbeat-glow ${
                     person.verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary"
                   }`}
                   style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
                 />
+
               </span>
             </button>
 
