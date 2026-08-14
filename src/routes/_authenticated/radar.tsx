@@ -525,12 +525,7 @@ function RadarPage() {
                     <Button
                       variant="heat"
                       className="w-full"
-                      onClick={() =>
-                        navigate({
-                          to: "/chat/$matchId",
-                          params: { matchId: selected.match_id as string },
-                        })
-                      }
+                      onClick={() => openChat(selected.match_id as string)}
                     >
                       Chat
                     </Button>
