@@ -17,7 +17,7 @@ type Incoming = {
 };
 
 export function IncomingSignals() {
-  const navigate = useNavigate();
+  const { openChat } = useChatSheet();
   const queryClient = useQueryClient();
 
   const { data: incoming = [] } = useQuery({
@@ -83,7 +83,7 @@ export function IncomingSignals() {
     onSuccess: (matchId) => {
       queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
-      navigate({ to: "/chat/$matchId", params: { matchId } });
+      openChat(matchId);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not accept"),
   });
