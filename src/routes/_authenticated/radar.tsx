@@ -134,7 +134,6 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
@@ -281,7 +280,7 @@ function RadarPage() {
     // Stationary phones stop emitting position updates, which would make the
     // user look offline to everyone else. Re-publish the last fix periodically,
     // and ask for a fresh one when the watcher never delivered anything.
-    heartbeat = setInterval(() => {
+    const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords);
       else refreshFix();
@@ -301,7 +300,7 @@ function RadarPage() {
 
     return () => {
       cancelled = true;
-      if (heartbeat) clearInterval(heartbeat);
+      clearInterval(heartbeat);
       document.removeEventListener("visibilitychange", onWake);
       window.removeEventListener("focus", onWake);
       if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
