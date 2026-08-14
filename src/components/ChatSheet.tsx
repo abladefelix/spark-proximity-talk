@@ -28,8 +28,8 @@ function ChatBackdrop() {
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2.5rem]">
-      <div className="absolute inset-0 opacity-55 blur-[1px] saturate-90 dark:opacity-45" style={{ background: css }} />
-      <div className="absolute inset-0 bg-card/45 backdrop-blur-md dark:bg-card/50" />
+      <div className="absolute inset-0 opacity-50 blur-[1px] saturate-90 dark:opacity-40" style={{ background: css }} />
+      <div className="absolute inset-0 bg-card/35 backdrop-blur-xl dark:bg-card/40" />
     </div>
   );
 }
@@ -51,15 +51,42 @@ export function useChatSheet() {
 /** Clears any body locks vaul/radix may leave behind after a sheet closes. */
 function releaseBodyLocks() {
   const body = document.body;
-  body.style.removeProperty("pointer-events");
-  body.style.removeProperty("overflow");
-  body.style.removeProperty("position");
-  body.style.removeProperty("top");
-  body.style.removeProperty("left");
-  body.style.removeProperty("right");
-  body.style.removeProperty("height");
-  body.style.removeProperty("touch-action");
-  body.removeAttribute("data-scroll-locked");
+  const html = document.documentElement;
+  const appScroll = document.getElementById("app-scroll");
+
+  [body, html, appScroll].forEach((el) => {
+    if (!el) return;
+    el.style.removeProperty("pointer-events");
+    el.style.removeProperty("overflow");
+    el.style.removeProperty("position");
+    el.style.removeProperty("top");
+    el.style.removeProperty("left");
+    el.style.removeProperty("right");
+    el.style.removeProperty("bottom");
+    el.style.removeProperty("height");
+    el.style.removeProperty("width");
+    el.style.removeProperty("touch-action");
+    el.removeAttribute("data-scroll-locked");
+  });
+
+  // Make sure the fixed root stays fixed.
+  html.style.position = "fixed";
+  html.style.inset = "0";
+  html.style.overflow = "hidden";
+  html.style.overscrollBehavior = "none";
+  html.style.touchAction = "none";
+  body.style.position = "fixed";
+  body.style.inset = "0";
+  body.style.overflow = "hidden";
+  body.style.overscrollBehavior = "none";
+  body.style.touchAction = "none";
+  if (appScroll) {
+    appScroll.style.position = "fixed";
+    appScroll.style.inset = "0";
+    appScroll.style.overflow = "hidden";
+    appScroll.style.overscrollBehavior = "none";
+    appScroll.style.touchAction = "none";
+  }
 }
 
 export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
@@ -88,35 +115,42 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
         onOpenChange={(o) => !o && closeChat()}
         dismissible
         direction="bottom"
-        closeThreshold={0.15}
-        scrollLockTimeout={100}
+        closeThreshold={0.08}
+        scrollLockTimeout={0}
         repositionInputs={false}
         noBodyStyles
         preventScrollRestoration={false}
         disablePreventScroll
+        modal={false}
       >
         <DrawerPrimitive.Portal>
-          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-colors duration-300" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y isolate flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/55 shadow-sheet backdrop-blur-2xl outline-none dark:bg-card/45 dark:shadow-sheet-dark">
+          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] transition-colors duration-300" />
+          <DrawerPrimitive.Content
+            data-vaul-no-drag={false}
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(92dvh,800px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/40 shadow-sheet outline-none backdrop-blur-3xl dark:bg-card/30 dark:shadow-sheet-dark"
+          >
             <ChatBackdrop />
-            <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-            <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
-            <DrawerPrimitive.Description className="sr-only">
-              Swipe down anywhere to close and pick someone else.
-            </DrawerPrimitive.Description>
-            <DrawerPrimitive.Handle
-              className="flex h-10 w-full shrink-0 touch-none cursor-grab items-center justify-center active:cursor-grabbing"
-              aria-label="Swipe down to close chat"
-            >
-              <span className="h-1.5 w-14 rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/50" />
-            </DrawerPrimitive.Handle>
-            {matchId && (
-              <ChatPanel
-                key={matchId}
-                matchId={matchId}
-                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent"
-              />
-            )}
+            <div className="relative z-10 flex h-full flex-col overflow-hidden">
+              <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
+              <DrawerPrimitive.Description className="sr-only">
+                Swipe down anywhere to close and pick someone else.
+              </DrawerPrimitive.Description>
+
+              {/* Full-width drag handle: draggable and clearly indicates the gesture. */}
+              <DrawerPrimitive.Handle
+                className="flex h-10 w-full shrink-0 touch-none cursor-grab items-center justify-center active:cursor-grabbing"
+                aria-label="Swipe down to close chat"
+              >
+                <span className="h-1.5 w-14 rounded-full bg-muted-foreground/40 transition-colors hover:bg-muted-foreground/60" />
+              </DrawerPrimitive.Handle>
+
+              {matchId && (
+                <ChatPanel
+                  key={matchId}
+                  matchId={matchId}
+                  className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent"
+                />
+              )}
             </div>
           </DrawerPrimitive.Content>
         </DrawerPrimitive.Portal>
