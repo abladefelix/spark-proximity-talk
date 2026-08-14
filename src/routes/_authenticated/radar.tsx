@@ -410,6 +410,8 @@ function RadarPage() {
     const el = scopeRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      // Let the page scroll normally unless the user is deliberately zooming.
+      if (!e.ctrlKey && viewRef.current.zoom <= 1.001) return;
       e.preventDefault();
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
       const rect = el.getBoundingClientRect();
