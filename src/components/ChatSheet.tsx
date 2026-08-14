@@ -27,7 +27,7 @@ function ChatBackdrop() {
   if (!css) return null;
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2.5rem]">
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-t-[2rem]">
       <div className="absolute inset-0 opacity-60 saturate-90 dark:opacity-50" style={{ background: css }} />
       <div className="absolute inset-0 bg-card/20 backdrop-blur-2xl dark:bg-card/25" />
     </div>
