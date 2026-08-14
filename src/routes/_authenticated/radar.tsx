@@ -249,6 +249,19 @@ function RadarPage() {
     toast.success("Report sent. Thanks for keeping SHATTA safe.");
   }
 
+  const scopeRef = useRef<HTMLElement | null>(null);
+  const [scopeSize, setScopeSize] = useState(0);
+  useEffect(() => {
+    const el = scopeRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) setScopeSize(entry.contentRect.width);
+    });
+    ro.observe(el);
+    setScopeSize(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
   // Auto-fitting layout: zooms the scope to the furthest person, scales beacon
   // size with crowd density and pushes overlapping beacons apart.
   const { beacons, beaconSize } = useMemo(() => {
@@ -388,6 +401,7 @@ function RadarPage() {
 
       <div className="flex flex-1 items-center justify-center py-8">
       <section
+        ref={scopeRef}
         aria-label={geoError ?? "Radar"}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
@@ -413,9 +427,12 @@ function RadarPage() {
             onClick={() => setSelectedId(person.id)}
             style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
             aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 transition active:scale-95"
+            className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
           >
-            <RadarBeacon active={person.they_signaled && !person.match_id}>
+            <RadarBeacon
+              sizePx={beaconSize}
+              active={person.they_signaled && !person.match_id}
+            >
               <PersonAvatar
                 path={person.avatar_url}
                 name={person.display_name}
