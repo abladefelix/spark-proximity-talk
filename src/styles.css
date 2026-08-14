@@ -262,6 +262,7 @@
   body[data-web-page] {
     user-select: auto;
     -webkit-user-select: auto;
+    --safe-top: 0px;
   }
 
   /* html/body stay pinned; the shell itself becomes the scroll container. */
