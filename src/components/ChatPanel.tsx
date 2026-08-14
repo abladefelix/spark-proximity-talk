@@ -199,28 +199,28 @@ export function ChatPanel({
 
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
-      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 bg-card/40 px-3 pb-3 pt-1 backdrop-blur-xl">
+      <header className="flex shrink-0 items-center gap-2 border-b border-border/40 bg-card/60 px-2 pb-2.5 pt-1 backdrop-blur-2xl">
         <button
           type="button"
           onClick={closeChat}
-          className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors active:bg-secondary"
           aria-label="Close chat"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className="size-6" />
         </button>
         <PersonAvatar
           path={other?.avatar_url}
           name={other?.display_name}
           username={other?.username ?? "?"}
           gender={other?.gender as import("@/components/PersonAvatar").Gender}
-          className="size-9 rounded-full"
+          className="size-10 rounded-full"
         />
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 truncate text-[15px] font-semibold leading-tight">
+        <div className="min-w-0 flex-1 pl-0.5">
+          <p className="flex items-center gap-1 truncate text-[16px] font-semibold leading-tight tracking-[-0.01em]">
             {other?.display_name ?? other?.username ?? "Chat"}
             {other?.verified && <VerifiedBadge className="size-3.5" />}
           </p>
-          <p className="truncate text-[11px] text-muted-foreground">
+          <p className="truncate text-[12px] leading-tight text-muted-foreground">
             {other ? lastSeenLabel(other.last_seen) : ""}
           </p>
         </div>
@@ -230,88 +230,94 @@ export function ChatPanel({
         ref={messagesRef}
         data-scrollable
         data-selectable
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-transparent px-4 pb-2 pt-4"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-transparent px-3 pb-3 pt-4"
       >
         <div className="mt-auto" />
-        <div className="mb-2 flex flex-col items-center text-center">
+        <div className="mb-4 flex flex-col items-center px-6 text-center">
           <PersonAvatar
             path={other?.avatar_url}
             name={other?.display_name}
             username={other?.username ?? "?"}
             gender={other?.gender as import("@/components/PersonAvatar").Gender}
-            className="size-16 rounded-full ring-2 ring-card"
+            className="size-20 rounded-full ring-1 ring-border/50"
           />
-          <p className="mt-3 text-sm font-medium leading-snug text-muted-foreground">
-            You both signalled nearby — say hello.
+          <p className="mt-3 text-[15px] font-semibold leading-tight">
+            {other?.display_name ?? other?.username ?? ""}
+          </p>
+          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+            You both signalled nearby. Messages here stay between the two of you.
           </p>
         </div>
-
 
         {messages.map((m, index) => {
           const mine = m.sender_id === me;
           const prev = messages[index - 1];
+          const next = messages[index + 1];
           const newDay =
             !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
           const grouped =
             !newDay && prev?.sender_id === m.sender_id &&
             new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000;
+          const lastOfGroup =
+            !next ||
+            next.sender_id !== m.sender_id ||
+            new Date(next.created_at).getTime() - new Date(m.created_at).getTime() >= 5 * 60000;
+
+          const corner = mine
+            ? `rounded-[20px] ${lastOfGroup ? "rounded-br-[6px]" : ""}`
+            : `rounded-[20px] ${lastOfGroup ? "rounded-bl-[6px]" : ""}`;
+          const skin = mine
+            ? "bg-primary text-primary-foreground"
+            : "border border-border/40 bg-card/85 text-foreground backdrop-blur-xl";
 
           return (
             <div key={m.id} className="shrink-0">
               {newDay && (
                 <div className="my-4 flex justify-center">
-                  <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur">
+                  <span className="rounded-full bg-secondary/80 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur">
                     {dayLabel(m.created_at)}
                   </span>
                 </div>
               )}
 
               <div
-                className={`flex items-start gap-2 ${grouped ? "mt-1" : "mt-4"} ${mine ? "justify-end" : "justify-start"}`}
+                className={`flex items-end gap-1.5 ${grouped ? "mt-0.5" : "mt-3"} ${mine ? "justify-end" : "justify-start"}`}
               >
                 {!mine && (
-                  <div className="size-8 shrink-0">
-                    {!grouped && (
+                  <div className="size-7 shrink-0">
+                    {lastOfGroup && (
                       <PersonAvatar
                         path={other?.avatar_url}
                         name={other?.display_name}
                         username={other?.username ?? "?"}
                         gender={other?.gender as import("@/components/PersonAvatar").Gender}
-                        className="size-8 rounded-full"
+                        className="size-7 rounded-full"
                       />
                     )}
                   </div>
                 )}
 
-                <div className={`flex max-w-[76%] flex-col ${mine ? "items-end" : "items-start"}`}>
-                  {!grouped && (
-                    <div
-                      className={`mb-1 flex items-center gap-2 px-1 ${mine ? "flex-row-reverse" : ""}`}
-                    >
-                      <span className="text-[12px] font-semibold text-foreground">
-                        {mine ? "You" : (other?.display_name ?? other?.username ?? "Them")}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">{timeLabel(m.created_at)}</span>
-                    </div>
-                  )}
-
+                <div className={`flex max-w-[78%] flex-col ${mine ? "items-end" : "items-start"}`}>
                   {m.kind === "image" ? (
                     m.mediaUrl ? (
                       <a
                         href={m.mediaUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="block overflow-hidden rounded-2xl bg-secondary"
+                        className={`relative block overflow-hidden ${corner} bg-secondary`}
                       >
                         <img
                           src={m.mediaUrl}
                           alt="Shared in chat"
-                          className="max-h-64 w-full object-cover"
+                          className="max-h-72 w-full object-cover"
                           loading="lazy"
                         />
+                        <span className="absolute bottom-1.5 right-2 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-medium text-white">
+                          {timeLabel(m.created_at)}
+                        </span>
                       </a>
                     ) : (
-                      <div className="flex h-36 w-52 items-center justify-center rounded-2xl bg-secondary text-xs text-muted-foreground">
+                      <div className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}>
                         Picture unavailable
                       </div>
                     )
@@ -320,25 +326,28 @@ export function ChatPanel({
                       href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
                       target="_blank"
                       rel="noreferrer"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
-                        mine
-                          ? "rounded-2xl rounded-tr-md bg-primary text-primary-foreground"
-                          : "rounded-2xl rounded-tl-md bg-secondary text-secondary-foreground"
-                      }`}
+                      className={`flex items-center gap-2 px-3.5 py-2.5 text-[15px] ${corner} ${skin}`}
                     >
                       <MapPin className="size-4" />
                       <span>Meet-up pin</span>
+                      <span className={`text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                        {timeLabel(m.created_at)}
+                      </span>
                     </a>
                   ) : (
-                    <p
-                      className={`whitespace-pre-wrap break-words px-4 py-2.5 text-[15px] leading-snug ${
-                        mine
-                          ? `bg-primary text-primary-foreground shadow-heat ${grouped ? "rounded-2xl" : "rounded-2xl rounded-tr-md"}`
-                          : `border border-border/20 bg-secondary/80 text-secondary-foreground backdrop-blur-xl ${grouped ? "rounded-2xl" : "rounded-2xl rounded-tl-md"}`
-                      }`}
-                    >
-                      {m.content}
-                    </p>
+                    <div className={`px-3.5 py-2 ${corner} ${skin}`}>
+                      <p className="whitespace-pre-wrap break-words text-[15.5px] leading-[1.35]">
+                        {m.content}
+                        <span className="pointer-events-none ml-2 inline-block w-9 select-none align-baseline" />
+                      </p>
+                      <span
+                        className={`-mt-3 block text-right text-[10.5px] leading-none ${
+                          mine ? "text-primary-foreground/70" : "text-muted-foreground"
+                        }`}
+                      >
+                        {timeLabel(m.created_at)}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -351,7 +360,7 @@ export function ChatPanel({
       <form
         onSubmit={send}
         data-vaul-no-drag
-        className="z-10 flex shrink-0 items-end gap-2 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+        className="z-10 flex shrink-0 items-end gap-2 border-t border-border/30 bg-card/50 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl"
       >
         <input
           ref={fileRef}
@@ -364,12 +373,23 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border/50 bg-card/60 py-1.5 pl-4 pr-1.5 shadow-card backdrop-blur-xl">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-10 shrink-0 rounded-full text-muted-foreground"
+          aria-label="Upload a picture"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          {uploading ? <LoaderCircle className="animate-spin" /> : <ImagePlus className="size-[22px]" />}
+        </Button>
+        <div className="flex min-w-0 flex-1 items-center rounded-[22px] border border-border/50 bg-background/70 px-3.5 py-0.5 backdrop-blur-xl">
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={settings.chat_prompt_text}
-            className="min-h-[40px] max-h-[140px] flex-1 resize-none border-0 bg-transparent px-0 py-2 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[38px] max-h-[132px] flex-1 resize-none border-0 bg-transparent px-0 py-2 text-[15.5px] leading-snug placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
             maxLength={settings.max_message_len}
             onKeyDown={(e) => {
@@ -379,24 +399,13 @@ export function ChatPanel({
               }
             }}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-9 shrink-0 rounded-full text-muted-foreground"
-            aria-label="Upload a picture"
-            disabled={uploading}
-            onClick={() => fileRef.current?.click()}
-          >
-            {uploading ? <LoaderCircle className="animate-spin" /> : <ImagePlus className="size-5" />}
-          </Button>
         </div>
         <Button
           type="submit"
           variant="heat"
           size="icon"
           disabled={!text.trim()}
-          className="size-11 shrink-0 rounded-full"
+          className="size-10 shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-40"
         >
           <Send className="size-[18px]" />
         </Button>
@@ -404,3 +413,4 @@ export function ChatPanel({
     </div>
   );
 }
+
