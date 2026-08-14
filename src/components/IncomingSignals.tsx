@@ -31,7 +31,7 @@ export function IncomingSignals() {
         .select("id, from_user")
         .eq("to_user", me)
         .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
       if (error || !signals?.length) return [];
 
       const ids = signals.map((s) => s.from_user);
@@ -107,7 +107,15 @@ export function IncomingSignals() {
 
   return (
     <div className="mt-4 space-y-2">
-      {incoming.map((person) => (
+      <div className="flex items-center justify-between px-1">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Waiting to chat
+        </p>
+        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+          {incoming.length} in queue
+        </span>
+      </div>
+      {incoming.map((person, index) => (
         <div
           key={person.id}
           className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-3 py-2.5"
@@ -123,7 +131,9 @@ export function IncomingSignals() {
             <p className="truncate text-sm font-medium">
               {person.display_name ?? person.username}
             </p>
-            <p className="text-xs text-muted-foreground">wants to chat</p>
+            <p className="text-xs text-muted-foreground">
+              wants to chat{index > 0 ? ` · #${index + 1} in queue` : ""}
+            </p>
           </div>
           <Button
             size="sm"
