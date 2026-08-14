@@ -216,10 +216,21 @@ function RadarPage() {
         openChat(updated.match_id);
       } else {
         toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
+        await sendPush({
+          data: {
+            kind: "signal",
+            recipientId: person.id,
+            title: person.display_name ?? `@${person.username}`,
+            body: "wants to chat on SHATTA",
+          },
+        }).catch(() => {
+          /* push failure is non-fatal */
+        });
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send signal"),
   });
+
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
