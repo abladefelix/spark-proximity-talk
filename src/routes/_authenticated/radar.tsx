@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Zap, Check, LoaderCircle, Ban, Flag, MapPin } from "lucide-react";
@@ -249,17 +249,87 @@ function RadarPage() {
     toast.success("Report sent. Thanks for keeping SHATTA safe.");
   }
 
-  const beacons = people.map((person) => {
-    let hash = 0;
-    for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
-    const angle = ((hash >>> 0) % 360) * (Math.PI / 180);
-    const r = Math.min(1, person.distance_m / radius) * 0.42;
+  const scopeRef = useRef<HTMLElement | null>(null);
+  const [scopeSize, setScopeSize] = useState(0);
+  useEffect(() => {
+    const el = scopeRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) setScopeSize(entry.contentRect.width);
+    });
+    ro.observe(el);
+    setScopeSize(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  // Auto-fitting layout: zooms the scope to the furthest person, scales beacon
+  // size with crowd density and pushes overlapping beacons apart.
+  const { beacons, beaconSize } = useMemo(() => {
+    const scope = scopeSize || 320;
+    const count = people.length;
+    const size = Math.max(
+      18,
+      Math.min(44, Math.round(scope / (4.2 + Math.sqrt(Math.max(count, 1)) * 1.5))),
+    );
+    const maxDist = people.reduce((m, p) => Math.max(m, p.distance_m), 0);
+    const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
+    const limit = scope * 0.46 - size / 2;
+
+    const nodes = people.map((person) => {
+      let hash = 0;
+      for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
+      const angle = ((hash >>> 0) % 360) * (Math.PI / 180);
+      const rr = Math.min(1, person.distance_m / viewMax) * limit;
+      return { person, x: Math.cos(angle) * rr, y: Math.sin(angle) * rr };
+    });
+
+    const minGap = size + 6;
+    for (let iter = 0; iter < 80; iter++) {
+      let moved = false;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i]!;
+          const b = nodes[j]!;
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let d = Math.hypot(dx, dy);
+          if (d === 0) {
+            dx = Math.cos(i * 2.4) * 0.01;
+            dy = Math.sin(i * 2.4) * 0.01;
+            d = 0.01;
+          }
+          if (d < minGap) {
+            const push = (minGap - d) / 2;
+            const ux = dx / d;
+            const uy = dy / d;
+            a.x -= ux * push;
+            a.y -= uy * push;
+            b.x += ux * push;
+            b.y += uy * push;
+            moved = true;
+          }
+        }
+      }
+      for (const n of nodes) {
+        const d = Math.hypot(n.x, n.y);
+        if (d > limit) {
+          n.x = (n.x / d) * limit;
+          n.y = (n.y / d) * limit;
+        }
+      }
+      if (!moved) break;
+    }
+
     return {
-      person,
-      left: `${50 + Math.cos(angle) * r * 100}%`,
-      top: `${50 + Math.sin(angle) * r * 100}%`,
+      beaconSize: size,
+      beacons: nodes.map((n) => ({
+        person: n.person,
+        left: `calc(50% + ${n.x}px)`,
+        top: `calc(50% + ${n.y}px)`,
+      })),
     };
-  });
+  }, [people, scopeSize, radius]);
+
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
@@ -331,6 +401,7 @@ function RadarPage() {
 
       <div className="flex flex-1 items-center justify-center py-8">
       <section
+        ref={scopeRef}
         aria-label={geoError ?? "Radar"}
         className="relative aspect-square w-full max-w-sm overflow-hidden rounded-full border border-border bg-secondary/20"
       >
@@ -356,9 +427,12 @@ function RadarPage() {
             onClick={() => setSelectedId(person.id)}
             style={{ left, top, opacity: person.is_online ? 1 : 0.55 }}
             aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 transition active:scale-95"
+            className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-95"
           >
-            <RadarBeacon active={person.they_signaled && !person.match_id}>
+            <RadarBeacon
+              sizePx={beaconSize}
+              active={person.they_signaled && !person.match_id}
+            >
               <PersonAvatar
                 path={person.avatar_url}
                 name={person.display_name}
