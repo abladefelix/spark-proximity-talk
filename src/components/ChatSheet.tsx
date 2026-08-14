@@ -91,6 +91,9 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
         closeThreshold={0.15}
         scrollLockTimeout={100}
         repositionInputs={false}
+        noBodyStyles
+        preventScrollRestoration={false}
+        disablePreventScroll
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-colors duration-300" />
