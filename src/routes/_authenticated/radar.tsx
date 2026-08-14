@@ -78,13 +78,25 @@ function RadarPage() {
   const { openChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
-  const radius = 500;
+  const { data: maxRadius } = useMaxRadius();
+  const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
+  const [radiusPref, setRadiusPref] = useState(500);
+  useEffect(() => {
+    const saved = Number(localStorage.getItem("skan-radius") ?? "500");
+    if (Number.isFinite(saved) && saved > 0) setRadiusPref(saved);
+  }, []);
+  const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
+  const setRadius = (v: number) => {
+    setRadiusPref(v);
+    localStorage.setItem("skan-radius", String(v));
+  };
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+
 
 
   const [reporting, setReporting] = useState(false);
