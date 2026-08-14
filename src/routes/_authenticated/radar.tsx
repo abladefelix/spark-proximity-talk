@@ -39,8 +39,13 @@ export const Route = createFileRoute("/_authenticated/radar")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: RadarPage,
+  component: () => (
+    <SuspendedGate>
+      <RadarPage />
+    </SuspendedGate>
+  ),
 });
+
 
 type NearbyPerson = {
   id: string;
