@@ -6,11 +6,11 @@ export type ChatBackground = {
   id: string;
   name: string;
   /** CSS background value for built-in gradient presets. */
-  css?: string;
+  css?: string | undefined;
   /** Storage path in the `chat-backgrounds` bucket for admin uploads. */
-  path?: string;
+  path?: string | undefined;
   /** Resolved signed URL (filled in at runtime for uploads). */
-  url?: string;
+  url?: string | undefined;
 };
 
 /** Built-in presets always available to members. */
