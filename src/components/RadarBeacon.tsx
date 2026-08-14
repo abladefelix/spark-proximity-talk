@@ -4,6 +4,8 @@ interface RadarBeaconProps {
   children: React.ReactNode;
   className?: string;
   active?: boolean;
+  /** Verified members get their own beacon colour. */
+  verified?: boolean;
   size?: "sm" | "md" | "lg";
   /** Explicit pixel size, overrides the `size` preset (used by the auto-zoom radar). */
   sizePx?: number;
@@ -19,37 +21,71 @@ export function RadarBeacon({
   children,
   className,
   active,
+  verified,
   size = "md",
   sizePx,
 }: RadarBeaconProps) {
+  const px = sizePx ?? 40;
+  const tail = Math.max(6, Math.round(px * 0.28));
+
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
       {active && (
         <>
-          <span className="absolute inset-[-6px] rounded-full border border-primary/25" />
-          <span className="beacon-ping absolute inset-[-5px] rounded-full border border-primary/40" />
+          <span
+            className={cn(
+              "absolute inset-[-6px] rounded-full border",
+              verified ? "border-[oklch(0.78_0.14_190)]/30" : "border-primary/25",
+            )}
+          />
+          <span
+            className={cn(
+              "beacon-ping absolute inset-[-5px] rounded-full border",
+              verified ? "border-[oklch(0.78_0.14_190)]/50" : "border-primary/40",
+            )}
+          />
         </>
       )}
+
+      {/* Pin tail: points down at the exact spot on the radar. */}
+      <span
+        aria-hidden
+        style={{
+          width: tail,
+          height: tail,
+          bottom: -tail * 0.42,
+          clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
+        }}
+        className={cn(
+          "absolute left-1/2 z-0 -translate-x-1/2",
+          verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary",
+        )}
+      />
 
       <div
         style={sizePx ? { width: sizePx, height: sizePx } : undefined}
         className={cn(
-          "relative z-10 flex items-center justify-center overflow-hidden rounded-full bg-card ring-1 ring-border/60",
+          "relative z-10 flex items-center justify-center overflow-hidden rounded-full bg-card ring-2",
+          verified ? "ring-[oklch(0.78_0.14_190)]" : active ? "ring-primary" : "ring-border/60",
           active ? "beacon-glow" : "shadow-heat",
           !sizePx && sizeClasses[size],
         )}
       >
-
         {children}
       </div>
 
-
       {active && (
-        <span className="absolute -right-0.5 -top-0.5 z-20 size-2.5 rounded-full bg-primary ring-2 ring-background" />
+        <span
+          className={cn(
+            "absolute -right-0.5 -top-0.5 z-20 size-2.5 rounded-full ring-2 ring-background",
+            verified ? "bg-[oklch(0.78_0.14_190)]" : "bg-primary",
+          )}
+        />
       )}
     </div>
   );
 }
+
 
 export function RadarBeaconInitial({
   label,
