@@ -26,10 +26,8 @@ import { ActiveChats } from "@/components/ActiveChats";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
-import logoAsset from "@/assets/skanaround-logo.png";
-import { Brand, BrandMark, useBranding } from "@/components/Brand";
+import { Brand, BrandMark } from "@/components/Brand";
 
-const logoUrl = logoAsset;
 
 
 
@@ -234,7 +232,7 @@ function RadarPage() {
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: branding } = useBranding();
+  
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
   async function blockPerson(person: NearbyPerson) {
