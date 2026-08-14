@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -51,7 +51,7 @@ import {
 } from "@/hooks/useAccent";
 
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Admin control — SkanAround" },
@@ -70,8 +70,24 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AdminPage,
+  component: AdminRoute,
 });
+
+/**
+ * The admin console is the one browser-only surface: it opts out of the
+ * native fixed-viewport lock so the document scrolls normally on the web.
+ */
+function AdminRoute() {
+  useEffect(() => {
+    document.body.setAttribute("data-web-page", "");
+    return () => document.body.removeAttribute("data-web-page");
+  }, []);
+  return (
+    <div className="mx-auto w-full max-w-5xl">
+      <AdminPage />
+    </div>
+  );
+}
 
 type Role = "admin" | "moderator" | "user";
 
