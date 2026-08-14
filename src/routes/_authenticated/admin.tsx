@@ -678,6 +678,31 @@ function AdminPage() {
             Members can pick any range up to this cap on their radar.
           </p>
 
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Chat history length
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={chatTtlDraft ?? String(chatTtl ?? 30)}
+              onChange={(e) => setChatTtlDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">days</span>
+            <Button size="sm" onClick={() => void saveChatTtl()}>
+              Save
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => void purgeOldChats()}>
+              Purge now
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Conversations older than this stop showing and can be cleared permanently.
+          </p>
+
+
 
         </div>
       )}
