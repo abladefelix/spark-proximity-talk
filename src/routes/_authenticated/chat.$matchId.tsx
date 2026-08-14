@@ -154,9 +154,11 @@ function ChatPage() {
     );
   }
 
+  const firstAt = messages[0]?.created_at;
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-30 flex items-center gap-3 bg-background px-4 pb-5 pt-3">
         <Link to="/chats" className="text-muted-foreground">
           <ChevronLeft className="size-6" />
         </Link>
@@ -164,10 +166,10 @@ function ChatPage() {
           path={other?.avatar_url}
           name={other?.display_name}
           username={other?.username ?? "?"}
-          className="size-10 rounded-xl"
+          className="size-11 rounded-2xl"
         />
         <div className="min-w-0">
-          <p className="flex items-center gap-1 truncate font-semibold leading-tight">
+          <p className="flex items-center gap-1.5 truncate text-lg font-semibold leading-tight">
             {other?.display_name ?? other?.username ?? "Chat"}
             {other?.verified && <VerifiedBadge />}
           </p>
@@ -177,12 +179,32 @@ function ChatPage() {
         </div>
       </header>
 
-      <div className="flex-1 space-y-3 px-4 py-5">
-        {messages.length === 0 && (
-          <p className="mx-auto max-w-xs rounded-2xl bg-card p-4 text-center text-sm text-muted-foreground">
-            You both signalled. Break the ice.
+      <div className="flex-1 space-y-3 rounded-t-[2rem] bg-card px-4 pb-6 pt-8">
+        <div className="mb-6 text-center">
+          <div className="flex items-center justify-center -space-x-3">
+            <PersonAvatar
+              path={other?.avatar_url}
+              name={other?.display_name}
+              username={other?.username ?? "?"}
+              className="size-14 rounded-2xl ring-2 ring-card"
+            />
+          </div>
+          <p className="mt-3 text-base font-semibold leading-snug">
+            You both signalled.
+            <span className="block">You were metres apart.</span>
           </p>
-        )}
+          {firstAt && (
+            <p className="mt-4 text-right text-xs text-muted-foreground">
+              {new Date(firstAt).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </p>
+          )}
+        </div>
+
         {messages.map((m) => {
           const mine = m.sender_id === me;
           return (
@@ -194,8 +216,8 @@ function ChatPage() {
                   rel="noreferrer"
                   className={
                     mine
-                      ? "flex max-w-[78%] items-center gap-2 rounded-2xl rounded-br-sm border border-primary/40 bg-primary/15 px-4 py-2.5 text-sm"
-                      : "flex max-w-[78%] items-center gap-2 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-2.5 text-sm"
+                      ? "flex max-w-[78%] items-center gap-2 rounded-3xl bg-secondary px-5 py-3 text-sm text-secondary-foreground"
+                      : "flex max-w-[78%] items-center gap-2 rounded-3xl bg-primary/15 px-5 py-3 text-sm text-foreground"
                   }
                 >
                   <MapPin className="size-4 text-primary" />
@@ -208,8 +230,8 @@ function ChatPage() {
                 <p
                   className={
                     mine
-                      ? "max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
-                      : "max-w-[78%] rounded-2xl rounded-bl-sm bg-card px-4 py-2.5 text-sm text-card-foreground"
+                      ? "max-w-[78%] rounded-3xl bg-secondary px-5 py-3 text-[15px] leading-snug text-secondary-foreground"
+                      : "max-w-[78%] rounded-3xl bg-primary/15 px-5 py-3 text-[15px] leading-snug text-foreground"
                   }
                 >
                   {m.content}
@@ -220,6 +242,7 @@ function ChatPage() {
         })}
         <div ref={bottomRef} />
       </div>
+
 
       <form
         onSubmit={send}
