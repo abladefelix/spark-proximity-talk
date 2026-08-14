@@ -295,7 +295,10 @@ function RadarPage() {
 
   const nearby = useQuery({
     queryKey: ["nearby", radius],
-    enabled: located,
+    // Runs even before our own fix lands: the server falls back to the last
+    // published location, so the radar is never blank just because the
+    // device watcher is slow.
+    enabled: true,
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("nearby_people", { radius_m: radius });
@@ -612,7 +615,7 @@ function RadarPage() {
           </button>
         </div>
       )}
-      {!geoError && located && people.length === 0 && !nearby.isLoading && (
+      {!geoError && people.length === 0 && !nearby.isLoading && (
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {settings.empty_radar_text} Widen your scan range in your profile.
         </p>
@@ -721,7 +724,7 @@ function RadarPage() {
 
 
 
-        {(!located || nearby.isLoading) && (
+        {nearby.isLoading && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
