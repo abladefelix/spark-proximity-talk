@@ -19,6 +19,7 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
+import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -274,6 +275,7 @@ function ProfilePage() {
 
       <section className="mt-8 space-y-4">
         <ScanRangeSetting />
+        <ChatBackgroundSetting />
         <div className="rounded-2xl border border-border p-4" hidden={!settings.verification_enabled}>
           <p className="flex items-center gap-2 text-sm font-semibold">
             <BadgeCheck className="size-4 text-primary" /> Verification
