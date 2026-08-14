@@ -155,16 +155,34 @@ function AuthPage() {
             />
           </div>
         )}
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+        {mode === "signin" ? (
+          <div className="space-y-2">
+            <Label htmlFor="identifier">Username or email</Label>
+            <Input
+              id="identifier"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="kofi_vibes or you@email.com"
+              required
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoCapitalize="none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+        )}
         {mode !== "reset" && (
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
