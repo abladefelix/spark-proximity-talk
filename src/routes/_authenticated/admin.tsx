@@ -4,10 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   BadgeCheck,
-  Ban,
+  EyeOff,
   Flag,
   Loader2,
+  MoreHorizontal,
   Radio,
+  RefreshCw,
   Search,
   ShieldCheck,
   Trash2,
@@ -18,6 +20,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -45,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Role = "admin" | "moderator" | "user";
 
-function StatCard({
+function Stat({
   icon: Icon,
   label,
   value,
@@ -55,13 +64,14 @@ function StatCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-2xl border border-border p-4">
-      <Icon className="size-4 text-primary" />
-      <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5">
+      <Icon className="size-3.5 shrink-0 text-primary" />
+      <span className="text-sm font-semibold tabular-nums">{value}</span>
+      <span className="truncate text-[11px] text-muted-foreground">{label}</span>
     </div>
   );
 }
+
 
 function AdminPage() {
   const queryClient = useQueryClient();
