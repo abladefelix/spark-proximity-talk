@@ -22,6 +22,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
+import { Brand, useBranding } from "@/components/Brand";
 
 const logoUrl = logoAsset.url;
 
@@ -155,6 +156,7 @@ function RadarPage() {
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { data: branding } = useBranding();
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
   async function blockPerson(person: NearbyPerson) {
@@ -201,10 +203,7 @@ function RadarPage() {
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-24 pt-6">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
-          <img src={logoUrl} alt="" width={28} height={28} className="size-7" />
-          SHATTA
-        </p>
+        <Brand />
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
@@ -227,7 +226,7 @@ function RadarPage() {
         <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
         <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
         <img
-          src={logoUrl}
+          src={branding?.logo ?? logoUrl}
           alt=""
           className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.08]"
           aria-hidden="true"

@@ -3,9 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoAsset from "@/assets/shatta-s.png.asset.json";
-
-const logoUrl = logoAsset.url;
+import { Brand } from "@/components/Brand";
 
 
 
@@ -46,10 +44,7 @@ function Landing() {
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-6 pb-10 pt-6">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground">
-          <img src={logoUrl} alt="" width={28} height={28} className="size-7" />
-          SHATTA
-        </p>
+        <Brand />
         <ThemeToggle />
       </div>
 

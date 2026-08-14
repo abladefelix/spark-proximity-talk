@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Brand, useBranding } from "@/components/Brand";
 import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
 
 
@@ -81,6 +82,9 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const { data: accentHue } = useAccentHue();
+  const { data: branding } = useBranding();
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [savingLogo, setSavingLogo] = useState(false);
 
   async function setAccent(hue: number) {
     const { error } = await supabase
@@ -94,6 +98,62 @@ function AdminPage() {
     await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
     toast.success("Theme colour updated");
   }
+
+  async function saveAppName() {
+    const name = (nameDraft ?? "").trim();
+    if (!name) return;
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ app_name: name })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    setNameDraft(null);
+    toast.success("App name updated");
+  }
+
+  async function uploadLogo(file: File) {
+    setSavingLogo(true);
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `logo-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("branding").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (upErr) {
+      setSavingLogo(false);
+      toast.error(upErr.message);
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ logo_url: path })
+      .eq("id", "global");
+    setSavingLogo(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    toast.success("Logo updated");
+  }
+
+  async function resetLogo() {
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ logo_url: null })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-branding"] });
+    toast.success("Logo reset");
+  }
+
 
 
   const { data: access, isLoading: accessLoading } = useQuery({
@@ -468,7 +528,44 @@ function AdminPage() {
       </div>
 
       {isAdmin && (
-        <div className="mt-3 rounded-xl border border-border px-3 py-2.5">
+        <div className="mt-3 space-y-3 rounded-xl border border-border px-3 py-2.5">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Branding</p>
+            <div className="mt-2 flex items-center gap-2">
+              <Brand className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-muted-foreground" size={24} />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <Input
+                value={nameDraft ?? branding?.name ?? ""}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder="App name"
+                className="h-8 text-sm"
+              />
+              <Button size="sm" variant="soft" onClick={() => void saveAppName()}>
+                Save
+              </Button>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <label className="cursor-pointer rounded-md border border-border px-2 py-1 text-xs">
+                {savingLogo ? "Uploading…" : "Upload logo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void uploadLogo(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              {branding?.logoPath && (
+                <Button size="sm" variant="ghost" onClick={() => void resetLogo()}>
+                  Reset logo
+                </Button>
+              )}
+            </div>
+          </div>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Accent colour</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {ACCENT_PRESETS.map((preset) => (
