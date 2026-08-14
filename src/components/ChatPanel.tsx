@@ -189,7 +189,7 @@ export function ChatPanel({
   const firstAt = messages[0]?.created_at;
 
   return (
-    <div className={className ?? "flex min-h-screen min-w-0 flex-col bg-background"}>
+    <div className={className ?? "flex min-h-screen min-w-0 flex-col bg-transparent"}>
       <header className="flex shrink-0 items-center gap-3 px-4 pb-3 pt-2">
         {leading}
         <PersonAvatar
@@ -209,7 +209,7 @@ export function ChatPanel({
         </div>
       </header>
 
-      <div ref={messagesRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card px-4 pb-5 pt-6">
+      <div ref={messagesRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-transparent px-4 pb-5 pt-6">
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center -space-x-3">
             <PersonAvatar
@@ -286,7 +286,7 @@ export function ChatPanel({
       <form
         onSubmit={send}
         data-vaul-no-drag
-        className="z-10 mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] mt-2 shrink-0 rounded-[26px] border border-border/60 bg-card p-2 shadow-card"
+        className="z-10 mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] mt-2 shrink-0 rounded-[26px] border border-border/50 bg-card/70 p-2 shadow-card backdrop-blur-md"
       >
 
         <div className="flex items-end gap-1.5">

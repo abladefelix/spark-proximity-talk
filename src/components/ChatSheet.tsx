@@ -60,8 +60,8 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
         repositionInputs={false}
       >
         <DrawerPrimitive.Portal>
-          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2rem] border border-b-0 border-border bg-background shadow-2xl outline-none">
+          <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-colors duration-300" />
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[min(88dvh,760px)] w-full max-w-lg touch-pan-y flex-col overflow-hidden rounded-t-[2.5rem] border border-border/40 bg-card/80 shadow-sheet backdrop-blur-2xl outline-none dark:bg-card/75 dark:shadow-sheet-dark">
             <DrawerPrimitive.Title className="sr-only">Chat</DrawerPrimitive.Title>
             <DrawerPrimitive.Description className="sr-only">
               Swipe down anywhere to close and pick someone else.
@@ -70,13 +70,13 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
               className="flex h-10 w-full shrink-0 touch-none cursor-grab items-center justify-center active:cursor-grabbing"
               aria-label="Swipe down to close chat"
             >
-              <span className="h-1.5 w-12 rounded-full bg-muted-foreground/40" />
+              <span className="h-1.5 w-14 rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/50" />
             </DrawerPrimitive.Handle>
             {matchId && (
               <ChatPanel
                 key={matchId}
                 matchId={matchId}
-                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent"
               />
             )}
           </DrawerPrimitive.Content>
