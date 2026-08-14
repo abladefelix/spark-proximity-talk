@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import defaultLogo from "@/assets/skanaround-s.png.asset.json";
+import defaultLogo from "@/assets/skanaround-logo.png";
 
 export const DEFAULT_APP_NAME = "skanAround";
-export const DEFAULT_LOGO_URL = defaultLogo.url;
+export const DEFAULT_LOGO_URL = defaultLogo;
 
 export function useBranding() {
   return useQuery({
