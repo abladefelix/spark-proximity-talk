@@ -189,7 +189,7 @@ export function ChatPanel({
   const firstAt = messages[0]?.created_at;
 
   return (
-    <div className={className ?? "flex min-h-screen min-w-0 flex-col bg-background"}>
+    <div className={className ?? "flex min-h-screen min-w-0 flex-col bg-transparent"}>
       <header className="flex shrink-0 items-center gap-3 px-4 pb-3 pt-2">
         {leading}
         <PersonAvatar
