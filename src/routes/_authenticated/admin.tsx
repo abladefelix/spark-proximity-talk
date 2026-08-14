@@ -463,7 +463,12 @@ function AdminPage() {
             Reports
             {reports.length > 0 ? ` (${reports.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="appeals" className="flex-1">
+            Appeals
+            {appeals.length > 0 ? ` (${appeals.length})` : ""}
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="people" className="mt-3">
           <div className="relative">
