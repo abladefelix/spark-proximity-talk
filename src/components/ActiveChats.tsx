@@ -4,6 +4,7 @@ import { ChevronDown, MessageCircle } from "lucide-react";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { useChatTtlDays, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 
 type Row = {
   matchId: string;
@@ -13,14 +14,16 @@ type Row = {
   avatar_url: string | null;
   gender: "male" | "female" | "other" | null;
   preview: string | null;
+  lastAt: number;
 };
 
 export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
   const [expanded, setExpanded] = useState(false);
+  const { data: ttlDays } = useChatTtlDays();
 
-  const { data: rows = [] } = useQuery({
+  const { data: allRows = [] } = useQuery({
     queryKey: ["active-chats"],
     refetchInterval: 15000,
     queryFn: async (): Promise<Row[]> => {
@@ -48,20 +51,23 @@ export function ActiveChats() {
           .order("created_at", { ascending: false }),
       ]);
 
-      return matches.map((m) => {
-        const otherId = m.user_a === me ? m.user_b : m.user_a;
-        const p = profiles?.find((x) => x.id === otherId);
-        const last = msgs?.find((x) => x.match_id === m.id);
-        return {
-          matchId: m.id,
-          id: otherId,
-          username: p?.username ?? "someone",
-          display_name: p?.display_name ?? null,
-          avatar_url: p?.avatar_url ?? null,
-          gender: (p?.gender ?? null) as Row["gender"],
-          preview: last?.content ?? null,
-        };
-      });
+      return matches
+        .map((m) => {
+          const otherId = m.user_a === me ? m.user_b : m.user_a;
+          const p = profiles?.find((x) => x.id === otherId);
+          const last = msgs?.find((x) => x.match_id === m.id);
+          return {
+            matchId: m.id,
+            id: otherId,
+            username: p?.username ?? "someone",
+            display_name: p?.display_name ?? null,
+            avatar_url: p?.avatar_url ?? null,
+            gender: (p?.gender ?? null) as Row["gender"],
+            preview: last?.content ?? null,
+            lastAt: new Date(last?.created_at ?? m.created_at).getTime(),
+          };
+        })
+        .sort((a, b) => b.lastAt - a.lastAt);
     },
   });
 
@@ -80,77 +86,79 @@ export function ActiveChats() {
     };
   }, [queryClient]);
 
-  if (rows.length === 0) return null;
+  const days = ttlDays ?? DEFAULT_CHAT_TTL_DAYS;
+  const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
+  const rows = allRows.filter((r) => r.lastAt >= cutoff);
 
-  const collapsible = rows.length > 2;
-  const shown = collapsible && !expanded ? [] : rows;
+  const latest = rows[0];
+  if (!latest) return null;
+
 
   return (
-    <div className="mt-4 rounded-2xl border border-primary/30 bg-card/60">
-      {collapsible && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
-        >
-          <div className="flex -space-x-3">
-            {rows.slice(0, 4).map((row) => (
-              <PersonAvatar
-                key={row.matchId}
-                path={row.avatar_url}
-                name={row.display_name}
-                username={row.username}
-                gender={row.gender}
-                className="size-8 shrink-0 ring-2 ring-card"
-              />
-            ))}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{rows.length} chats unlocked</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {expanded ? "Tap to collapse" : "Tap to see everyone"}
-            </p>
-          </div>
-          <ChevronDown
-            className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
-          />
-        </button>
-      )}
-
-      <div
-        className={
-          collapsible && expanded
-            ? "max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5"
-            : "space-y-1 p-1.5"
-        }
+    <div className="mt-4 overflow-hidden rounded-2xl border border-primary/30 bg-card/60">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
       >
-        {shown.map((row) => (
-          <button
-            key={row.matchId}
-            type="button"
-            onClick={() => openChat(row.matchId)}
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
-          >
+        <div className="flex -space-x-3">
+          {rows.slice(0, 4).map((row) => (
             <PersonAvatar
+              key={row.matchId}
               path={row.avatar_url}
               name={row.display_name}
               username={row.username}
               gender={row.gender}
-              className="size-9 shrink-0"
+              className="size-8 shrink-0 ring-2 ring-card"
             />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {row.preview ?? "Chat unlocked — say hello"}
-              </p>
-            </div>
-            <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
-              <MessageCircle className="size-3.5" />
-              Open
-            </span>
-          </button>
-        ))}
-      </div>
+          ))}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">
+            {rows.length === 1
+              ? (latest.display_name ?? latest.username)
+              : `${rows.length} chats unlocked`}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {latest.preview ?? "Chat unlocked — say hello"}
+          </p>
+        </div>
+        <ChevronDown
+          className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {expanded && (
+        <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
+          {rows.map((row) => (
+            <button
+              key={row.matchId}
+              type="button"
+              onClick={() => openChat(row.matchId)}
+              className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+            >
+              <PersonAvatar
+                path={row.avatar_url}
+                name={row.display_name}
+                username={row.username}
+                gender={row.gender}
+                className="size-9 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{row.display_name ?? row.username}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {row.preview ?? "Chat unlocked — say hello"}
+                </p>
+              </div>
+              <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+                <MessageCircle className="size-3.5" />
+                Open
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+

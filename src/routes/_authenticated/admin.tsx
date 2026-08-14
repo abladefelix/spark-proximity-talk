@@ -33,6 +33,8 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
 import { useMaxRadius } from "@/hooks/useMaxRadius";
+import { useChatTtlDays } from "@/hooks/useChatTtl";
+
 
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
@@ -98,7 +100,39 @@ function AdminPage() {
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
   const { data: maxRadius } = useMaxRadius();
+  const { data: chatTtl } = useChatTtlDays();
+  const [chatTtlDraft, setChatTtlDraft] = useState<string | null>(null);
   const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
+
+  async function saveChatTtl() {
+    const value = Math.round(Number(chatTtlDraft ?? chatTtl ?? 30));
+    if (!Number.isFinite(value) || value < 1) {
+      toast.error("Enter at least 1 day");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ chat_ttl_days: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-chat-ttl"] });
+    setChatTtlDraft(null);
+    toast.success("Chat history length updated");
+  }
+
+  async function purgeOldChats() {
+    const { data, error } = await supabase.rpc("purge_old_chats");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+    toast.success(`Removed ${data ?? 0} old messages`);
+  }
+
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [savingLogo, setSavingLogo] = useState(false);
 
@@ -677,6 +711,31 @@ function AdminPage() {
           <p className="mt-1 text-[11px] text-muted-foreground">
             Members can pick any range up to this cap on their radar.
           </p>
+
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Chat history length
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={chatTtlDraft ?? String(chatTtl ?? 30)}
+              onChange={(e) => setChatTtlDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">days</span>
+            <Button size="sm" onClick={() => void saveChatTtl()}>
+              Save
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => void purgeOldChats()}>
+              Purge now
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Conversations older than this stop showing and can be cleared permanently.
+          </p>
+
 
 
         </div>

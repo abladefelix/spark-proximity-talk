@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           accent_hue: number
           app_name: string
+          chat_ttl_days: number
           created_at: string
           id: string
           logo_url: string | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           accent_hue?: number
           app_name?: string
+          chat_ttl_days?: number
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           accent_hue?: number
           app_name?: string
+          chat_ttl_days?: number
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -511,6 +514,7 @@ export type Database = {
         }[]
       }
       purge_expired_signals: { Args: never; Returns: undefined }
+      purge_old_chats: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
