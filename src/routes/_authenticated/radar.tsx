@@ -78,6 +78,7 @@ function formatDistance(m: number) {
 function RadarPage() {
   const navigate = useNavigate();
   const { openChat } = useChatSheet();
+  const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
   const radius = 500;
   const [visible, setVisible] = useState(true);
@@ -86,6 +87,7 @@ function RadarPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
