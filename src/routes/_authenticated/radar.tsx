@@ -131,8 +131,11 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const push = async (coords: { latitude: number; longitude: number }) => {
       if (cancelled) return;
+      lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
+
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) return;
       const { error } = await supabase.from("locations").upsert(
