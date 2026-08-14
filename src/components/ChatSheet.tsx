@@ -1,6 +1,39 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
+import { useQuery } from "@tanstack/react-query";
 import { ChatPanel } from "@/components/ChatPanel";
+import { supabase } from "@/integrations/supabase/client";
+import { backgroundCss, useChatBackgrounds } from "@/lib/chatBackgrounds";
+
+/** Washed-out wallpaper behind the chat, chosen by the member in their profile. */
+function ChatBackdrop() {
+  const backgrounds = useChatBackgrounds();
+  const { data: chosen } = useQuery({
+    queryKey: ["my-chat-background"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return "none";
+      const { data } = await supabase
+        .from("profiles")
+        .select("chat_background")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      return data?.chat_background ?? "none";
+    },
+  });
+
+  const css = backgroundCss(backgrounds.find((b) => b.id === chosen));
+  if (!css) return null;
+
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 opacity-25 blur-[2px] saturate-75 dark:opacity-20" style={{ background: css }} />
+      <div className="absolute inset-0 bg-card/60 dark:bg-card/65" />
+    </div>
+  );
+}
+
 
 type ChatSheetContextValue = {
   openChat: (matchId: string) => void;
