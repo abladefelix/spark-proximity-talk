@@ -199,7 +199,7 @@ export function ChatPanel({
 
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
-      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 px-4 pb-2 pt-0.5">
+      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 bg-card/30 px-4 pb-2 pt-0.5 backdrop-blur-xl">
         <button
           type="button"
           onClick={closeChat}
