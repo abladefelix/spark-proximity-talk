@@ -768,7 +768,15 @@ function AdminPage() {
           <TabsTrigger value="backup" className="flex-1">
             Backup
           </TabsTrigger>
+          <TabsTrigger value="app" className="flex-1">
+            App
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="app" className="mt-3">
+          <AppTab />
+        </TabsContent>
+
 
         <TabsContent value="emails" className="mt-3">
           <EmailsTab />
