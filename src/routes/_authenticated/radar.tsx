@@ -117,16 +117,17 @@ function RadarPage() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
 
-  // On arrival, if location isn't granted yet, ask for it up front.
+  // Only react to an explicit "denied" state. Native webviews often don't
+  // implement navigator.permissions, so we never block on it — we just try to
+  // read the position and show the prompt if the OS actually refuses.
   useEffect(() => {
     let cancelled = false;
-    const check = async () => {
-      if (!("geolocation" in navigator)) return;
+    void (async () => {
       try {
         const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
         if (cancelled || !status) return;
-        if (status.state !== "granted") {
-          setPermDenied(status.state === "denied");
+        if (status.state === "denied") {
+          setPermDenied(true);
           setAskLocation(true);
         }
         status.onchange = () => {
@@ -134,13 +135,15 @@ function RadarPage() {
             setAskLocation(false);
             setPermDenied(false);
             setRetryKey((k) => k + 1);
+          } else if (status.state === "denied") {
+            setPermDenied(true);
+            setAskLocation(true);
           }
         };
       } catch {
-        setAskLocation(true);
+        /* permissions API unavailable — rely on the geolocation callbacks */
       }
-    };
-    void check();
+    })();
     return () => {
       cancelled = true;
     };
