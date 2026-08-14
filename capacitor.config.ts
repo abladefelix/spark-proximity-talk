@@ -28,7 +28,7 @@ const config: CapacitorConfig = {
 
 
   ios: {
-    contentInset: "always",
+    contentInset: "never",
     allowsLinkPreview: false,
   },
   android: {
