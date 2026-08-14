@@ -199,14 +199,14 @@ export function ChatPanel({
 
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col bg-transparent"}>
-      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 bg-card/30 px-4 pb-2 pt-0.5 backdrop-blur-xl">
+      <header className="flex shrink-0 items-center gap-3 border-b border-border/30 bg-card/40 px-3 pb-3 pt-1 backdrop-blur-xl">
         <button
           type="button"
           onClick={closeChat}
-          className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary"
+          className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary"
           aria-label="Close chat"
         >
-          <X className="size-5" />
+          <ChevronLeft className="size-5" />
         </button>
         <PersonAvatar
           path={other?.avatar_url}
