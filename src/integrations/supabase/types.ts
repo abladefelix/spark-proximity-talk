@@ -18,32 +18,101 @@ export type Database = {
         Row: {
           accent_hue: number
           app_name: string
+          chat_enabled: boolean
+          chat_prompt_text: string
           chat_ttl_days: number
+          color_female: string
+          color_male: string
+          color_other: string
           created_at: string
+          daily_signal_limit: number
+          default_radius_m: number
+          default_theme: string
+          empty_radar_text: string
+          font_family: string
           id: string
+          location_sharing_enabled: boolean
           logo_url: string | null
+          max_message_len: number
           max_radius_m: number
+          presence_timeout_min: number
+          privacy_text: string
+          push_enabled: boolean
+          radar_sweep_enabled: boolean
+          reports_enabled: boolean
+          signal_expiry_hours: number
+          signups_enabled: boolean
+          tagline: string
+          terms_text: string
           updated_at: string
+          verification_enabled: boolean
+          welcome_text: string
         }
         Insert: {
           accent_hue?: number
           app_name?: string
+          chat_enabled?: boolean
+          chat_prompt_text?: string
           chat_ttl_days?: number
+          color_female?: string
+          color_male?: string
+          color_other?: string
           created_at?: string
+          daily_signal_limit?: number
+          default_radius_m?: number
+          default_theme?: string
+          empty_radar_text?: string
+          font_family?: string
           id?: string
+          location_sharing_enabled?: boolean
           logo_url?: string | null
+          max_message_len?: number
           max_radius_m?: number
+          presence_timeout_min?: number
+          privacy_text?: string
+          push_enabled?: boolean
+          radar_sweep_enabled?: boolean
+          reports_enabled?: boolean
+          signal_expiry_hours?: number
+          signups_enabled?: boolean
+          tagline?: string
+          terms_text?: string
           updated_at?: string
+          verification_enabled?: boolean
+          welcome_text?: string
         }
         Update: {
           accent_hue?: number
           app_name?: string
+          chat_enabled?: boolean
+          chat_prompt_text?: string
           chat_ttl_days?: number
+          color_female?: string
+          color_male?: string
+          color_other?: string
           created_at?: string
+          daily_signal_limit?: number
+          default_radius_m?: number
+          default_theme?: string
+          empty_radar_text?: string
+          font_family?: string
           id?: string
+          location_sharing_enabled?: boolean
           logo_url?: string | null
+          max_message_len?: number
           max_radius_m?: number
+          presence_timeout_min?: number
+          privacy_text?: string
+          push_enabled?: boolean
+          radar_sweep_enabled?: boolean
+          reports_enabled?: boolean
+          signal_expiry_hours?: number
+          signups_enabled?: boolean
+          tagline?: string
+          terms_text?: string
           updated_at?: string
+          verification_enabled?: boolean
+          welcome_text?: string
         }
         Relationships: []
       }

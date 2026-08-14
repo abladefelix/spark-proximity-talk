@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useAppSettings";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ export function ChatPanel({
 }) {
   const queryClient = useQueryClient();
   const sendPush = useServerFn(sendPushNotification);
+  const settings = useSettings();
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -259,24 +261,26 @@ export function ChatPanel({
         className="sticky bottom-3 z-40 mx-4 mb-3 shrink-0 rounded-[28px] border border-border/60 bg-card/95 p-2 shadow-card backdrop-blur"
       >
         <div className="flex items-end gap-1.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0 rounded-full text-muted-foreground"
-            aria-label="Share a meet-up pin"
-            disabled={pinning}
-            onClick={sharePin}
-          >
-            <MapPin className="size-[18px]" />
-          </Button>
+          {settings.location_sharing_enabled && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-10 shrink-0 rounded-full text-muted-foreground"
+              aria-label="Share a meet-up pin"
+              disabled={pinning}
+              onClick={sharePin}
+            >
+              <MapPin className="size-[18px]" />
+            </Button>
+          )}
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Say something…"
+            placeholder={settings.chat_prompt_text}
             className="min-h-[44px] max-h-[160px] flex-1 resize-none border-0 bg-transparent py-3.5 text-[15px] leading-snug placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
-            maxLength={2000}
+            maxLength={settings.max_message_len}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

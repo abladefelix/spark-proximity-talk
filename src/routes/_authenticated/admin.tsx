@@ -39,6 +39,7 @@ import { useChatTtlDays } from "@/hooks/useChatTtl";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
+import { AppTab } from "@/components/admin/AppTab";
 import {
   ACCENT_PRESETS,
   DEFAULT_HUE,
@@ -768,7 +769,15 @@ function AdminPage() {
           <TabsTrigger value="backup" className="flex-1">
             Backup
           </TabsTrigger>
+          <TabsTrigger value="app" className="flex-1">
+            App
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="app" className="mt-3">
+          <AppTab />
+        </TabsContent>
+
 
         <TabsContent value="emails" className="mt-3">
           <EmailsTab />

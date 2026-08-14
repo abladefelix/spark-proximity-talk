@@ -35,6 +35,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 
 import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
+import { useSettings } from "@/hooks/useAppSettings";
 
 
 
@@ -95,12 +96,14 @@ function RadarPage() {
   const sendPush = useServerFn(sendPushNotification);
   const queryClient = useQueryClient();
   const { data: maxRadius } = useMaxRadius();
+  const settings = useSettings();
   const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
-  const [radiusPref, setRadiusPref] = useState(500);
+  const [radiusPref, setRadiusPref] = useState(settings.default_radius_m);
   useEffect(() => {
-    const saved = Number(localStorage.getItem("skan-radius") ?? "500");
+    const saved = Number(localStorage.getItem("skan-radius") ?? "");
     if (Number.isFinite(saved) && saved > 0) setRadiusPref(saved);
-  }, []);
+    else setRadiusPref(settings.default_radius_m);
+  }, [settings.default_radius_m]);
   const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -522,8 +525,7 @@ function RadarPage() {
       )}
       {!geoError && located && people.length === 0 && !nearby.isLoading && (
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          No one within {radius < 1000 ? `${radius} m` : `${(radius / 1000).toFixed(1)} km`} — widen
-          your scan range in your profile.
+          {settings.empty_radar_text} Widen your scan range in your profile.
         </p>
       )}
 
@@ -620,7 +622,9 @@ function RadarPage() {
           ))}
         </div>
 
-        <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+        {settings.radar_sweep_enabled && (
+          <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+        )}
 
 
 
@@ -697,7 +701,11 @@ function RadarPage() {
                 </div>
               ) : (
                 <>
-                  {selected.match_id ? (
+                  {!settings.chat_enabled ? (
+                    <Button variant="ghost" className="w-full" disabled>
+                      Chat is off right now
+                    </Button>
+                  ) : selected.match_id ? (
                     <Button
                       variant="heat"
                       className="w-full"
@@ -728,13 +736,15 @@ function RadarPage() {
                     >
                       <Ban className="size-3.5" /> Block
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5"
-                      onClick={() => setReporting(true)}
-                    >
-                      <Flag className="size-3.5" /> Report
-                    </button>
+                    {settings.reports_enabled && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5"
+                        onClick={() => setReporting(true)}
+                      >
+                        <Flag className="size-3.5" /> Report
+                      </button>
+                    )}
                   </div>
                 </>
               )}
