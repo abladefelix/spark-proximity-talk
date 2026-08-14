@@ -342,7 +342,7 @@ function AdminPage() {
     const { error } = await supabase.rpc("admin_set_ban", {
       _user_id: userId,
       _banned: banned,
-      _reason: banned ? reason : null,
+      _reason: banned ? reason : undefined,
     });
     if (error) {
       toast.error(error.message);
