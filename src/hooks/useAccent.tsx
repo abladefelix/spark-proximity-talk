@@ -76,10 +76,11 @@ export function parseColorToRgb(input: string): [number, number, number] | null 
   const v = input.trim().toLowerCase();
   const hex = v.replace(/^#/, "");
   if (/^[0-9a-f]{3}$/.test(hex)) {
+    const [h0 = "0", h1 = "0", h2 = "0"] = hex.split("");
     return [
-      parseInt(hex[0] + hex[0], 16),
-      parseInt(hex[1] + hex[1], 16),
-      parseInt(hex[2] + hex[2], 16),
+      parseInt(h0 + h0, 16),
+      parseInt(h1 + h1, 16),
+      parseInt(h2 + h2, 16),
     ];
   }
   if (/^[0-9a-f]{6}$/.test(hex)) {
@@ -91,7 +92,7 @@ export function parseColorToRgb(input: string): [number, number, number] | null 
   }
   const rgbMatch = v.match(/^rgba?\(([^)]+)\)$/);
   if (rgbMatch) {
-    const parts = rgbMatch[1].split(/[\s,/]+/).filter(Boolean).slice(0, 3);
+    const parts = (rgbMatch[1] ?? "").split(/[\s,/]+/).filter(Boolean).slice(0, 3);
     if (parts.length === 3) {
       const nums = parts.map((p) =>
         p.endsWith("%") ? (parseFloat(p) / 100) * 255 : parseFloat(p),
@@ -103,11 +104,12 @@ export function parseColorToRgb(input: string): [number, number, number] | null 
   }
   const hslMatch = v.match(/^hsla?\(([^)]+)\)$/);
   if (hslMatch) {
-    const parts = hslMatch[1].split(/[\s,/]+/).filter(Boolean).slice(0, 3);
+    const parts = (hslMatch[1] ?? "").split(/[\s,/]+/).filter(Boolean).slice(0, 3);
     if (parts.length === 3) {
-      const h = ((parseFloat(parts[0]) % 360) + 360) % 360;
-      const sat = parseFloat(parts[1]) / 100;
-      const light = parseFloat(parts[2]) / 100;
+      const [p0 = "", p1 = "", p2 = ""] = parts;
+      const h = ((parseFloat(p0) % 360) + 360) % 360;
+      const sat = parseFloat(p1) / 100;
+      const light = parseFloat(p2) / 100;
       if ([h, sat, light].every((n) => Number.isFinite(n))) {
         const c = (1 - Math.abs(2 * light - 1)) * sat;
         const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
