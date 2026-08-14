@@ -29,6 +29,10 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
       <DrawerPrimitive.Root
         open={Boolean(matchId)}
         onOpenChange={(o) => !o && closeChat()}
+        dismissible
+        direction="bottom"
+        handleOnly
+        closeThreshold={0.25}
       >
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
@@ -37,9 +41,12 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
             <DrawerPrimitive.Description className="sr-only">
               Swipe down to close and pick someone else.
             </DrawerPrimitive.Description>
-            <div className="flex h-7 shrink-0 touch-none items-center justify-center" aria-hidden>
-              <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
-            </div>
+            <DrawerPrimitive.Handle
+              className="flex h-10 w-full shrink-0 touch-none cursor-grab items-center justify-center active:cursor-grabbing"
+              aria-label="Swipe down to close chat"
+            >
+              <span className="h-1.5 w-12 rounded-full bg-muted-foreground/40" />
+            </DrawerPrimitive.Handle>
             {matchId && (
               <ChatPanel matchId={matchId} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background" />
             )}
