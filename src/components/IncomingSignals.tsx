@@ -1,0 +1,151 @@
+import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Zap } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { PersonAvatar } from "@/components/PersonAvatar";
+
+type Incoming = {
+  id: string;
+  from_user: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  gender: "male" | "female" | "other" | null;
+  match_id: string | null;
+};
+
+export function IncomingSignals() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: incoming = [] } = useQuery({
+    queryKey: ["incoming-signals"],
+    refetchInterval: 10000,
+    queryFn: async (): Promise<Incoming[]> => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) return [];
+      const { data: signals, error } = await supabase
+        .from("signals")
+        .select("id, from_user")
+        .eq("to_user", me)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false });
+      if (error || !signals?.length) return [];
+
+      const ids = signals.map((s) => s.from_user);
+      const [{ data: profiles }, { data: matches }] = await Promise.all([
+        supabase.from("profiles").select("id, username, display_name, avatar_url, gender").in("id", ids),
+        supabase.from("matches").select("id, user_a, user_b"),
+      ]);
+
+      return signals
+        .map((s) => {
+          const p = profiles?.find((x) => x.id === s.from_user);
+          if (!p) return null;
+          const match = matches?.find(
+            (m) =>
+              (m.user_a === me && m.user_b === s.from_user) ||
+              (m.user_b === me && m.user_a === s.from_user),
+          );
+          return {
+            id: s.id,
+            from_user: s.from_user,
+            username: p.username,
+            display_name: p.display_name,
+            avatar_url: p.avatar_url,
+            gender: p.gender as Incoming["gender"],
+            match_id: match?.id ?? null,
+          };
+        })
+        .filter((x): x is Incoming => x !== null && x.match_id === null);
+    },
+  });
+
+  const accept = useMutation({
+    mutationFn: async (person: Incoming) => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) throw new Error("Not signed in");
+      const { error } = await supabase
+        .from("signals")
+        .insert({ from_user: me, to_user: person.from_user });
+      if (error && !error.message.includes("duplicate")) throw error;
+      const { data: matches } = await supabase.from("matches").select("id, user_a, user_b");
+      const match = matches?.find(
+        (m) =>
+          (m.user_a === me && m.user_b === person.from_user) ||
+          (m.user_b === me && m.user_a === person.from_user),
+      );
+      if (!match) throw new Error("Couldn't open the chat — try again");
+      return match.id;
+    },
+    onSuccess: (matchId) => {
+      queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
+      queryClient.invalidateQueries({ queryKey: ["nearby"] });
+      navigate({ to: "/chat/$matchId", params: { matchId } });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not accept"),
+  });
+
+  const decline = useMutation({
+    mutationFn: async (person: Incoming) => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) throw new Error("Not signed in");
+      const { error } = await supabase.from("blocks").insert({ blocker: me, blocked: person.from_user });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
+      queryClient.invalidateQueries({ queryKey: ["nearby"] });
+      toast.success("Declined");
+    },
+    onError: () => toast.error("Couldn't decline"),
+  });
+
+  if (incoming.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-2">
+      {incoming.map((person) => (
+        <div
+          key={person.id}
+          className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-3 py-2.5"
+        >
+          <PersonAvatar
+            path={person.avatar_url}
+            name={person.display_name}
+            username={person.username}
+            gender={person.gender}
+            className="size-10 shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">
+              {person.display_name ?? person.username}
+            </p>
+            <p className="text-xs text-muted-foreground">wants to chat</p>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-xs text-muted-foreground"
+            onClick={() => decline.mutate(person)}
+            disabled={decline.isPending}
+          >
+            Decline
+          </Button>
+          <Button
+            size="sm"
+            variant="heat"
+            className="gap-1 text-xs"
+            onClick={() => accept.mutate(person)}
+            disabled={accept.isPending}
+          >
+            <Zap className="size-3.5" />
+            Accept
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
