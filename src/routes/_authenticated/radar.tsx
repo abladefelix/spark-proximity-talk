@@ -20,6 +20,7 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { RadarBeacon } from "@/components/RadarBeacon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
+import { IncomingSignals } from "@/components/IncomingSignals";
 
 import logoAsset from "@/assets/shatta-s.png.asset.json";
 import { Brand, useBranding } from "@/components/Brand";
