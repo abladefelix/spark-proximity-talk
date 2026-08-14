@@ -35,7 +35,15 @@ import { Brand, useBranding } from "@/components/Brand";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
-import { ACCENT_PRESETS, DEFAULT_HUE, accentSwatch, useAccentHue } from "@/hooks/useAccent";
+import {
+  ACCENT_PRESETS,
+  DEFAULT_HUE,
+  accentSwatch,
+  useAccentHue,
+  parseColorToHue,
+  parseColorToRgb,
+  toHexColor,
+} from "@/hooks/useAccent";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
