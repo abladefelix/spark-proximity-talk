@@ -270,6 +270,40 @@ function RadarPage() {
         </div>
       </div>
 
+      <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
+        <DialogContent className="max-w-xs rounded-3xl text-center">
+          <DialogHeader className="items-center">
+            <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
+              <MapPin className="size-7 text-primary" />
+            </span>
+            <DialogTitle>Turn on location</DialogTitle>
+            <DialogDescription>
+              {permDenied
+                ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
+                : "SHATTA needs your location to show people around you. Only distance is ever shared — never your exact spot."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              variant="heat"
+              className="w-full"
+              onClick={() => {
+                setPermDenied(false);
+                setAskLocation(false);
+                setRetryKey((k) => k + 1);
+              }}
+            >
+              {permDenied ? "Try again" : "Allow location"}
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setAskLocation(false)}>
+              Not now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       {geoError && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
           <span>{geoError}</span>
