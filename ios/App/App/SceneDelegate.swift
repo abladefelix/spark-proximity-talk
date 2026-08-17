@@ -11,7 +11,6 @@ class OfflineBridgeViewController: CAPBridgeViewController {
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "app.skanaround.network")
     private var overlay: UIView?
-    private var didLoadOnce = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -81,22 +80,10 @@ class OfflineBridgeViewController: CAPBridgeViewController {
     }
 
     private func hideOffline(reload: Bool) {
-        guard let container = overlay else {
-            didLoadOnce = true
-            return
-        }
+        guard let container = overlay else { return }
         container.removeFromSuperview()
         overlay = nil
-        if reload {
-            if didLoadOnce {
-                webView?.reload()
-            } else if let url = bridge?.config.serverURL {
-                webView?.load(URLRequest(url: url))
-            } else {
-                webView?.reload()
-            }
-        }
-        didLoadOnce = true
+        if reload { webView?.reload() }
     }
 
     @objc private func retryTapped() {
