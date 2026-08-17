@@ -4,22 +4,33 @@ import Network
 import WebKit
 
 /// The web UI is served from the live site, so with no connection the web view
-/// has nothing to render. This controller puts a native "no internet" screen on
-/// top instead of a blank page, and reloads the app once the network returns.
-class OfflineBridgeViewController: CAPBridgeViewController {
+/// has nothing to render. A separate native window is shown on top instead of a
+/// blank page, and the web view reloads once the network returns.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
 
+    /// Separate window kept above the Capacitor window so the offline screen is
+    /// never replaced by the bridge's own view controller setup.
+    private var offlineWindow: UIWindow?
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "app.skanaround.network")
-    private var overlay: UIView?
+    private var wasOffline = false
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        monitor.pathUpdateHandler = { [weak self] path in
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
+
+        guard let windowScene = scene as? UIWindowScene else { return }
+        window = windowScene.windows.first
+
+        monitor.pathUpdateHandler = { [weak self, weak windowScene] path in
             DispatchQueue.main.async {
+                guard let self, let windowScene else { return }
                 if path.status == .satisfied {
-                    self?.hideOffline(reload: true)
+                    self.hideOffline(reload: self.wasOffline)
+                    self.wasOffline = false
                 } else {
-                    self?.showOffline()
+                    self.wasOffline = true
+                    self.showOffline(in: windowScene)
                 }
             }
         }
@@ -28,12 +39,13 @@ class OfflineBridgeViewController: CAPBridgeViewController {
 
     deinit { monitor.cancel() }
 
-    private func showOffline() {
-        guard overlay == nil else { return }
+    private func showOffline(in windowScene: UIWindowScene) {
+        guard offlineWindow == nil else { return }
 
-        let container = UIView(frame: view.bounds)
-        container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        container.backgroundColor = UIColor(red: 0.078, green: 0.071, blue: 0.063, alpha: 1)
+        let host = UIWindow(windowScene: windowScene)
+        host.windowLevel = .alert + 1
+        let vc = UIViewController()
+        vc.view.backgroundColor = UIColor(red: 0.078, green: 0.071, blue: 0.063, alpha: 1)
 
         let stack = UIStackView()
         stack.axis = .vertical
@@ -67,41 +79,31 @@ class OfflineBridgeViewController: CAPBridgeViewController {
         stack.setCustomSpacing(24, after: body)
         stack.addArrangedSubview(retry)
 
-        container.addSubview(stack)
+        vc.view.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            stack.leadingAnchor.constraint(greaterThanOrEqualTo: container.leadingAnchor, constant: 32),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -32),
+            stack.centerXAnchor.constraint(equalTo: vc.view.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: vc.view.centerYAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: vc.view.leadingAnchor, constant: 32),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: vc.view.trailingAnchor, constant: -32),
         ])
 
-        view.addSubview(container)
-        overlay = container
+        host.rootViewController = vc
+        host.isHidden = false
+        offlineWindow = host
     }
 
     private func hideOffline(reload: Bool) {
-        guard let container = overlay else { return }
-        container.removeFromSuperview()
-        overlay = nil
-        if reload { webView?.reload() }
+        if let host = offlineWindow {
+            host.isHidden = true
+            offlineWindow = nil
+        }
+        if reload, let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
+            bridgeVC.webView?.reload()
+        }
     }
 
     @objc private func retryTapped() {
         hideOffline(reload: true)
-    }
-}
-
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    var window: UIWindow?
-
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = scene as? UIWindowScene else { return }
-
-        window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = OfflineBridgeViewController()
-        window?.makeKeyAndVisible()
-
-        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
