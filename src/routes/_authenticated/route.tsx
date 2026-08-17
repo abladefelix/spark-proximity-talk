@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { withTimeoutFallback } from "@/lib/net";
 import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -10,7 +11,14 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     // getSession() reads the locally cached session; getUser() hits the network
     // on every navigation and made cold app launches feel slow.
-    const { data } = await supabase.auth.getSession();
+    // Offline, a token refresh inside getSession() can hang forever and the app
+    // never finishes booting — cap it and fall back to "no session".
+    const { data } = await withTimeoutFallback(
+      supabase.auth.getSession(),
+      { data: { session: null } } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
+      5000,
+      "Session check",
+    );
     if (!data.session?.user) throw redirect({ to: "/auth" });
     return { user: data.session.user };
   },

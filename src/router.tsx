@@ -1,9 +1,25 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { isNetworkError } from "./lib/net";
 
 export const getRouter = () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Keep showing cached data while offline instead of hanging on a spinner.
+        networkMode: "offlineFirst",
+        refetchOnReconnect: true,
+        refetchOnWindowFocus: false,
+        retry: (failureCount, error) => (isNetworkError(error) ? failureCount < 3 : failureCount < 1),
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+      },
+      mutations: {
+        networkMode: "offlineFirst",
+        retry: (failureCount, error) => isNetworkError(error) && failureCount < 2,
+      },
+    },
+  });
 
   const router = createRouter({
     routeTree,
