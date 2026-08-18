@@ -87,10 +87,13 @@ export const FONT_OPTIONS = [
 
 /** Applies admin-controlled look & feel (beacon colours, font, default theme). */
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
+  const { data: loaded } = useAppSettings();
   const settings = useSettings();
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
+    // Until the real settings load, keep whatever the pre-paint script applied.
+    if (!loaded) return;
     const root = document.documentElement;
     root.style.setProperty("--gender-male", settings.color_male);
     root.style.setProperty("--gender-female", settings.color_female);
@@ -103,9 +106,10 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     } catch {
       /* storage unavailable */
     }
-  }, [settings.color_male, settings.color_female, settings.color_other]);
+  }, [loaded, settings.color_male, settings.color_female, settings.color_other]);
 
   useEffect(() => {
+    if (!loaded) return;
     // Only the two default families ship in the blocking <link>; any other
     // admin-picked family is fetched lazily so cold start stays fast.
     const family = settings.font_family;
@@ -131,10 +135,10 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     } catch {
       /* storage unavailable */
     }
-  }, [settings.font_family]);
+  }, [loaded, settings.font_family]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!loaded || typeof window === "undefined") return;
     const preferred = settings.default_theme === "light" ? "light" : "dark";
     // Cached so the pre-paint boot script can apply it on the next cold start.
     try {
@@ -145,7 +149,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     if (localStorage.getItem("skanaround-theme")) return;
     if (preferred !== theme) setTheme(preferred);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.default_theme]);
+  }, [loaded, settings.default_theme]);
 
   return <>{children}</>;
 }
