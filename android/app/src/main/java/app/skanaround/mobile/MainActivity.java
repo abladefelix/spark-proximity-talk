@@ -233,7 +233,15 @@ public class MainActivity extends BridgeActivity {
 
 
     @Override
+    public void onResume() {
+        super.onResume();
+        evaluateConnectivity();
+    }
+
+    @Override
     public void onDestroy() {
+        handler.removeCallbacks(poll);
+        probeExecutor.shutdownNow();
         if (connectivityManager != null && networkCallback != null) {
             try {
                 connectivityManager.unregisterNetworkCallback(networkCallback);
@@ -243,12 +251,16 @@ public class MainActivity extends BridgeActivity {
         super.onDestroy();
     }
 
-    private boolean isOnline() {
+    /** Interface-level check only; real reachability is confirmed by probeReachable(). */
+    private boolean hasNetwork() {
         Network network = connectivityManager.getActiveNetwork();
         if (network == null) return false;
         NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(network);
-        return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        if (caps == null) return false;
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
+
 
     private View ring(int sizeDp, int alpha) {
         View ring = new View(this);
