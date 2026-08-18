@@ -402,14 +402,35 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Only dismiss the offline screen when the network is actually back —
     /// otherwise reloading leaves a blank web view behind the dismissed overlay.
     @objc private func retryTapped() {
-        if monitor.currentPath.status == .satisfied {
-            hideOffline(reload: true)
-            wasOffline = false
+        guard !probing else { return }
+        statusLabel?.text = "Checking connection…"
+        statusLabel?.textColor = UIColor(white: 1, alpha: 0.6)
+        UIView.animate(withDuration: 0.2) { self.statusLabel?.alpha = 1 }
+
+        if monitor.currentPath.status != .satisfied {
+            failRetry()
             return
         }
 
+        probing = true
+        retryButton?.isEnabled = false
+        probeReachability { [weak self] ok in
+            guard let self else { return }
+            self.probing = false
+            self.retryButton?.isEnabled = true
+            if ok {
+                self.hideOffline(reload: true)
+                self.wasOffline = false
+            } else {
+                self.failRetry()
+            }
+        }
+    }
+
+    private func failRetry() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
         statusLabel?.text = "Still no connection"
+        statusLabel?.textColor = UIColor(red: 1.0, green: 0.55, blue: 0.45, alpha: 1)
         UIView.animate(withDuration: 0.2) { self.statusLabel?.alpha = 1 }
 
         guard let button = retryButton else { return }
@@ -417,6 +438,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         shake.values = [0, -8, 8, -6, 6, 0]
         shake.duration = 0.35
         button.layer.add(shake, forKey: "shake")
+
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
