@@ -41,6 +41,8 @@ import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
+import { MailSettingsTab } from "@/components/admin/MailSettingsTab";
+
 import { AppTab } from "@/components/admin/AppTab";
 import {
   ACCENT_PRESETS,
