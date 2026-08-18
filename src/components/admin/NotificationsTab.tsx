@@ -52,6 +52,18 @@ export function NotificationsTab() {
     },
   });
 
+  const filteredPeople = query.trim()
+    ? people.filter((p) => {
+        const q = query.toLowerCase();
+        return (
+          p.username.toLowerCase().includes(q) ||
+          (p.display_name && p.display_name.toLowerCase().includes(q))
+        );
+      })
+    : people;
+
+  const selectedPerson = people.find((p) => p.id === target);
+
   const send = useMutation({
     mutationFn: async () => {
       const { data: auth } = await supabase.auth.getUser();
