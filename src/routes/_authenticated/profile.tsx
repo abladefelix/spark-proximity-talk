@@ -20,6 +20,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
 import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
+import { RadarSoundSetting } from "@/components/RadarSoundSetting";
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -275,6 +276,7 @@ function ProfilePage() {
 
       <section className="mt-8 space-y-4">
         <ScanRangeSetting />
+        <RadarSoundSetting />
         <ChatBackgroundSetting />
         <div className="rounded-2xl border border-border p-4" hidden={!settings.verification_enabled}>
           <p className="flex items-center gap-2 text-sm font-semibold">

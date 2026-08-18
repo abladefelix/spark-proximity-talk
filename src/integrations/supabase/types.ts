@@ -40,6 +40,7 @@ export type Database = {
           privacy_text: string
           push_enabled: boolean
           radar_sweep_enabled: boolean
+          radar_tones: Json
           reports_enabled: boolean
           signal_expiry_hours: number
           signups_enabled: boolean
@@ -76,6 +77,7 @@ export type Database = {
           privacy_text?: string
           push_enabled?: boolean
           radar_sweep_enabled?: boolean
+          radar_tones?: Json
           reports_enabled?: boolean
           signal_expiry_hours?: number
           signups_enabled?: boolean
@@ -112,6 +114,7 @@ export type Database = {
           privacy_text?: string
           push_enabled?: boolean
           radar_sweep_enabled?: boolean
+          radar_tones?: Json
           reports_enabled?: boolean
           signal_expiry_hours?: number
           signups_enabled?: boolean
@@ -442,6 +445,8 @@ export type Database = {
           gender: string | null
           id: string
           last_seen: string
+          radar_sound: boolean
+          radar_tone: string | null
           updated_at: string
           username: string
           verified: boolean
@@ -458,6 +463,8 @@ export type Database = {
           gender?: string | null
           id: string
           last_seen?: string
+          radar_sound?: boolean
+          radar_tone?: string | null
           updated_at?: string
           username: string
           verified?: boolean
@@ -474,6 +481,8 @@ export type Database = {
           gender?: string | null
           id?: string
           last_seen?: string
+          radar_sound?: boolean
+          radar_tone?: string | null
           updated_at?: string
           username?: string
           verified?: boolean

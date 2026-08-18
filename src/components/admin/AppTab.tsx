@@ -4,6 +4,7 @@ import { Loader2, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ChatBackgroundsAdmin } from "@/components/admin/ChatBackgroundsAdmin";
+import { RadarTonesAdmin } from "@/components/admin/RadarTonesAdmin";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -292,6 +293,8 @@ export function AppTab() {
       </Section>
 
       <ChatBackgroundsAdmin />
+
+      <RadarTonesAdmin />
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-2">

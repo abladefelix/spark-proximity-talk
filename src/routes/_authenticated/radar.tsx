@@ -40,6 +40,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
 import { useSettings } from "@/hooks/useAppSettings";
+import { useRadarAlert } from "@/hooks/useRadarSound";
 
 
 
@@ -409,6 +410,23 @@ function RadarPage() {
 
   const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Optional alert tone whenever somebody new shows up on the scope.
+  const playRadarAlert = useRadarAlert();
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const ids = new Set(people.map((p) => p.id));
+    const seen = seenIdsRef.current;
+    seenIdsRef.current = ids;
+    if (!seen) return; // first load: don't chirp for everyone already there
+    for (const id of ids) {
+      if (!seen.has(id)) {
+        playRadarAlert();
+        break;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [people]);
   
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
