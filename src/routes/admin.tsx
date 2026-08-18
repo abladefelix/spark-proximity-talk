@@ -827,6 +827,11 @@ function AdminPage() {
           <EmailsTab />
         </TabsContent>
 
+        <TabsContent value="mail" className="mt-3">
+          <MailSettingsTab />
+        </TabsContent>
+
+
         <TabsContent value="insights" className="mt-3">
           <InsightsTab />
         </TabsContent>
