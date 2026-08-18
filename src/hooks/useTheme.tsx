@@ -15,8 +15,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    // Admin's default theme is cached so the pre-paint boot script and this
+    // hook agree — otherwise the app flashes the old theme on every launch.
+    const adminDefault = localStorage.getItem("skanaround-default-theme") as Theme | null;
     const initial =
-      stored ?? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      stored ??
+      adminDefault ??
+      (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
     setThemeState(initial);
   }, []);
 

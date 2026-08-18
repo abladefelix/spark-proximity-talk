@@ -40,7 +40,9 @@ export function AccentProvider({ children }: { children: ReactNode }) {
   const { data: hue } = useAccentHue();
 
   useEffect(() => {
-    const h = hue ?? DEFAULT_HUE;
+    // Until the real value loads, keep whatever the pre-paint script applied.
+    if (hue === undefined) return;
+    const h = hue;
     const root = document.documentElement;
     const primary = theme === "dark" ? `oklch(0.74 0.135 ${h})` : `oklch(0.65 0.16 ${h})`;
     const fg = theme === "dark" ? `oklch(0.17 0.02 ${h})` : `oklch(0.99 0.005 ${h})`;
@@ -49,6 +51,11 @@ export function AccentProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--sidebar-primary", primary);
     root.style.setProperty("--sidebar-primary-foreground", fg);
     root.style.setProperty("--ring", primary);
+    try {
+      localStorage.setItem("skanaround-accent-hue", String(h));
+    } catch {
+      /* storage unavailable */
+    }
   }, [hue, theme]);
 
   return <>{children}</>;

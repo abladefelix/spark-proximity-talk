@@ -169,7 +169,13 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('skanaround-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}",
+              "try{var d=document.documentElement,ls=localStorage;"+
+              "var t=ls.getItem('skanaround-theme')||ls.getItem('skanaround-default-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');"+
+              "if(t==='dark')d.classList.add('dark');"+
+              "var h=ls.getItem('skanaround-accent-hue');if(h){var p=t==='dark'?'oklch(0.74 0.135 '+h+')':'oklch(0.65 0.16 '+h+')';var f=t==='dark'?'oklch(0.17 0.02 '+h+')':'oklch(0.99 0.005 '+h+')';d.style.setProperty('--primary',p);d.style.setProperty('--primary-foreground',f);d.style.setProperty('--sidebar-primary',p);d.style.setProperty('--sidebar-primary-foreground',f);d.style.setProperty('--ring',p);}"+
+              "var fam=ls.getItem('skanaround-font');if(fam){d.style.setProperty('--font-sans-active','\"'+fam+'\", ui-sans-serif, system-ui, sans-serif');if(document.body)document.body.style.fontFamily='var(--font-sans-active)';}"+
+              "var gm=ls.getItem('skanaround-gender-colors');if(gm){var g=gm.split(',');d.style.setProperty('--gender-male',g[0]);d.style.setProperty('--gender-female',g[1]);d.style.setProperty('--gender-other',g[2]);}"+
+              "}catch(e){document.documentElement.classList.add('dark');}",
           }}
         />
         <div id="app-scroll">{children}</div>

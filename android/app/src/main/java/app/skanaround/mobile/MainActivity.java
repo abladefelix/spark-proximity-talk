@@ -42,6 +42,17 @@ public class MainActivity extends BridgeActivity {
     private ConnectivityManager.NetworkCallback networkCallback;
     private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
 
+    private final java.util.concurrent.ExecutorService probeExecutor =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
+    private boolean probing = false;
+    private final Runnable poll = new Runnable() {
+        @Override
+        public void run() {
+            evaluateConnectivity();
+            handler.postDelayed(this, 8000);
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,27 +61,75 @@ public class MainActivity extends BridgeActivity {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(Network network) {
-                runOnUiThread(() -> hideOffline(true));
+                runOnUiThread(() -> evaluateConnectivity());
+            }
+
+            @Override
+            public void onCapabilitiesChanged(Network network, NetworkCapabilities caps) {
+                runOnUiThread(() -> evaluateConnectivity());
             }
 
             @Override
             public void onLost(Network network) {
-                runOnUiThread(() -> {
-                    if (!isOnline()) {
-                        hideSplash();
-                        showOffline();
-                    }
-                });
+                runOnUiThread(() -> evaluateConnectivity());
             }
         };
         connectivityManager.registerNetworkCallback(new NetworkRequest.Builder().build(), networkCallback);
 
-        if (!isOnline()) {
+        if (!hasNetwork()) {
             showOffline();
         } else {
             showSplash();
+            evaluateConnectivity();
+        }
+        handler.postDelayed(poll, 8000);
+    }
+
+    /**
+     * A connected interface is not the same as working internet — a Wi-Fi network
+     * with no upstream still reports a network. Confirm with a real request.
+     */
+    private void evaluateConnectivity() {
+        if (probing) return;
+        if (!hasNetwork()) {
+            applyConnectivity(false);
+            return;
+        }
+        probing = true;
+        probeExecutor.execute(() -> {
+            boolean ok = probeReachable();
+            runOnUiThread(() -> {
+                probing = false;
+                applyConnectivity(ok);
+            });
+        });
+    }
+
+    private boolean probeReachable() {
+        java.net.HttpURLConnection conn = null;
+        try {
+            conn = (java.net.HttpURLConnection) new java.net.URL(SERVER_URL).openConnection();
+            conn.setRequestMethod("HEAD");
+            conn.setConnectTimeout(6000);
+            conn.setReadTimeout(6000);
+            conn.setUseCaches(false);
+            return conn.getResponseCode() > 0;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            if (conn != null) conn.disconnect();
         }
     }
+
+    private void applyConnectivity(boolean online) {
+        if (online) {
+            hideOffline(overlay != null);
+        } else {
+            hideSplash();
+            showOffline();
+        }
+    }
+
 
     /**
      * Reload if a document is present, otherwise start a fresh load — a web view
@@ -174,7 +233,15 @@ public class MainActivity extends BridgeActivity {
 
 
     @Override
+    public void onResume() {
+        super.onResume();
+        evaluateConnectivity();
+    }
+
+    @Override
     public void onDestroy() {
+        handler.removeCallbacks(poll);
+        probeExecutor.shutdownNow();
         if (connectivityManager != null && networkCallback != null) {
             try {
                 connectivityManager.unregisterNetworkCallback(networkCallback);
@@ -184,12 +251,16 @@ public class MainActivity extends BridgeActivity {
         super.onDestroy();
     }
 
-    private boolean isOnline() {
+    /** Interface-level check only; real reachability is confirmed by probeReachable(). */
+    private boolean hasNetwork() {
         Network network = connectivityManager.getActiveNetwork();
         if (network == null) return false;
         NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(network);
-        return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        if (caps == null) return false;
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
+
 
     private View ring(int sizeDp, int alpha) {
         View ring = new View(this);
@@ -260,7 +331,7 @@ public class MainActivity extends BridgeActivity {
         title.setGravity(Gravity.CENTER);
 
         TextView body = new TextView(this);
-        body.setText("SkanAround can't reach the network.\nTurn off airplane mode or reconnect to Wi-Fi.");
+        body.setText("SkanAround can't reach the internet.\nCheck your Wi-Fi or mobile data and try again.");
         body.setTextColor(Color.parseColor("#85FFFFFF"));
         body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         body.setGravity(Gravity.CENTER);
@@ -303,11 +374,38 @@ public class MainActivity extends BridgeActivity {
      * offline leaves a blank web view behind the dismissed overlay.
      */
     private void onRetry() {
-        if (isOnline()) {
-            hideOffline(true);
+        if (probing) return;
+        if (statusLabel != null) {
+            statusLabel.setText("Checking connection\u2026");
+            statusLabel.setTextColor(Color.parseColor("#99FFFFFF"));
+            statusLabel.animate().alpha(1f).setDuration(200).start();
+        }
+        if (!hasNetwork()) {
+            failRetry();
             return;
         }
-        if (statusLabel != null) statusLabel.animate().alpha(1f).setDuration(200).start();
+        probing = true;
+        if (retryButton != null) retryButton.setEnabled(false);
+        probeExecutor.execute(() -> {
+            boolean ok = probeReachable();
+            runOnUiThread(() -> {
+                probing = false;
+                if (retryButton != null) retryButton.setEnabled(true);
+                if (ok) {
+                    hideOffline(true);
+                } else {
+                    failRetry();
+                }
+            });
+        });
+    }
+
+    private void failRetry() {
+        if (statusLabel != null) {
+            statusLabel.setText("Still no connection");
+            statusLabel.setTextColor(Color.parseColor("#FF8C72"));
+            statusLabel.animate().alpha(1f).setDuration(200).start();
+        }
         if (retryButton != null) {
             ObjectAnimator shake = ObjectAnimator.ofFloat(
                     retryButton, "translationX", 0f, -dp(8), dp(8), -dp(6), dp(6), 0f);
