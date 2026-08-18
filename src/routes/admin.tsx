@@ -794,6 +794,12 @@ function AdminPage() {
           >
             Emails
           </TabsTrigger>
+          <TabsTrigger value="mail"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
+            Mail
+          </TabsTrigger>
+
           <TabsTrigger value="insights"
             className="shrink-0 whitespace-nowrap px-3"
           >
