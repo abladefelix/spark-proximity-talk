@@ -314,7 +314,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         title.textAlignment = .center
 
         let body = UILabel()
-        body.text = "SkanAround can't reach the network.\nTurn off airplane mode or reconnect to Wi-Fi."
+        body.text = "SkanAround can't reach the internet.\nCheck your Wi-Fi or mobile data and try again."
         body.numberOfLines = 0
         body.textAlignment = .center
         body.font = .systemFont(ofSize: 15)
