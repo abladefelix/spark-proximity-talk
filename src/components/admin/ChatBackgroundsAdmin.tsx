@@ -166,7 +166,7 @@ export function ChatBackgroundsAdmin() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => void remove(item)}
+                    onClick={() => setPending(item)}
                     aria-label={`Remove ${bg.name}`}
                     className="absolute right-1 top-1 z-10 grid size-6 place-items-center rounded-full bg-destructive text-white shadow-sm"
                   >
