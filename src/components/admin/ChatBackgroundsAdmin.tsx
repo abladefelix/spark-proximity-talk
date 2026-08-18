@@ -3,6 +3,16 @@ import { toast } from "sonner";
 import { AlertCircle, ImagePlus, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
 import { backgroundCss, useChatBackgrounds, NONE_BACKGROUND } from "@/lib/chatBackgrounds";
 
