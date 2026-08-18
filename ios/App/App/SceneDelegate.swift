@@ -324,10 +324,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             pulseView = nil
         }
         if reload {
+            if let windowScene = window?.windowScene {
+                showSplash(in: windowScene)
+            }
             reloadWeb()
         }
-
     }
+
 
     /// Only dismiss the offline screen when the network is actually back —
     /// otherwise reloading leaves a blank web view behind the dismissed overlay.
