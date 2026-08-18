@@ -126,18 +126,46 @@ export function NotificationsTab() {
         </div>
 
         {audience === "user" && (
-          <select
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-          >
-            <option value="">Select a member…</option>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.display_name ? `${p.display_name} (@${p.username})` : `@${p.username}`}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search member by name or username"
+                className="pl-9"
+              />
+            </div>
+
+            {selectedPerson && (
+              <div className="text-xs text-muted-foreground">
+                Sending to: <span className="font-medium text-foreground">{selectedPerson.display_name ? `${selectedPerson.display_name} (@${selectedPerson.username})` : `@${selectedPerson.username}`}</span>
+              </div>
+            )}
+
+            <div className="max-h-40 overflow-y-auto rounded-md border border-input">
+              {filteredPeople.map((p) => {
+                const label = p.display_name ? `${p.display_name} (@${p.username})` : `@${p.username}`;
+                const isSelected = target === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setTarget(p.id)}
+                    className={cn(
+                      "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+                      isSelected && "bg-accent/50 font-medium"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              {filteredPeople.length === 0 && (
+                <p className="px-3 py-2 text-sm text-muted-foreground">No members found</p>
+              )}
+            </div>
+          </div>
         )}
 
         <Input
