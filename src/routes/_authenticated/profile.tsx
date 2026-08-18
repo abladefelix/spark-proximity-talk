@@ -20,6 +20,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
 import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
+import { RadarSoundSetting } from "@/components/RadarSoundSetting";
 import {
   notificationPermission,
   requestNotificationPermission,
