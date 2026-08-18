@@ -101,6 +101,15 @@ export function RadarTonesAdmin() {
         Members pick one in their profile; it plays when new people appear on the radar.
       </p>
 
+      <div className="mt-3 flex items-start gap-2 rounded-lg border border-border/60 bg-muted/40 px-2.5 py-2">
+        <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+        <div className="text-[11px] leading-4 text-muted-foreground">
+          <p className="font-medium text-foreground">Accepted formats</p>
+          <p>{TONE_FORMATS.join(", ")}</p>
+          <p className="mt-0.5">Max file size: {TONE_MAX_SIZE_MB}MB · Short clips work best (1–3 seconds).</p>
+        </div>
+      </div>
+
       <div className="mt-3 space-y-2">
         {all.map((tone) => {
           const isBuiltin = BUILTIN_TONES.some((b) => b.id === tone.id);
@@ -145,7 +154,7 @@ export function RadarTonesAdmin() {
           Upload tone
           <input
             type="file"
-            accept="audio/*"
+            accept="audio/mpeg,audio/wav,audio/ogg,audio/aac,audio/mp4,audio/x-m4a,audio/flac"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
