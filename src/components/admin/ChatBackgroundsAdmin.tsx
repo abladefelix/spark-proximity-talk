@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
@@ -8,12 +8,33 @@ import { backgroundCss, useChatBackgrounds, BUILTIN_BACKGROUNDS } from "@/lib/ch
 
 type Stored = { id: string; name: string; path: string };
 
+/** Supported chat background uploads and hard limits shown to admins. */
+export const BG_FORMATS = ["JPG", "JPEG", "PNG", "WEBP"];
+export const BG_MAX_SIZE_MB = 5;
+export const BG_MAX_SIZE_BYTES = BG_MAX_SIZE_MB * 1024 * 1024;
+
+const SUPPORTED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
 function storedList(value: unknown): Stored[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
     (v): v is Stored =>
       Boolean(v) && typeof v === "object" && typeof (v as Stored).path === "string",
   );
+}
+
+function isSupportedBackground(file: File): boolean {
+  if (file.type) return SUPPORTED_MIME_TYPES.includes(file.type);
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ["jpg", "jpeg", "png", "webp"].includes(ext);
+}
+
+function bgLimitLabel(): string {
+  return `${BG_FORMATS.join(", ")} · max ${BG_MAX_SIZE_MB}MB`;
 }
 
 /** Admin upload + management of chat sheet backgrounds. */
@@ -26,13 +47,21 @@ export function ChatBackgroundsAdmin() {
   const stored = storedList((settings as { chat_backgrounds?: unknown } | undefined)?.chat_backgrounds);
 
   async function onUpload(file: File) {
+    if (!isSupportedBackground(file)) {
+      toast.error(`Unsupported format. Accepted: ${BG_FORMATS.join(", ")}`);
+      return;
+    }
+    if (file.size > BG_MAX_SIZE_BYTES) {
+      toast.error(`Background must be smaller than ${BG_MAX_SIZE_MB}MB`);
+      return;
+    }
     setBusy(true);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
       const id = crypto.randomUUID();
       const path = `${id}.${ext}`;
       const { error } = await supabase.storage.from("chat-backgrounds").upload(path, file, {
-        contentType: file.type,
+        contentType: file.type || "image/jpeg",
       });
       if (error) throw error;
       const name = file.name.replace(/\.[^.]+$/, "").slice(0, 30) || "Background";
