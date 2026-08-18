@@ -204,6 +204,32 @@ export function ChatBackgroundsAdmin() {
           </Button>
         ) : null}
       </div>
+
+      <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove “{pending?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This background will no longer be available to members. Uploaded files are deleted permanently.
+              {pending?.css ? " You can bring built-in presets back with Restore defaults." : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => {
+                e.preventDefault();
+                const item = pending;
+                if (!item) return;
+                void remove(item).then(() => setPending(null));
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
