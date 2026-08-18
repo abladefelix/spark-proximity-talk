@@ -175,6 +175,31 @@ export function RadarTonesAdmin() {
           />
         </label>
       </Button>
+
+      <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove “{pending?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The audio file is deleted permanently and members using it fall back to a built-in tone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => {
+                e.preventDefault();
+                const item = pending;
+                if (!item) return;
+                void remove(item).then(() => setPending(null));
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
