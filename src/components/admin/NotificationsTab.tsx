@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, Loader2, Send, Trash2, User as UserIcon, Users } from "lucide-react";
+import { Bell, Loader2, Search, Send, Trash2, User as UserIcon, Users } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
