@@ -323,9 +323,11 @@ public class MainActivity extends BridgeActivity {
         overlay = null;
         statusLabel = null;
         retryButton = null;
-        if (reload && getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().reload();
+        if (reload) {
+            showSplash();
+            reloadWeb();
         }
+
     }
 
     private int dp(int value) {
