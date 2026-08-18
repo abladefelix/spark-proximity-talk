@@ -293,6 +293,8 @@ export function AppTab() {
 
       <ChatBackgroundsAdmin />
 
+      <RadarTonesAdmin />
+
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-2">
           <p className="flex-1 text-xs text-muted-foreground">
