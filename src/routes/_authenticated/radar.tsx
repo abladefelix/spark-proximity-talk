@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/NotificationBell";
+
 import {
   Dialog,
   DialogContent,
@@ -620,7 +622,9 @@ function RadarPage() {
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
+          <NotificationBell />
           <ThemeToggle />
+
           <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
           <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
         </div>

@@ -42,6 +42,8 @@ import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
 import { MailSettingsTab } from "@/components/admin/MailSettingsTab";
+import { NotificationsTab } from "@/components/admin/NotificationsTab";
+
 
 import { AppTab } from "@/components/admin/AppTab";
 import {
@@ -801,6 +803,12 @@ function AdminPage() {
           >
             Mail
           </TabsTrigger>
+          <TabsTrigger value="notify"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
+            Notify
+          </TabsTrigger>
+
 
           <TabsTrigger value="insights"
             className="shrink-0 whitespace-nowrap px-3"
@@ -832,6 +840,11 @@ function AdminPage() {
         <TabsContent value="mail" className="mt-3">
           <MailSettingsTab />
         </TabsContent>
+
+        <TabsContent value="notify" className="mt-3">
+          <NotificationsTab />
+        </TabsContent>
+
 
 
         <TabsContent value="insights" className="mt-3">
