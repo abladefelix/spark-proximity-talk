@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "app.skanaround.mobile",
-  appName: "SkanAround",
+  appName: "SKANAROUND",
   webDir: ".output/public",
   server: {
     // Live URL — the native shell loads the published web app so updates ship

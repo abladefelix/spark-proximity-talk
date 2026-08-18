@@ -56,16 +56,16 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin control — SkanAround" },
+      { title: "Admin control — SKANAROUND" },
       {
         name: "description",
         content:
-          "Moderation and control panel for SkanAround: people, roles, verification, reports and activity.",
+          "Moderation and control panel for SKANAROUND: people, roles, verification, reports and activity.",
       },
-      { property: "og:title", content: "Admin control — SkanAround" },
+      { property: "og:title", content: "Admin control — SKANAROUND" },
       {
         property: "og:description",
-        content: "Moderate people, roles, verification and reports on SkanAround.",
+        content: "Moderate people, roles, verification and reports on SKANAROUND.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

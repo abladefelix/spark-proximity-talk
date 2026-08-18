@@ -104,7 +104,7 @@ export function IncomingSignals() {
           kind: "match",
           recipientId: person.from_user,
           title: "It's mutual",
-          body: "Your chat on SkanAround is unlocked",
+          body: "Your chat on SKANAROUND is unlocked",
           relatedId: matchId,
         },
       }).catch(() => {

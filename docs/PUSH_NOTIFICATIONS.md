@@ -1,6 +1,6 @@
 # Push Notifications (APNs + FCM)
 
-SkanAround sends push for three events: a new **signal**, a mutual **match**, and a
+SKANAROUND sends push for three events: a new **signal**, a mutual **match**, and a
 new chat **message**.
 
 ## Pipeline

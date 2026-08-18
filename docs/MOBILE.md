@@ -1,6 +1,6 @@
-# SkanAround — Mobile (iOS + Android)
+# SKANAROUND — Mobile (iOS + Android)
 
-SkanAround ships as a Capacitor shell around the live web app. The native apps load
+SKANAROUND ships as a Capacitor shell around the live web app. The native apps load
 `https://shatta.caymanirs.com`, so web updates go live without an app-store resubmit.
 
 ## Project layout
@@ -13,7 +13,7 @@ dist/                 web build copied into both platforms by `npx cap sync`
 ```
 
 App ID: `app.skanaround.mobile`
-App name: `SkanAround`
+App name: `SKANAROUND`
 
 ## Prerequisites
 
@@ -69,7 +69,7 @@ Permissions declared in `android/app/src/main/AndroidManifest.xml`:
 
 ## Store checklist
 
-- Privacy: SkanAround collects coarse/precise location, photos, and account email.
+- Privacy: SKANAROUND collects coarse/precise location, photos, and account email.
   Declare location, photos, identifiers, and user content in App Privacy /
   Data Safety forms.
 - Provide the moderation story (report, block, ban, appeals) — required for
