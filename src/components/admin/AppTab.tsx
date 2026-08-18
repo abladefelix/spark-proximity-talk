@@ -4,6 +4,7 @@ import { Loader2, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ChatBackgroundsAdmin } from "@/components/admin/ChatBackgroundsAdmin";
+import { RadarTonesAdmin } from "@/components/admin/RadarTonesAdmin";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
