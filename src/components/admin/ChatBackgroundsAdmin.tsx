@@ -65,6 +65,7 @@ export function ChatBackgroundsAdmin() {
   const save = useSaveAppSettings();
   const all = useChatBackgrounds();
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Stored | null>(null);
 
   const stored = storedList((settings as { chat_backgrounds?: unknown } | undefined)?.chat_backgrounds);
 
