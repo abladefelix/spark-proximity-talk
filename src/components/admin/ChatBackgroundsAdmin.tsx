@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
 import { backgroundCss, useChatBackgrounds, NONE_BACKGROUND } from "@/lib/chatBackgrounds";
 
-type Stored = { id: string; name: string; path?: string; css?: string };
+type Stored = { id: string; name: string; path?: string | undefined; css?: string | undefined };
 
 /** Supported chat background uploads and hard limits shown to admins. */
 export const BG_FORMATS = ["JPG", "JPEG", "PNG", "WEBP"];
