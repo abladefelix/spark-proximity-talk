@@ -323,9 +323,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             retryButton = nil
             pulseView = nil
         }
-        if reload, let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
-            bridgeVC.webView?.reload()
+        if reload {
+            reloadWeb()
         }
+
     }
 
     /// Only dismiss the offline screen when the network is actually back —
