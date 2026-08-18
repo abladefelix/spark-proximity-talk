@@ -102,12 +102,16 @@ function buildMime(msg: SmtpMessage): string {
 }
 
 export async function sendSmtpMail(config: SmtpConfig, msg: SmtpMessage): Promise<void> {
-  const { connect } = (await import("cloudflare:sockets")) as {
+  // Opaque specifier so the bundler does not try to resolve the Worker
+  // built-in at build time (it only exists at runtime on workerd).
+  const socketsModule = "cloudflare" + ":sockets";
+  const { connect } = (await import(/* @vite-ignore */ socketsModule)) as {
     connect: (
       address: { hostname: string; port: number },
       options?: { secureTransport?: "on" | "off" | "starttls"; allowHalfOpen?: boolean },
     ) => any;
   };
+
 
   let socket = connect(
     { hostname: config.host, port: config.port },
