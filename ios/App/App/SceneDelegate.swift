@@ -97,18 +97,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         let kicker = UILabel()
-        kicker.text = "NO SIGNAL"
+        kicker.attributedText = NSAttributedString(string: "NO SIGNAL", attributes: [.kern: 3.0])
         kicker.font = .systemFont(ofSize: 11, weight: .heavy)
         kicker.textColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 0.85)
-        if #available(iOS 14.0, *) {
-            let attributed = NSAttributedString(
-                string: "NO SIGNAL",
-                attributes: [.kern: 3.0]
-            )
-            kicker.attributedText = attributed
-            kicker.font = .systemFont(ofSize: 11, weight: .heavy)
-            kicker.textColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 0.85)
-        }
 
         let title = UILabel()
         title.text = "You're off the radar"
