@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Music, Play, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2, Music, Play, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
@@ -8,12 +8,40 @@ import { BUILTIN_TONES, playRadarTone, useRadarTones } from "@/lib/radarTones";
 
 type Stored = { id: string; name: string; path: string };
 
+/** Supported tone uploads and the hard limits shown to admins. */
+export const TONE_FORMATS = ["MP3", "WAV", "OGG", "AAC", "M4A", "FLAC"];
+export const TONE_MAX_SIZE_MB = 5;
+export const TONE_MAX_SIZE_BYTES = TONE_MAX_SIZE_MB * 1024 * 1024;
+
+const SUPPORTED_MIME_PREFIXES = [
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/aac",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/flac",
+  "audio/x-flac",
+];
+
 function storedList(value: unknown): Stored[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
     (v): v is Stored =>
       Boolean(v) && typeof v === "object" && typeof (v as Stored).path === "string",
   );
+}
+
+function isSupportedTone(file: File): boolean {
+  if (file.type) return SUPPORTED_MIME_PREFIXES.some((p) => file.type.startsWith(p) || file.type === p);
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ["mp3", "wav", "ogg", "aac", "m4a", "flac"].includes(ext);
+}
+
+function formatLimitLabel(): string {
+  return `${TONE_FORMATS.join(", ")} · max ${TONE_MAX_SIZE_MB}MB`;
 }
 
 /** Admin upload + management of radar alert tones. */
@@ -26,6 +54,14 @@ export function RadarTonesAdmin() {
   const stored = storedList((settings as { radar_tones?: unknown } | undefined)?.radar_tones);
 
   async function onUpload(file: File) {
+    if (!isSupportedTone(file)) {
+      toast.error(`Unsupported format. Accepted: ${TONE_FORMATS.join(", ")}`);
+      return;
+    }
+    if (file.size > TONE_MAX_SIZE_BYTES) {
+      toast.error(`Tone must be smaller than ${TONE_MAX_SIZE_MB}MB`);
+      return;
+    }
     setBusy(true);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "mp3";
