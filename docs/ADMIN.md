@@ -9,7 +9,7 @@ Route: `/admin`. Access requires an `admin` or `moderator` row in `user_roles`
 - **Users** — grant/revoke roles, ban and unban, view verification state.
 - **Reports** — review user reports, act on the reported account.
 - **Appeals** — `reactivation_requests` from banned users; approve to unban.
-- **Verification** — review selfie verification requests, grant the SkanAround
+- **Verification** — review selfie verification requests, grant the SKANAROUND
   Signal Lock badge.
 - **Emails** — manually confirm unconfirmed accounts.
 - **Branding** — app name, logo upload (private `branding` bucket), accent hue

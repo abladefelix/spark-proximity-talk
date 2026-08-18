@@ -331,7 +331,7 @@ public class MainActivity extends BridgeActivity {
         title.setGravity(Gravity.CENTER);
 
         TextView body = new TextView(this);
-        body.setText("SkanAround can't reach the internet.\nCheck your Wi-Fi or mobile data and try again.");
+        body.setText("SKANAROUND can't reach the internet.\nCheck your Wi-Fi or mobile data and try again.");
         body.setTextColor(Color.parseColor("#85FFFFFF"));
         body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         body.setGravity(Gravity.CENTER);

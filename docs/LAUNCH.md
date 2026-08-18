@@ -1,4 +1,4 @@
-# SkanAround — VS Code Terminal Setup (Line-by-Line)
+# SKANAROUND — VS Code Terminal Setup (Line-by-Line)
 
 Copy each command block and paste it into your VS Code terminal. Run them in order.
 

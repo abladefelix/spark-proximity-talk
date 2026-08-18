@@ -13,16 +13,16 @@ import { signInWithIdentifier } from "@/lib/username-auth.functions";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in to SkanAround — Chat with people around you" },
+      { title: "Sign in to SKANAROUND — Chat with people around you" },
       {
         name: "description",
         content:
-          "Create your SkanAround account or sign in to see who is nearby, send a signal and start chatting.",
+          "Create your SKANAROUND account or sign in to see who is nearby, send a signal and start chatting.",
       },
-      { property: "og:title", content: "Sign in to SkanAround" },
+      { property: "og:title", content: "Sign in to SKANAROUND" },
       {
         property: "og:description",
-        content: "Join SkanAround and meet the people sharing your spot right now.",
+        content: "Join SKANAROUND and meet the people sharing your spot right now.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

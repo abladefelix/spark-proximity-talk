@@ -5,9 +5,9 @@ import { ChatPanel } from "@/components/ChatPanel";
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({
   head: () => ({
     meta: [
-      { title: "Chat — SkanAround" },
-      { name: "description", content: "Your private SkanAround conversation after a mutual signal." },
-      { property: "og:title", content: "SkanAround chat" },
+      { title: "Chat — SKANAROUND" },
+      { name: "description", content: "Your private SKANAROUND conversation after a mutual signal." },
+      { property: "og:title", content: "SKANAROUND chat" },
       { property: "og:description", content: "A conversation that started with a signal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

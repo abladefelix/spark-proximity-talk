@@ -28,12 +28,12 @@ import {
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Your SkanAround profile" },
+      { title: "Your SKANAROUND profile" },
       {
         name: "description",
-        content: "Set the name, photo and line people see when you signal them on SkanAround.",
+        content: "Set the name, photo and line people see when you signal them on SKANAROUND.",
       },
-      { property: "og:title", content: "Your SkanAround profile" },
+      { property: "og:title", content: "Your SKANAROUND profile" },
       { property: "og:description", content: "The face people see when you signal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
