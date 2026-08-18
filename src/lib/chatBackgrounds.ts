@@ -13,57 +13,29 @@ export type ChatBackground = {
   url?: string | undefined;
 };
 
-/** Built-in presets always available to members. */
-export const BUILTIN_BACKGROUNDS: ChatBackground[] = [
-  { id: "none", name: "None" },
-  {
-    id: "dusk",
-    name: "Dusk",
-    css: "linear-gradient(160deg, oklch(0.62 0.17 32), oklch(0.42 0.16 300))",
-  },
-  {
-    id: "signal",
-    name: "Signal",
-    css: "radial-gradient(120% 90% at 20% 0%, oklch(0.75 0.15 55), transparent 60%), linear-gradient(200deg, oklch(0.55 0.13 220), oklch(0.30 0.09 265))",
-  },
-  {
-    id: "mint",
-    name: "Mint",
-    css: "linear-gradient(150deg, oklch(0.85 0.12 165), oklch(0.62 0.11 205))",
-  },
-  {
-    id: "ember",
-    name: "Ember",
-    css: "radial-gradient(100% 80% at 80% 10%, oklch(0.72 0.19 25), transparent 65%), linear-gradient(180deg, oklch(0.35 0.08 20), oklch(0.20 0.04 300))",
-  },
-  {
-    id: "grid",
-    name: "Night grid",
-    css: "repeating-linear-gradient(0deg, oklch(0.30 0.03 250 / 0.6) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, oklch(0.30 0.03 250 / 0.6) 0 1px, transparent 1px 28px), linear-gradient(160deg, oklch(0.28 0.05 265), oklch(0.18 0.03 280))",
-  },
-];
+/** Always-available fallback background. */
+export const NONE_BACKGROUND: ChatBackground = { id: "none", name: "None" };
 
-function parseCustom(value: unknown): ChatBackground[] {
+function parseBackgrounds(value: unknown): ChatBackground[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((raw) => {
     if (!raw || typeof raw !== "object") return [];
     const item = raw as Record<string, unknown>;
-    if (typeof item["id"] !== "string" || typeof item["path"] !== "string") return [];
-    return [
-      {
-        id: item["id"],
-        name: typeof item["name"] === "string" ? item["name"] : "Background",
-        path: item["path"],
-      },
-    ];
+    if (typeof item["id"] !== "string" || typeof item["name"] !== "string") return [];
+    const bg: ChatBackground = { id: item["id"], name: item["name"] };
+    if (typeof item["css"] === "string") bg.css = item["css"];
+    if (typeof item["path"] === "string") bg.path = item["path"];
+    // Require at least one renderable source (css for built-ins, path for uploads).
+    if (!bg.css && !bg.path) return [];
+    return [bg];
   });
 }
 
-/** All backgrounds: built-in presets plus admin uploads with signed URLs. */
+/** All backgrounds configured by admins: built-in presets + uploads with signed URLs. */
 export function useChatBackgrounds() {
   const settings = useSettings();
-  const custom = parseCustom((settings as { chat_backgrounds?: unknown }).chat_backgrounds);
-  const paths = custom.map((c) => c.path!).sort();
+  const configured = parseBackgrounds((settings as { chat_backgrounds?: unknown }).chat_backgrounds);
+  const paths = configured.map((c) => c.path).filter((p): p is string => Boolean(p)).sort();
 
   const { data: signed } = useQuery({
     queryKey: ["chat-background-urls", paths],
@@ -81,8 +53,13 @@ export function useChatBackgrounds() {
     },
   });
 
-  const uploads = custom.map((c) => ({ ...c, url: signed?.[c.path!] }));
-  return [...BUILTIN_BACKGROUNDS, ...uploads];
+  const withUrls = configured.map((c) => (c.path ? { ...c, url: signed?.[c.path] } : c));
+  const byId = new Map<string, ChatBackground>();
+  byId.set(NONE_BACKGROUND.id, NONE_BACKGROUND);
+  for (const bg of withUrls) {
+    byId.set(bg.id, bg);
+  }
+  return Array.from(byId.values());
 }
 
 /** CSS background shorthand for a background, or undefined for "none". */
