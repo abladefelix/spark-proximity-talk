@@ -233,6 +233,60 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          enabled: boolean
+          from_email: string | null
+          from_name: string | null
+          id: string
+          last_test_at: string | null
+          last_test_error: string | null
+          last_test_ok: boolean | null
+          provider: string
+          reply_to: string | null
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_secure: boolean
+          smtp_user: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          last_test_at?: string | null
+          last_test_error?: string | null
+          last_test_ok?: boolean | null
+          provider?: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_user?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          last_test_at?: string | null
+          last_test_error?: string | null
+          last_test_ok?: boolean | null
+          provider?: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_user?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           is_visible: boolean

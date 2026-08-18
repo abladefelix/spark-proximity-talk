@@ -41,6 +41,8 @@ import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
+import { MailSettingsTab } from "@/components/admin/MailSettingsTab";
+
 import { AppTab } from "@/components/admin/AppTab";
 import {
   ACCENT_PRESETS,
@@ -794,6 +796,12 @@ function AdminPage() {
           >
             Emails
           </TabsTrigger>
+          <TabsTrigger value="mail"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
+            Mail
+          </TabsTrigger>
+
           <TabsTrigger value="insights"
             className="shrink-0 whitespace-nowrap px-3"
           >
@@ -820,6 +828,11 @@ function AdminPage() {
         <TabsContent value="emails" className="mt-3">
           <EmailsTab />
         </TabsContent>
+
+        <TabsContent value="mail" className="mt-3">
+          <MailSettingsTab />
+        </TabsContent>
+
 
         <TabsContent value="insights" className="mt-3">
           <InsightsTab />
