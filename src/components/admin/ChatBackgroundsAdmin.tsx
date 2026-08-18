@@ -3,6 +3,16 @@ import { toast } from "sonner";
 import { AlertCircle, ImagePlus, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
 import { backgroundCss, useChatBackgrounds, NONE_BACKGROUND } from "@/lib/chatBackgrounds";
 
@@ -55,6 +65,7 @@ export function ChatBackgroundsAdmin() {
   const save = useSaveAppSettings();
   const all = useChatBackgrounds();
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Stored | null>(null);
 
   const stored = storedList((settings as { chat_backgrounds?: unknown } | undefined)?.chat_backgrounds);
 
@@ -155,7 +166,7 @@ export function ChatBackgroundsAdmin() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => void remove(item)}
+                    onClick={() => setPending(item)}
                     aria-label={`Remove ${bg.name}`}
                     className="absolute right-1 top-1 z-10 grid size-6 place-items-center rounded-full bg-destructive text-white shadow-sm"
                   >
@@ -193,6 +204,32 @@ export function ChatBackgroundsAdmin() {
           </Button>
         ) : null}
       </div>
+
+      <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove “{pending?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This background will no longer be available to members. Uploaded files are deleted permanently.
+              {pending?.css ? " You can bring built-in presets back with Restore defaults." : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => {
+                e.preventDefault();
+                const item = pending;
+                if (!item) return;
+                void remove(item).then(() => setPending(null));
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

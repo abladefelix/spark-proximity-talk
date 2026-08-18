@@ -3,6 +3,16 @@ import { toast } from "sonner";
 import { AlertCircle, Loader2, Music, Play, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
 import { BUILTIN_TONES, playRadarTone, useRadarTones } from "@/lib/radarTones";
 
@@ -50,6 +60,7 @@ export function RadarTonesAdmin() {
   const save = useSaveAppSettings();
   const all = useRadarTones();
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Stored | null>(null);
 
   const stored = storedList((settings as { radar_tones?: unknown } | undefined)?.radar_tones);
 
@@ -137,7 +148,7 @@ export function RadarTonesAdmin() {
                   type="button"
                   disabled={busy}
                   aria-label={`Remove ${tone.name}`}
-                  onClick={() => void remove(item)}
+                  onClick={() => setPending(item)}
                   className="grid size-7 shrink-0 place-items-center rounded-full border border-border text-destructive"
                 >
                   <Trash2 className="size-3" />
@@ -164,6 +175,31 @@ export function RadarTonesAdmin() {
           />
         </label>
       </Button>
+
+      <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove “{pending?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The audio file is deleted permanently and members using it fall back to a built-in tone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => {
+                e.preventDefault();
+                const item = pending;
+                if (!item) return;
+                void remove(item).then(() => setPending(null));
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
