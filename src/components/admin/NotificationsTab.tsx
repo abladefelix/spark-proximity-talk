@@ -25,6 +25,19 @@ export function NotificationsTab() {
   const [body, setBody] = useState("");
   const [audience, setAudience] = useState<"all" | "user">("all");
   const [target, setTarget] = useState("");
+  const [query, setQuery] = useState("");
+
+  const filteredPeople = query.trim()
+    ? people.filter((p) => {
+        const q = query.toLowerCase();
+        return (
+          p.username.toLowerCase().includes(q) ||
+          (p.display_name && p.display_name.toLowerCase().includes(q))
+        );
+      })
+    : people;
+
+  const selectedPerson = people.find((p) => p.id === target);
 
   const { data: sent = [], isLoading } = useQuery({
     queryKey: ["admin-notifications"],
