@@ -94,6 +94,15 @@ export function ChatBackgroundsAdmin() {
         Members pick one in their profile. Backgrounds show washed out behind messages.
       </p>
 
+      <div className="mt-3 flex items-start gap-2 rounded-lg border border-border/60 bg-muted/40 px-2.5 py-2">
+        <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+        <div className="text-[11px] leading-4 text-muted-foreground">
+          <p className="font-medium text-foreground">Accepted formats</p>
+          <p>{BG_FORMATS.join(", ")}</p>
+          <p className="mt-0.5">Max file size: {BG_MAX_SIZE_MB}MB · Built-in presets cannot be deleted.</p>
+        </div>
+      </div>
+
       <div className="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-5">
         {all
           .filter((b) => b.id !== "none")
@@ -111,9 +120,9 @@ export function ChatBackgroundsAdmin() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => remove(item)}
+                    onClick={() => void remove(item)}
                     aria-label={`Remove ${bg.name}`}
-                    className="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-black/55 text-white"
+                    className="absolute right-1 top-1 z-10 grid size-6 place-items-center rounded-full bg-destructive text-white shadow-sm"
                   >
                     <Trash2 className="size-3" />
                   </button>
@@ -132,7 +141,7 @@ export function ChatBackgroundsAdmin() {
           Upload background
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
