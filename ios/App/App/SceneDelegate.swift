@@ -26,6 +26,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private weak var retryButton: UIButton?
     private weak var pulseView: UIView?
 
+    /// A satisfied network path only means an interface is up — a Wi-Fi router
+    /// with no upstream still reports `.satisfied`. Everything below decides
+    /// offline state from an actual request to the site instead.
+    private var reachabilityTimer: Timer?
+    private var probing = false
+    private lazy var probeSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 6
+        config.timeoutIntervalForResource = 6
+        config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        config.waitsForConnectivity = false
+        return URLSession(configuration: config)
+    }()
+
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
 
@@ -34,26 +48,79 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         showSplash(in: windowScene)
 
-        monitor.pathUpdateHandler = { [weak self, weak windowScene] path in
+        monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
-                guard let self, let windowScene else { return }
+                guard let self else { return }
                 if path.status == .satisfied {
-                    self.hideOffline(reload: self.wasOffline)
-                    self.wasOffline = false
+                    self.evaluateConnectivity()
                 } else {
-                    self.wasOffline = true
-                    self.hideSplash()
-                    self.showOffline(in: windowScene)
+                    self.applyConnectivity(online: false)
                 }
             }
         }
         monitor.start(queue: monitorQueue)
+
+        // Poll while the app is in use so a Wi-Fi network that silently loses
+        // its upstream still flips the app to the offline screen.
+        reachabilityTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
+            self?.evaluateConnectivity()
+        }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(evaluateConnectivity),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
     }
 
     deinit {
         monitor.cancel()
         splashTimer?.invalidate()
+        reachabilityTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
     }
+
+    // MARK: - Reachability
+
+    /// Cheap request against the site itself; any response at all means the
+    /// device can reach the internet.
+    private func probeReachability(_ completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: Self.serverURL) else { return completion(false) }
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        request.timeoutInterval = 6
+        probeSession.dataTask(with: request) { _, response, error in
+            let ok = error == nil && response != nil
+            DispatchQueue.main.async { completion(ok) }
+        }.resume()
+    }
+
+    @objc private func evaluateConnectivity() {
+        guard !probing else { return }
+        if monitor.currentPath.status != .satisfied {
+            applyConnectivity(online: false)
+            return
+        }
+        probing = true
+        probeReachability { [weak self] ok in
+            self?.probing = false
+            self?.applyConnectivity(online: ok)
+        }
+    }
+
+    private func applyConnectivity(online: Bool) {
+        guard let windowScene = window?.windowScene ?? (UIApplication.shared.connectedScenes.first as? UIWindowScene) else { return }
+        if online {
+            hideOffline(reload: wasOffline)
+            wasOffline = false
+        } else {
+            wasOffline = true
+            hideSplash()
+            showOffline(in: windowScene)
+        }
+    }
+
 
     // MARK: - Web view helpers
 
