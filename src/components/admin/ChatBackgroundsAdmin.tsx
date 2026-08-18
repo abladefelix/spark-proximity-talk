@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, ImagePlus, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAppSettings, useSaveAppSettings } from "@/hooks/useAppSettings";
-import { backgroundCss, useChatBackgrounds, BUILTIN_BACKGROUNDS } from "@/lib/chatBackgrounds";
+import { backgroundCss, useChatBackgrounds, NONE_BACKGROUND } from "@/lib/chatBackgrounds";
 
-type Stored = { id: string; name: string; path: string };
+type Stored = { id: string; name: string; path?: string; css?: string };
 
 /** Supported chat background uploads and hard limits shown to admins. */
 export const BG_FORMATS = ["JPG", "JPEG", "PNG", "WEBP"];
@@ -19,11 +19,23 @@ const SUPPORTED_MIME_TYPES = [
   "image/webp",
 ];
 
+const DEFAULT_BACKGROUNDS: Stored[] = [
+  { id: "dusk", name: "Dusk", css: "linear-gradient(160deg, oklch(0.62 0.17 32), oklch(0.42 0.16 300))" },
+  { id: "signal", name: "Signal", css: "radial-gradient(120% 90% at 20% 0%, oklch(0.75 0.15 55), transparent 60%), linear-gradient(200deg, oklch(0.55 0.13 220), oklch(0.30 0.09 265))" },
+  { id: "mint", name: "Mint", css: "linear-gradient(150deg, oklch(0.85 0.12 165), oklch(0.62 0.11 205))" },
+  { id: "ember", name: "Ember", css: "radial-gradient(100% 80% at 80% 10%, oklch(0.72 0.19 25), transparent 65%), linear-gradient(180deg, oklch(0.35 0.08 20), oklch(0.20 0.04 300))" },
+  { id: "grid", name: "Night grid", css: "repeating-linear-gradient(0deg, oklch(0.30 0.03 250 / 0.6) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, oklch(0.30 0.03 250 / 0.6) 0 1px, transparent 1px 28px), linear-gradient(160deg, oklch(0.28 0.05 265), oklch(0.18 0.03 280))" },
+];
+
 function storedList(value: unknown): Stored[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
     (v): v is Stored =>
-      Boolean(v) && typeof v === "object" && typeof (v as Stored).path === "string",
+      Boolean(v) &&
+      typeof v === "object" &&
+      typeof (v as Stored).id === "string" &&
+      typeof (v as Stored).name === "string" &&
+      (typeof (v as Stored).path === "string" || typeof (v as Stored).css === "string"),
   );
 }
 
@@ -77,7 +89,9 @@ export function ChatBackgroundsAdmin() {
   async function remove(item: Stored) {
     setBusy(true);
     try {
-      await supabase.storage.from("chat-backgrounds").remove([item.path]);
+      if (item.path) {
+        await supabase.storage.from("chat-backgrounds").remove([item.path]);
+      }
       await save({ chat_backgrounds: stored.filter((s) => s.id !== item.id) as never });
       toast.success("Background removed");
     } catch (e) {
@@ -86,6 +100,27 @@ export function ChatBackgroundsAdmin() {
       setBusy(false);
     }
   }
+
+  async function restoreDefaults() {
+    setBusy(true);
+    try {
+      const existing = new Map(stored.map((s) => [s.id, s]));
+      const restored = [...DEFAULT_BACKGROUNDS];
+      for (const item of restored) {
+        if (!existing.has(item.id)) {
+          existing.set(item.id, item);
+        }
+      }
+      await save({ chat_backgrounds: Array.from(existing.values()) as never });
+      toast.success("Default backgrounds restored");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not restore");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const missingDefaults = DEFAULT_BACKGROUNDS.some((d) => !stored.some((s) => s.id === d.id));
 
   return (
     <section className="rounded-xl border border-border p-3">
@@ -99,24 +134,24 @@ export function ChatBackgroundsAdmin() {
         <div className="text-[11px] leading-4 text-muted-foreground">
           <p className="font-medium text-foreground">Accepted formats</p>
           <p>{BG_FORMATS.join(", ")}</p>
-          <p className="mt-0.5">Max file size: {BG_MAX_SIZE_MB}MB · Built-in presets cannot be deleted.</p>
+          <p className="mt-0.5">Max file size: {BG_MAX_SIZE_MB}MB · Built-in presets can now be removed or restored.</p>
         </div>
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-5">
         {all
-          .filter((b) => b.id !== "none")
+          .filter((b) => b.id !== NONE_BACKGROUND.id)
           .map((bg) => {
             const css = backgroundCss(bg);
-            const isBuiltin = BUILTIN_BACKGROUNDS.some((b) => b.id === bg.id);
-            const item = stored.find((s) => s.id === bg.id);
+            const item = stored.find((s) => s.id === bg.id) ?? { id: bg.id, name: bg.name, css: bg.css, path: bg.path };
+            const isNone = bg.id === NONE_BACKGROUND.id;
             return (
               <div
                 key={bg.id}
                 className="relative aspect-[3/4] overflow-hidden rounded-lg border border-border"
                 style={css ? { background: css } : undefined}
               >
-                {!isBuiltin && item ? (
+                {!isNone ? (
                   <button
                     type="button"
                     disabled={busy}
@@ -135,22 +170,29 @@ export function ChatBackgroundsAdmin() {
           })}
       </div>
 
-      <Button asChild size="sm" variant="outline" className="mt-3" disabled={busy}>
-        <label className="cursor-pointer">
-          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <ImagePlus className="size-3.5" />}
-          Upload background
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) void onUpload(file);
-            }}
-          />
-        </label>
-      </Button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button asChild size="sm" variant="outline" disabled={busy}>
+          <label className="cursor-pointer">
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <ImagePlus className="size-3.5" />}
+            Upload background
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void onUpload(file);
+              }}
+            />
+          </label>
+        </Button>
+        {missingDefaults ? (
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => void restoreDefaults()}>
+            <RotateCcw className="mr-1 size-3.5" /> Restore defaults
+          </Button>
+        ) : null}
+      </div>
     </section>
   );
 }
