@@ -331,7 +331,7 @@ public class MainActivity extends BridgeActivity {
         title.setGravity(Gravity.CENTER);
 
         TextView body = new TextView(this);
-        body.setText("SkanAround can't reach the network.\nTurn off airplane mode or reconnect to Wi-Fi.");
+        body.setText("SkanAround can't reach the internet.\nCheck your Wi-Fi or mobile data and try again.");
         body.setTextColor(Color.parseColor("#85FFFFFF"));
         body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         body.setGravity(Gravity.CENTER);
@@ -374,11 +374,38 @@ public class MainActivity extends BridgeActivity {
      * offline leaves a blank web view behind the dismissed overlay.
      */
     private void onRetry() {
-        if (isOnline()) {
-            hideOffline(true);
+        if (probing) return;
+        if (statusLabel != null) {
+            statusLabel.setText("Checking connection\u2026");
+            statusLabel.setTextColor(Color.parseColor("#99FFFFFF"));
+            statusLabel.animate().alpha(1f).setDuration(200).start();
+        }
+        if (!hasNetwork()) {
+            failRetry();
             return;
         }
-        if (statusLabel != null) statusLabel.animate().alpha(1f).setDuration(200).start();
+        probing = true;
+        if (retryButton != null) retryButton.setEnabled(false);
+        probeExecutor.execute(() -> {
+            boolean ok = probeReachable();
+            runOnUiThread(() -> {
+                probing = false;
+                if (retryButton != null) retryButton.setEnabled(true);
+                if (ok) {
+                    hideOffline(true);
+                } else {
+                    failRetry();
+                }
+            });
+        });
+    }
+
+    private void failRetry() {
+        if (statusLabel != null) {
+            statusLabel.setText("Still no connection");
+            statusLabel.setTextColor(Color.parseColor("#FF8C72"));
+            statusLabel.animate().alpha(1f).setDuration(200).start();
+        }
         if (retryButton != null) {
             ObjectAnimator shake = ObjectAnimator.ofFloat(
                     retryButton, "translationX", 0f, -dp(8), dp(8), -dp(6), dp(6), 0f);
