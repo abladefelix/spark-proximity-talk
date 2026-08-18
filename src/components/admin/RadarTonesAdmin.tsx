@@ -60,6 +60,7 @@ export function RadarTonesAdmin() {
   const save = useSaveAppSettings();
   const all = useRadarTones();
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<Stored | null>(null);
 
   const stored = storedList((settings as { radar_tones?: unknown } | undefined)?.radar_tones);
 
@@ -147,7 +148,7 @@ export function RadarTonesAdmin() {
                   type="button"
                   disabled={busy}
                   aria-label={`Remove ${tone.name}`}
-                  onClick={() => void remove(item)}
+                  onClick={() => setPending(item)}
                   className="grid size-7 shrink-0 place-items-center rounded-full border border-border text-destructive"
                 >
                   <Trash2 className="size-3" />
