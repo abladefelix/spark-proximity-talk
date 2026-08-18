@@ -49,6 +49,11 @@ export function AccentProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--sidebar-primary", primary);
     root.style.setProperty("--sidebar-primary-foreground", fg);
     root.style.setProperty("--ring", primary);
+    try {
+      localStorage.setItem("skanaround-accent-hue", String(h));
+    } catch {
+      /* storage unavailable */
+    }
   }, [hue, theme]);
 
   return <>{children}</>;
