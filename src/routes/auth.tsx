@@ -31,6 +31,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+/** Whole years between a YYYY-MM-DD date and today; null when unparseable. */
+function ageFrom(dob: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+  const birth = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const before =
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (before) years -= 1;
+  return years;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const settings = useSettings();
@@ -38,6 +52,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [dob, setDob] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
@@ -88,12 +104,27 @@ function AuthPage() {
           toast.error("Pick a username with at least 3 characters");
           return;
         }
+        // Age gate — both stores require an age check on a dating/discovery app.
+        const minAge = settings.min_age || 18;
+        const age = ageFrom(dob);
+        if (age === null) {
+          toast.error("Enter your date of birth");
+          return;
+        }
+        if (age < minAge) {
+          toast.error(`You must be ${minAge} or older to use SKANAROUND`);
+          return;
+        }
+        if (!acceptedTerms) {
+          toast.error("Please accept the Terms and Privacy Policy");
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/radar`,
-            data: { username: clean, display_name: username.trim() },
+            data: { username: clean, display_name: username.trim(), date_of_birth: dob },
           },
         });
         if (error) throw error;
@@ -101,6 +132,8 @@ function AuthPage() {
         await supabase.auth.signOut();
         setPassword("");
         setUsername("");
+        setDob("");
+        setAcceptedTerms(false);
         setMode("signin");
         toast.success("Account created. Sign in to continue.");
         return;
@@ -195,6 +228,43 @@ function AuthPage() {
             required
           />
         </div>
+        )}
+        {mode === "signup" && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="dob">Date of birth</Label>
+              <Input
+                id="dob"
+                type="date"
+                value={dob}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setDob(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                You must be {settings.min_age || 18} or older. We only use this to verify your age.
+              </p>
+            </div>
+            <label className="flex items-start gap-3 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 accent-[var(--primary)]"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+              <span>
+                I agree to the{" "}
+                <Link to="/terms" className="text-foreground underline underline-offset-4">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="text-foreground underline underline-offset-4">
+                  Privacy Policy
+                </Link>
+                , and I understand there is zero tolerance for abusive content or behaviour.
+              </span>
+            </label>
+          </>
         )}
         <Button type="submit" variant="heat" size="lg" className="w-full" disabled={busy}>
           {mode === "signup" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}

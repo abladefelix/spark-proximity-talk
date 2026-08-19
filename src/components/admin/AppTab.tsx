@@ -144,6 +144,29 @@ export function AppTab() {
         </Field>
       </Section>
 
+      <Section
+        title="Compliance"
+        hint="Required by the App Store and Play Store. Leave the legal text blank to use the built-in Terms and Privacy Policy at /terms and /privacy."
+      >
+        <Field label="Support / legal email">
+          <Input
+            type="email"
+            placeholder="support@example.com"
+            value={value.support_email}
+            onChange={(e) => set("support_email", e.target.value)}
+          />
+        </Field>
+        <Field label="Minimum age">
+          <Input
+            type="number"
+            min={13}
+            max={25}
+            value={value.min_age}
+            onChange={(e) => set("min_age", Number(e.target.value) || 18)}
+          />
+        </Field>
+      </Section>
+
       <Section title="Features" hint="Turn parts of the app on or off for everyone.">
         <Toggle
           label="Chat"

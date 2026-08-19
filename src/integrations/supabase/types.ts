@@ -36,6 +36,7 @@ export type Database = {
           logo_url: string | null
           max_message_len: number
           max_radius_m: number
+          min_age: number
           presence_timeout_min: number
           privacy_text: string
           push_enabled: boolean
@@ -44,6 +45,7 @@ export type Database = {
           reports_enabled: boolean
           signal_expiry_hours: number
           signups_enabled: boolean
+          support_email: string
           tagline: string
           terms_text: string
           updated_at: string
@@ -73,6 +75,7 @@ export type Database = {
           logo_url?: string | null
           max_message_len?: number
           max_radius_m?: number
+          min_age?: number
           presence_timeout_min?: number
           privacy_text?: string
           push_enabled?: boolean
@@ -81,6 +84,7 @@ export type Database = {
           reports_enabled?: boolean
           signal_expiry_hours?: number
           signups_enabled?: boolean
+          support_email?: string
           tagline?: string
           terms_text?: string
           updated_at?: string
@@ -110,6 +114,7 @@ export type Database = {
           logo_url?: string | null
           max_message_len?: number
           max_radius_m?: number
+          min_age?: number
           presence_timeout_min?: number
           privacy_text?: string
           push_enabled?: boolean
@@ -118,6 +123,7 @@ export type Database = {
           reports_enabled?: boolean
           signal_expiry_hours?: number
           signups_enabled?: boolean
+          support_email?: string
           tagline?: string
           terms_text?: string
           updated_at?: string
@@ -441,6 +447,7 @@ export type Database = {
           bio: string | null
           chat_background: string | null
           created_at: string
+          date_of_birth: string | null
           display_name: string | null
           gender: string | null
           id: string
@@ -459,6 +466,7 @@ export type Database = {
           bio?: string | null
           chat_background?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
           gender?: string | null
           id: string
@@ -477,6 +485,7 @@ export type Database = {
           bio?: string | null
           chat_background?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
           gender?: string | null
           id?: string
