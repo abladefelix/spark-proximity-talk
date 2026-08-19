@@ -665,6 +665,12 @@ function RadarPage() {
                 ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
                 : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
             </DialogDescription>
+            <Link
+              to="/privacy"
+              className="text-xs text-muted-foreground underline underline-offset-4"
+            >
+              How we use your location
+            </Link>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
