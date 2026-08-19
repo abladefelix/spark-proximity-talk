@@ -31,6 +31,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+/** Whole years between a YYYY-MM-DD date and today; null when unparseable. */
+function ageFrom(dob: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+  const birth = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const before =
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (before) years -= 1;
+  return years;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const settings = useSettings();
