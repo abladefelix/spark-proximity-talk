@@ -371,10 +371,106 @@ function ProfilePage() {
           </Link>
         )}
 
+        <div className="rounded-2xl border border-border p-4">
+          <p className="text-sm font-semibold">Legal & support</p>
+          <div className="mt-3 flex flex-col gap-2 text-sm">
+            <Link to="/terms" className="text-muted-foreground underline-offset-4 hover:underline">
+              Terms of Service
+            </Link>
+            <Link to="/privacy" className="text-muted-foreground underline-offset-4 hover:underline">
+              Privacy Policy
+            </Link>
+            {settings.support_email?.trim() ? (
+              <a
+                href={`mailto:${settings.support_email.trim()}`}
+                className="text-muted-foreground underline-offset-4 hover:underline"
+              >
+                Contact support — {settings.support_email.trim()}
+              </a>
+            ) : null}
+          </div>
+        </div>
+
         <Button variant="ghost" className="w-full text-muted-foreground" onClick={signOut}>
           Sign out
         </Button>
+
+        <DeleteAccountSection />
       </section>
     </main>
+  );
+}
+
+/**
+ * Self-service, permanent account deletion. Required by Apple (5.1.1(v)) and
+ * Google Play; the typed confirmation keeps it from being a one-tap accident.
+ */
+function DeleteAccountSection() {
+  const navigate = useNavigate();
+  const runDelete = useServerFn(deleteMyAccount);
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await runDelete({ data: undefined });
+      await supabase.auth.signOut();
+      toast.success("Your account and data have been deleted.");
+      navigate({ to: "/auth" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete your account");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-destructive/40 p-4">
+      <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
+        <Trash2 className="size-4" /> Delete account
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Permanently removes your profile, photos, chats, matches and login. This cannot be undone.
+      </p>
+      <AlertDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setConfirm("");
+        }}
+      >
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm" className="mt-3">
+            Delete my account
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Everything goes: your profile, photos, messages, matches and signals. There is no way
+              to restore it. Type DELETE below to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="DELETE"
+            autoCapitalize="characters"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Keep my account</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={confirm.trim().toUpperCase() !== "DELETE" || busy}
+              onClick={() => void submit()}
+            >
+              {busy ? "Deleting…" : "Delete forever"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
