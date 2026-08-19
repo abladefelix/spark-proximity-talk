@@ -9,6 +9,7 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 
 type Message = {
   id: string;
