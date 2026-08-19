@@ -221,6 +221,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             </p>
           </div>
         </div>
+
+        <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
       </header>
 
       {/* Transcript */}
