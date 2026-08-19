@@ -215,6 +215,43 @@ function AuthPage() {
           />
         </div>
         )}
+        {mode === "signup" && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="dob">Date of birth</Label>
+              <Input
+                id="dob"
+                type="date"
+                value={dob}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setDob(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                You must be {settings.min_age || 18} or older. We only use this to verify your age.
+              </p>
+            </div>
+            <label className="flex items-start gap-3 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 accent-[var(--primary)]"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+              <span>
+                I agree to the{" "}
+                <Link to="/terms" className="text-foreground underline underline-offset-4">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="text-foreground underline underline-offset-4">
+                  Privacy Policy
+                </Link>
+                , and I understand there is zero tolerance for abusive content or behaviour.
+              </span>
+            </label>
+          </>
+        )}
         <Button type="submit" variant="heat" size="lg" className="w-full" disabled={busy}>
           {mode === "signup" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}
         </Button>
