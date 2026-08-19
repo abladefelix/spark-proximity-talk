@@ -90,12 +90,27 @@ function AuthPage() {
           toast.error("Pick a username with at least 3 characters");
           return;
         }
+        // Age gate — both stores require an age check on a dating/discovery app.
+        const minAge = settings.min_age || 18;
+        const age = ageFrom(dob);
+        if (age === null) {
+          toast.error("Enter your date of birth");
+          return;
+        }
+        if (age < minAge) {
+          toast.error(`You must be ${minAge} or older to use SKANAROUND`);
+          return;
+        }
+        if (!acceptedTerms) {
+          toast.error("Please accept the Terms and Privacy Policy");
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/radar`,
-            data: { username: clean, display_name: username.trim() },
+            data: { username: clean, display_name: username.trim(), date_of_birth: dob },
           },
         });
         if (error) throw error;
@@ -103,6 +118,8 @@ function AuthPage() {
         await supabase.auth.signOut();
         setPassword("");
         setUsername("");
+        setDob("");
+        setAcceptedTerms(false);
         setMode("signin");
         toast.success("Account created. Sign in to continue.");
         return;
