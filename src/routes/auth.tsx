@@ -38,6 +38,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [dob, setDob] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
