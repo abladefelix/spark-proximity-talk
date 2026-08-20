@@ -441,20 +441,32 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
         </header>
 
-        <div className="px-3 pb-3 pt-4">
-          <div className="mb-5 flex flex-col items-center px-8 text-center">
+        <div className="px-3 pb-3 pt-3">
+          {/* WhatsApp-style intro: a small encryption note, then a contact card. */}
+          <div className="mx-auto mb-3 max-w-[85%] rounded-[10px] bg-accent/40 px-3 py-2 text-center text-[11px] leading-snug text-muted-foreground">
+            Messages here stay between you two. You matched by being nearby — meet in public places.
+          </div>
+
+          <div className="mb-4 flex flex-col items-center rounded-[14px] bg-card px-6 py-5 text-center shadow-sm">
             <PersonAvatar
               path={other?.avatar_url}
               name={other?.display_name}
               username={other?.username ?? "?"}
               gender={other?.gender as import("@/components/PersonAvatar").Gender}
-              className="size-14 rounded-full"
+              className="size-20 rounded-full"
             />
-            <p className="mt-2 text-[14px] font-semibold leading-tight">{other ? name : ""}</p>
-            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-              You both signalled nearby — this conversation stays between you two.
+            <p className="mt-3 flex items-center gap-1 text-[15px] font-semibold leading-tight">
+              {other ? name : ""}
+              {other?.verified && <VerifiedBadge className="size-3.5" />}
+            </p>
+            {other?.username && (
+              <p className="mt-0.5 text-[12px] text-muted-foreground">@{other.username}</p>
+            )}
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Not a contact • Matched nearby
             </p>
           </div>
+
 
           {hasMore && (
             <div className="mb-3 flex justify-center">
