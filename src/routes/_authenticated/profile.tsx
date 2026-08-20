@@ -317,31 +317,12 @@ function ProfilePage() {
             </p>
           ) : verification?.status === "pending" ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              {verification?.source === "pro"
-                ? "Your Pro payment is in. An admin is reviewing your account for the verified badge."
-                : "Selfie under review."}
+              Your account is in the review queue for the verified badge.
             </p>
           ) : (
-            <>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {verification?.status === "rejected"
-                  ? "Your last selfie didn't match. Try again."
-                  : "Send a quick selfie to get the verified badge and more signals back."}
-              </p>
-              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold">
-                <Camera className="size-3.5" /> Take a selfie
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void submitVerification(file);
-                  }}
-                />
-              </label>
-            </>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Verified badges are reviewed by our team for Pro members.
+            </p>
           )}
         </div>
 
