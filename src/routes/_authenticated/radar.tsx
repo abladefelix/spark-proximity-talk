@@ -847,7 +847,21 @@ function RadarPage() {
           </button>
         </div>
       )}
-      {!geoError && people.length === 0 && !nearby.isLoading && (
+      {!geoError && nearby.isError && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+          <span>Radar could not refresh. Check your connection and try again.</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => void nearby.refetch()}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+      {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {settings.empty_radar_text} Widen your scan range in your profile.
         </p>
