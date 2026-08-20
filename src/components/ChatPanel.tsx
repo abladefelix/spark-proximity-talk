@@ -489,7 +489,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
+        className="z-20 flex shrink-0 items-end gap-1.5 bg-background/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5"
       >
         <input
           ref={fileRef}
