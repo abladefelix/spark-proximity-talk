@@ -908,6 +908,50 @@ function RadarPage() {
       </section>
       </div>
 
+      {/* Crowd picker: several people standing on the same spot */}
+      <Dialog open={Boolean(clusterKey)} onOpenChange={(o) => !o && setClusterKey(null)}>
+        <DialogContent className="max-w-xs rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {clusterMembers.length} people right here
+            </DialogTitle>
+            <DialogDescription>Pick someone, or pinch the radar to zoom in.</DialogDescription>
+          </DialogHeader>
+          <div className="-mx-2 max-h-[52vh] space-y-1 overflow-y-auto px-2">
+            {clusterMembers.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setClusterKey(null);
+                  setSelectedId(p.id);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+              >
+                <PersonAvatar
+                  path={p.avatar_url}
+                  name={p.display_name}
+                  username={p.username}
+                  gender={p.gender}
+                  className="size-10 shrink-0"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 truncate text-sm font-medium">
+                    {p.display_name ?? p.username}
+                    {p.verified && <VerifiedBadge className="size-3.5" />}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {formatDistance(p.distance_m)}
+                    {p.is_online ? " · active now" : ""}
+                    {p.they_signaled && !p.match_id ? " · signaled you" : ""}
+                  </span>
+                </span>
+                {p.match_id && <Check className="size-4 shrink-0 text-muted-foreground" />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
       <Dialog
