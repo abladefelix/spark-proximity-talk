@@ -913,7 +913,7 @@ function RadarPage() {
       </div>
 
       {/* Crowd picker: several people standing on the same spot */}
-      <Dialog open={Boolean(clusterKey)} onOpenChange={(o) => !o && setClusterKey(null)}>
+      <Dialog open={clusterMembers.length > 1} onOpenChange={(o) => !o && setClusterKey(null)}>
         <DialogContent className="max-w-xs rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-base">
