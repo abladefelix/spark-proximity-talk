@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Radar, MessagesSquare, UserRound } from "lucide-react";
 
+import { GoProButton } from "@/components/GoProButton";
+
 const items = [
   { to: "/radar", label: "Radar", icon: Radar },
   { to: "/chats", label: "Chats", icon: MessagesSquare },
@@ -22,7 +24,9 @@ export function BottomNav() {
             {label}
           </Link>
         ))}
+        <GoProButton variant="nav" />
       </div>
     </nav>
   );
 }
+
