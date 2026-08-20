@@ -253,9 +253,17 @@ function RadarPage() {
     const cachedLocation = localStorage.getItem("skan-last-location");
     if (cachedLocation) {
       try {
-        const parsed = JSON.parse(cachedLocation) as { latitude?: unknown; longitude?: unknown };
+        const parsed = JSON.parse(cachedLocation) as {
+          latitude?: unknown;
+          longitude?: unknown;
+          accuracy?: unknown;
+        };
         if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
-          void push({ latitude: parsed.latitude, longitude: parsed.longitude });
+          void push({
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : null,
+          });
         }
       } catch {
         localStorage.removeItem("skan-last-location");
