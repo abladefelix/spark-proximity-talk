@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
