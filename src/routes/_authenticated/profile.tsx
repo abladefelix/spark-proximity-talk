@@ -211,13 +211,20 @@ function ProfilePage() {
 
       <section className="mt-6 flex items-center gap-4">
         <div className="relative">
-          <PersonAvatar
-            path={profile?.avatar_url}
-            name={profile?.display_name}
-            gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
-            username={profile?.username ?? "?"}
-            className="size-24 rounded-full"
-          />
+          <button
+            type="button"
+            aria-label="View profile photo"
+            onClick={() => setPhotoOpen(true)}
+            className="rounded-full outline-none ring-primary/50 focus-visible:ring-2"
+          >
+            <PersonAvatar
+              path={profile?.avatar_url}
+              name={profile?.display_name}
+              gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
+              username={profile?.username ?? "?"}
+              className="size-24 rounded-full"
+            />
+          </button>
           <label className="absolute -bottom-2 -right-2 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary">
             <Camera className="size-4 text-primary-foreground" />
             <input
