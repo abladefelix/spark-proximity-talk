@@ -97,7 +97,7 @@ function ProfilePage() {
       if (!me) return null;
       const { data } = await supabase
         .from("verification_requests")
-        .select("status")
+        .select("status, source")
         .eq("user_id", me)
         .maybeSingle();
       return data;
@@ -316,7 +316,11 @@ function ProfilePage() {
               Your profile is verified. People see the badge on your beacon.
             </p>
           ) : verification?.status === "pending" ? (
-            <p className="mt-1 text-xs text-muted-foreground">Selfie under review.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {verification?.source === "pro"
+                ? "Your Pro payment is in. An admin is reviewing your account for the verified badge."
+                : "Selfie under review."}
+            </p>
           ) : (
             <>
               <p className="mt-1 text-xs text-muted-foreground">
