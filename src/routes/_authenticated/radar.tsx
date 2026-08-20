@@ -20,7 +20,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
-import { GoProButton } from "@/components/GoProButton";
 
 import {
   Dialog,
@@ -744,7 +743,6 @@ function RadarPage() {
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
-          <GoProButton />
           <NotificationBell />
           <ThemeToggle />
 

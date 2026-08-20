@@ -15,8 +15,8 @@ import { useBillingInfo, useMySubscription } from "@/hooks/useBilling";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** "icon" for the radar header, "full" for a wide button in the profile. */
-  variant?: "icon" | "full";
+  /** "icon" small round, "full" wide button, "nav" bottom-bar tab. */
+  variant?: "icon" | "full" | "nav";
   className?: string;
 };
 
@@ -33,7 +33,20 @@ export function GoProButton({ variant = "icon", className }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {variant === "icon" ? (
+        {variant === "nav" ? (
+          <button
+            type="button"
+            aria-label={isPro ? billing.pro_label : "Go Pro"}
+            className={cn(
+              "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs transition-colors",
+              isPro ? "text-primary" : "text-muted-foreground",
+              className,
+            )}
+          >
+            <Crown className={cn("size-5", isPro && "fill-current")} />
+            {isPro ? "Pro" : "Go Pro"}
+          </button>
+        ) : variant === "icon" ? (
           <button
             type="button"
             aria-label={isPro ? billing.pro_label : "Go Pro"}
