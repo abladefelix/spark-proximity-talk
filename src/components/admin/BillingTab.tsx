@@ -185,7 +185,8 @@ export function BillingTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not update"),
   });
 
-  const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
+  const d = draft as any;
+  const set = (key: string, value: unknown) => setDraft((cur) => ({ ...cur, [key]: value }));
   const num = (key: string, min: number, max: number) => (
     <Input
       type="number"
@@ -213,7 +214,7 @@ export function BillingTab() {
           ["Paid transactions", stats?.paid_total ?? 0],
           [
             "Revenue",
-            formatAmount(Number(stats?.revenue_minor ?? 0), draft.currency ?? "GHS"),
+            formatAmount(Number(stats?.revenue_minor ?? 0), d.currency ?? "GHS"),
           ],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-lg border border-border px-3 py-2">
@@ -230,12 +231,12 @@ export function BillingTab() {
         <Toggle
           label="Payments active"
           hint="Turns the upgrade card on for members."
-          checked={Boolean(draft.enabled)}
+          checked={Boolean(d.enabled)}
           onChange={(v) => set("enabled", v)}
         />
         <Field label="Public key">
           <Input
-            value={draft.paystack_public_key ?? ""}
+            value={d.paystack_public_key ?? ""}
             placeholder="pk_live_..."
             onChange={(e) => set("paystack_public_key", e.target.value)}
           />
@@ -243,14 +244,14 @@ export function BillingTab() {
         <Field label="Secret key">
           <Input
             type="password"
-            value={draft.paystack_secret_key ?? ""}
+            value={d.paystack_secret_key ?? ""}
             placeholder="sk_live_..."
             onChange={(e) => set("paystack_secret_key", e.target.value)}
           />
         </Field>
         <Field label="Currency code">
           <Input
-            value={draft.currency ?? ""}
+            value={d.currency ?? ""}
             placeholder="GHS, NGN, ZAR, USD, KES"
             onChange={(e) => set("currency", e.target.value.toUpperCase())}
           />
@@ -262,19 +263,19 @@ export function BillingTab() {
 
       <Section title="Plan & pricing" hint="Amounts are in the smallest unit (e.g. pesewas / kobo / cents).">
         <Field label="Plan name">
-          <Input value={draft.pro_label ?? ""} onChange={(e) => set("pro_label", e.target.value)} />
+          <Input value={d.pro_label ?? ""} onChange={(e) => set("pro_label", e.target.value)} />
         </Field>
         <Field label="Pitch shown to members">
           <Textarea
             rows={2}
-            value={draft.pro_pitch ?? ""}
+            value={d.pro_pitch ?? ""}
             onChange={(e) => set("pro_pitch", e.target.value)}
           />
         </Field>
-        <Field label={`Monthly price (${formatAmount(Number(draft.monthly_amount ?? 0), draft.currency ?? "GHS")})`}>
+        <Field label={`Monthly price (${formatAmount(Number(d.monthly_amount ?? 0), d.currency ?? "GHS")})`}>
           {num("monthly_amount", 0, 100000000)}
         </Field>
-        <Field label={`Yearly price (${formatAmount(Number(draft.yearly_amount ?? 0), draft.currency ?? "GHS")})`}>
+        <Field label={`Yearly price (${formatAmount(Number(d.yearly_amount ?? 0), d.currency ?? "GHS")})`}>
           {num("yearly_amount", 0, 100000000)}
         </Field>
       </Section>
@@ -288,32 +289,32 @@ export function BillingTab() {
       <Section title="Pro features" hint="Switch off anything you don't want included in the paid plan.">
         <Toggle
           label="Unlimited signals"
-          checked={Boolean(draft.pro_unlimited_signals)}
+          checked={Boolean(d.pro_unlimited_signals)}
           onChange={(v) => set("pro_unlimited_signals", v)}
         />
         <Toggle
           label="Full scan range"
-          checked={Boolean(draft.pro_extended_radius)}
+          checked={Boolean(d.pro_extended_radius)}
           onChange={(v) => set("pro_extended_radius", v)}
         />
         <Toggle
           label="Unlimited messages"
-          checked={Boolean(draft.pro_unlimited_messages)}
+          checked={Boolean(d.pro_unlimited_messages)}
           onChange={(v) => set("pro_unlimited_messages", v)}
         />
         <Toggle
           label="See everyone who signalled"
-          checked={Boolean(draft.pro_see_who_signaled)}
+          checked={Boolean(d.pro_see_who_signaled)}
           onChange={(v) => set("pro_see_who_signaled", v)}
         />
         <Toggle
           label="Priority beacon"
-          checked={Boolean(draft.pro_priority_beacon)}
+          checked={Boolean(d.pro_priority_beacon)}
           onChange={(v) => set("pro_priority_beacon", v)}
         />
         <Toggle
           label="Custom beacon look"
-          checked={Boolean(draft.pro_custom_beacon)}
+          checked={Boolean(d.pro_custom_beacon)}
           onChange={(v) => set("pro_custom_beacon", v)}
         />
       </Section>
