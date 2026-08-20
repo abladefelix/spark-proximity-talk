@@ -280,6 +280,32 @@ function AdminPage() {
     },
   });
 
+  const { data: maint } = useQuery({
+    queryKey: ["admin-maintenance"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await (
+        supabase.rpc as unknown as (
+          name: string,
+        ) => Promise<{
+          data:
+            | {
+                expired_signals: number;
+                stale_locations: number;
+                empty_matches: number;
+                old_notifications: number;
+                old_reports: number;
+              }[]
+            | null;
+          error: { message: string } | null;
+        }>
+      )("admin_maintenance_overview");
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
+
   const { data: people = [] } = useQuery({
     queryKey: ["admin-people"],
     enabled: isStaff,
