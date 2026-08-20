@@ -53,6 +53,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [dob, setDob] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
@@ -115,6 +116,10 @@ function AuthPage() {
           toast.error(`You must be ${minAge} or older to use SKANAROUND`);
           return;
         }
+        if (!gender) {
+          toast.error("Choose your gender");
+          return;
+        }
         if (!acceptedTerms) {
           toast.error("Please accept the Terms and Privacy Policy");
           return;
@@ -124,7 +129,12 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/radar`,
-            data: { username: clean, display_name: username.trim(), date_of_birth: dob },
+            data: {
+              username: clean,
+              display_name: username.trim(),
+              date_of_birth: dob,
+              gender,
+            },
           },
         });
         if (error) throw error;
@@ -133,6 +143,7 @@ function AuthPage() {
         setPassword("");
         setUsername("");
         setDob("");
+        setGender("");
         setAcceptedTerms(false);
         setMode("signin");
         toast.success("Account created. Sign in to continue.");
@@ -243,6 +254,28 @@ function AuthPage() {
               />
               <p className="text-xs text-muted-foreground">
                 You must be {settings.min_age || 18} or older. We only use this to verify your age.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Gender</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["male", "female", "other"] as const).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(g)}
+                    className={`rounded-xl border px-3 py-2 text-sm capitalize transition ${
+                      gender === g
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This sets your beacon avatar on the radar.
               </p>
             </div>
             <label className="flex items-start gap-3 text-sm text-muted-foreground">
