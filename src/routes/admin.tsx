@@ -312,14 +312,10 @@ function AdminPage() {
     queryKey: ["admin-people"],
     enabled: isStaff,
     queryFn: async () => {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select(
-          "id, username, display_name, bio, avatar_url, gender, verified, banned, banned_reason, last_seen, created_at",
-        )
-        .order("created_at", { ascending: false })
-        .limit(200);
+      // Moderation fields are staff-only: fetched through a role-checked RPC.
+      const { data: profiles } = await supabase.rpc("staff_profiles", { _limit: 200 });
       const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+
       return (profiles ?? []).map((p) => ({
         ...p,
         roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as Role),
