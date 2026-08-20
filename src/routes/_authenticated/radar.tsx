@@ -473,7 +473,11 @@ function RadarPage() {
     return () => ro.disconnect();
   }, []);
 
+  const [zoom, setZoom] = useState(1);
+  const [clusterKey, setClusterKey] = useState<string | null>(null);
+
   // Auto-fitting layout: zooms the scope to the furthest person, scales beacon
+
   // size with crowd density, groups people who sit on top of each other into a
   // tappable cluster and pushes the remaining beacons apart.
   const { clusters, beaconSize } = useMemo(() => {
