@@ -773,10 +773,15 @@ function RadarPage() {
                     "gender-female": "border-gender-female/60",
                     "gender-other": "border-gender-other/60",
                   }[token];
-                  const dotClass = {
-                    "gender-male": "bg-gender-male text-gender-male",
-                    "gender-female": "bg-gender-female text-gender-female",
-                    "gender-other": "bg-gender-other text-gender-other",
+                  const ringClass = {
+                    "gender-male": "ring-gender-male",
+                    "gender-female": "ring-gender-female",
+                    "gender-other": "ring-gender-other",
+                  }[token];
+                  const iconClass = {
+                    "gender-male": "text-gender-male",
+                    "gender-female": "text-gender-female",
+                    "gender-other": "text-gender-other",
                   }[token];
                   return (
                     <>
