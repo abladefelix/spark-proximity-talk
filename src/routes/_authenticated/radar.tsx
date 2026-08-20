@@ -152,10 +152,34 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    const push = async (coords: { latitude: number; longitude: number }) => {
+    let lastPublished: { lat: number; lng: number; at: number } | null = null;
+    const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+      const R = 6371000;
+      const dLat = ((bLat - aLat) * Math.PI) / 180;
+      const dLng = ((bLng - aLng) * Math.PI) / 180;
+      const la = (aLat * Math.PI) / 180;
+      const lb = (bLat * Math.PI) / 180;
+      const h =
+        Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    };
+    const push = async (coords: { latitude: number; longitude: number }, force = false) => {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
+
+      // Movement filter: publish whenever the person actually moved a few
+      // metres, otherwise fall back to the slower presence heartbeat. This
+      // keeps moving beacons tracking in near real time without spamming.
+      if (!force && lastPublished) {
+        const moved = metresBetween(
+          lastPublished.lat,
+          lastPublished.lng,
+          coords.latitude,
+          coords.longitude,
+        );
+        if (moved < 4 && Date.now() - lastPublished.at < 15000) return;
+      }
 
       // Use the locally cached session: a network round-trip here (getUser)
       // can hang on flaky mobile networks and silently kill the heartbeat.
@@ -165,6 +189,7 @@ function RadarPage() {
         myIdRef.current = me;
       }
       if (!me) return;
+      lastPublished = { lat: coords.latitude, lng: coords.longitude, at: Date.now() };
       const { error } = await supabase.from("locations").upsert(
         {
           user_id: me,
