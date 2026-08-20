@@ -70,12 +70,12 @@ function ChatsPage() {
         const last = msgs?.find((x) => x.match_id === m.id);
         return {
           matchId: m.id,
-          other: profile ?? {
-            id: otherId,
-            username: "someone",
-            display_name: null,
-            avatar_url: null,
-            gender: null,
+          other: {
+            id: profile?.id ?? otherId,
+            username: profile?.username ?? "someone",
+            display_name: profile?.display_name ?? null,
+            avatar_url: profile?.avatar_url ?? null,
+            gender: (profile?.gender as Row["other"]["gender"]) ?? null,
           },
           preview: last?.content ?? null,
           at: last?.created_at ?? m.created_at,
