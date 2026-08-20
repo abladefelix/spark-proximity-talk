@@ -23,9 +23,11 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   } catch (error) {
     // Navigations, reloads, and native WebView suspension can close an HTTP
     // stream before SSR finishes. This is cancellation, not an application
-    // failure; preserve it so Start can dispose of the stream quietly instead
-    // of turning it into a 500 page and reporting a false blank-screen crash.
-    if (isRequestCancellation(error, request)) throw error;
+    // failure. Consume it so it cannot become a 500 or a false blank-screen
+    // crash report; a connected caller receives the conventional 499 status.
+    if (isRequestCancellation(error, request)) {
+      return new Response(null, { status: 499, statusText: "Client Closed Request" });
+    }
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
