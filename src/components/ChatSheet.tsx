@@ -122,7 +122,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           role="dialog"
           aria-modal="true"
           aria-label="Chat"
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-2 duration-200"
+          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-2 duration-200"
           style={{ paddingBottom: keyboard }}
         >
           <ChatBackdrop />
