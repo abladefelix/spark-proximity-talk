@@ -1052,11 +1052,19 @@ function RadarPage() {
         {needsPermission
           ? "Enable compass"
           : compassCalibrating
-            ? "Calibrating compass…"
+            ? "Calibrating…"
             : compassActive
               ? `Facing ${compassPoint(heading as number)}`
               : "North up"}
       </button>
+
+      {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
+      {compassCalibrating && (
+        <div className="flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+          <LoaderCircle className="size-3.5 animate-spin text-primary" />
+          Calibrating compass — move your phone in a figure 8
+        </div>
+      )}
 
       </div>
 
