@@ -23,7 +23,13 @@ export const Route = createFileRoute("/_authenticated/chats")({
 
 type Row = {
   matchId: string;
-  other: { id: string; username: string; display_name: string | null; avatar_url: string | null };
+  other: {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    gender: "male" | "female" | "other" | null;
+  };
   preview: string | null;
   at: string;
 };
