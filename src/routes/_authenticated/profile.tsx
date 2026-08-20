@@ -31,6 +31,8 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
+import { BeaconStyleSetting } from "@/components/BeaconStyleSetting";
+
 import { ProUpgradeCard } from "@/components/ProUpgradeCard";
 import { GoProButton } from "@/components/GoProButton";
 import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
