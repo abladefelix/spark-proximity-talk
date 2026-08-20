@@ -560,14 +560,13 @@ function RadarPage() {
     };
   }, [people, scopeSize, radius, zoom]);
 
-
   // ---- Zoom & pan on the radar scope -------------------------------------
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 6;
-  const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   viewRef.current = { zoom, pan };
+
 
   const clampPan = (z: number, p: { x: number; y: number }) => {
     const scope = scopeSize || 320;
