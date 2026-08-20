@@ -986,7 +986,7 @@ function RadarPage() {
                           <GenderAvatarIcon
                             gender={person.gender}
                             className={custom ? "h-[76%] w-[76%]" : `h-[76%] w-[76%] ${iconClass}`}
-                            style={custom ? { color: custom } : undefined}
+                            {...(custom ? { style: { color: custom } } : {})}
                           />
                         )}
                       </span>
