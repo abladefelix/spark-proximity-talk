@@ -1160,6 +1160,7 @@ function AdminPage() {
                   path={a.person?.avatar_url ?? null}
                   name={a.person?.display_name ?? null}
                   username={a.person?.username ?? "unknown"}
+                  gender={a.person?.gender as import("@/components/PersonAvatar").Gender}
                   className="size-8"
                 />
                 <div className="min-w-0 flex-1">
