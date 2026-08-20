@@ -281,6 +281,8 @@ function ProfilePage() {
       <section className="mt-8 space-y-4">
         <ProUpgradeCard />
         <ScanRangeSetting />
+        <BeaconStyleSetting />
+
         <RadarSoundSetting />
         <BiometricSetting />
         <ChatBackgroundSetting />
