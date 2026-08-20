@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export function ProUpgradeCard() {
   const start = useServerFn(startCheckout);
   const verify = useServerFn(verifyCheckout);
   const [busy, setBusy] = useState<string | null>(null);
+  const cancelled = useRef(false);
 
   // Coming back from Paystack: confirm the reference in the URL.
   useEffect(() => {
@@ -68,15 +69,24 @@ export function ProUpgradeCard() {
 
   async function buy(plan: "monthly" | "yearly") {
     setBusy(plan);
+    cancelled.current = false;
     try {
       const res = await start({
         data: { plan, callbackUrl: `${window.location.origin}/profile` },
       });
+      if (cancelled.current) return;
       window.location.href = res.authorizationUrl;
     } catch (e) {
+      if (cancelled.current) return;
       toast.error(e instanceof Error ? e.message : "Could not start the payment.");
       setBusy(null);
     }
+  }
+
+  function cancelPayment() {
+    cancelled.current = true;
+    setBusy(null);
+    toast.message("Payment cancelled");
   }
 
   return (
@@ -141,6 +151,11 @@ export function ProUpgradeCard() {
               </Button>
             ) : null}
           </div>
+          {busy ? (
+            <Button variant="ghost" className="mt-2 w-full" onClick={cancelPayment}>
+              Cancel payment
+            </Button>
+          ) : null}
         </>
       )}
     </div>

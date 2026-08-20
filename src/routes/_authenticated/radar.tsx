@@ -746,7 +746,20 @@ function RadarPage() {
           <NotificationBell />
           <ThemeToggle />
 
-          <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible on radar" />
+          <Switch
+            checked={visible}
+            onCheckedChange={(next) => {
+              if (!next && !isPro) {
+                toast.error("Going invisible is a Pro feature", {
+                  description: "Upgrade to hide your beacon while you scan.",
+                  action: { label: "Go Pro", onClick: () => navigate({ to: "/profile" }) },
+                });
+                return;
+              }
+              setVisible(next);
+            }}
+            aria-label="Visible on radar"
+          />
           <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
         </div>
       </div>
