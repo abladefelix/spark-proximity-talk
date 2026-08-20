@@ -341,10 +341,11 @@ export function BillingTab() {
           {people.map((p: any) => (
             <div key={p.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
               <PersonAvatar
-                src={p.avatar_url}
+                path={p.avatar_url}
                 name={p.display_name ?? p.username}
+                username={p.username}
                 gender={p.gender}
-                size={32}
+                className="size-8"
               />
               <span className="min-w-0 flex-1 truncate text-sm">
                 {p.display_name ?? p.username}
@@ -379,10 +380,11 @@ export function BillingTab() {
                 className="flex items-center gap-2 rounded-lg border border-border p-2"
               >
                 <PersonAvatar
-                  src={s.profile?.avatar_url}
+                  path={s.profile?.avatar_url}
                   name={s.profile?.display_name ?? s.profile?.username ?? "Member"}
+                  username={s.profile?.username}
                   gender={s.profile?.gender}
-                  size={32}
+                  className="size-8"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">

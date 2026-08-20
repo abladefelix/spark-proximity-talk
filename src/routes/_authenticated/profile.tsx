@@ -31,6 +31,7 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
+import { ProUpgradeCard } from "@/components/ProUpgradeCard";
 import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
 import { RadarSoundSetting } from "@/components/RadarSoundSetting";
 import { BiometricSetting } from "@/components/BiometricSetting";
@@ -288,6 +289,7 @@ function ProfilePage() {
       </section>
 
       <section className="mt-8 space-y-4">
+        <ProUpgradeCard />
         <ScanRangeSetting />
         <RadarSoundSetting />
         <BiometricSetting />
