@@ -45,6 +45,7 @@ import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadi
 import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
+import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 
 
 
