@@ -134,6 +134,7 @@ function RadarPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+  const [showPro, setShowPro] = useState(false);
 
 
 
