@@ -3,8 +3,9 @@ import { cn } from "@/lib/utils";
 export type AvatarGender = "male" | "female" | "other" | null | undefined;
 
 /**
- * Bold, filled gender-symbol beacon icons for the radar.
- * Designed to read instantly at small sizes inside a glowing ring.
+ * Hair-silhouette beacon icons for the radar.
+ * Bold, filled shapes so male (short hair), female (long hair), and neutral
+ * read instantly inside the glowing ring.
  */
 export function GenderAvatarIcon({
   gender,
@@ -21,11 +22,13 @@ export function GenderAvatarIcon({
         fill="currentColor"
         aria-hidden="true"
       >
-        {/* bold filled male symbol: circle + arrow */}
-        <circle cx="9.5" cy="14.5" r="4.8" />
-        <path d="M19.2 5.5 14.1 10.6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M19.2 5.5V10" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M19.2 5.5H14.7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        {/* short cropped hair silhouette */}
+        <path
+          d="M12 2.5c-3.2 0-5.5 2.1-5.5 5.1 0 .4.3.7.7.7h9.6c.4 0 .7-.3.7-.7 0-3-2.3-5.1-5.5-5.1Z"
+          opacity="0.9"
+        />
+        <circle cx="12" cy="10" r="3.8" />
+        <path d="M12 14.4c-3.5 0-6.4 2.3-7.1 5.4-.2.9.5 1.8 1.5 1.8h11.2c1 0 1.7-.9 1.5-1.8-.7-3.1-3.6-5.4-7.1-5.4Z" />
       </svg>
     );
   }
@@ -38,10 +41,13 @@ export function GenderAvatarIcon({
         fill="currentColor"
         aria-hidden="true"
       >
-        {/* bold filled female symbol: circle + cross */}
-        <circle cx="12" cy="9.5" r="4.8" />
-        <path d="M12 14.3V20" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M9.4 17.15H14.6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        {/* long hair framing the face */}
+        <path
+          d="M12 2.2c-3.6 0-6 2.5-6 6.1 0 1.8-.5 3.3-1.2 4.6-.3.6.1 1.3.8 1.3h1.2c-.3-.8-.5-1.7-.5-2.7V8.8c1.9-.3 3.6-1.2 4.8-2.6a7.4 7.4 0 0 0 4.5 2.6v2.6c0 1-.2 1.9-.5 2.7h1.2c.7 0 1.1-.7.8-1.3a9 9 0 0 1-1.1-4.6c0-3.6-3-6.1-4.4-6.1Z"
+          opacity="0.9"
+        />
+        <circle cx="12" cy="10" r="3.6" />
+        <path d="M12 14.6c-3.6 0-6.6 2.4-7.3 5.6-.2.9.5 1.8 1.5 1.8h11.6c1 0 1.7-.9 1.5-1.8-.7-3.2-3.7-5.6-7.3-5.6Z" />
       </svg>
     );
   }
@@ -53,10 +59,9 @@ export function GenderAvatarIcon({
       fill="currentColor"
       aria-hidden="true"
     >
-      {/* bold filled neutral/transgender symbol */}
-      <circle cx="12" cy="9.5" r="4.8" />
-      <path d="M12 14.3V20" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-      <path d="M9.4 19.2 12 17.2 14.6 19.2" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      {/* neutral simple head & shoulders */}
+      <circle cx="12" cy="9.2" r="4.1" />
+      <path d="M12 14.4c-3.6 0-6.6 2.4-7.3 5.6-.2.9.5 1.8 1.5 1.8h11.6c1 0 1.7-.9 1.5-1.8-.7-3.2-3.7-5.6-7.3-5.6Z" />
     </svg>
   );
 }
