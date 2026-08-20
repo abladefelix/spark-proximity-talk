@@ -10,7 +10,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export function useCompassHeading(enabled: boolean) {
   const [heading, setHeading] = useState<number | null>(null);
   const [needsPermission, setNeedsPermission] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [settled, setSettled] = useState(false);
   const smoothed = useRef<number | null>(null);
+  const samples = useRef(0);
 
   const apply = useCallback((next: number) => {
     const prev = smoothed.current;
@@ -23,8 +26,13 @@ export function useCompassHeading(enabled: boolean) {
       delta *= 0.25;
       smoothed.current = (prev + delta + 360) % 360;
     }
+    samples.current += 1;
+    // The first readings lag behind reality while the magnetometer settles,
+    // so only trust the rose once enough samples have flowed through.
+    if (samples.current >= 12) setSettled(true);
     setHeading(smoothed.current);
   }, []);
+
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -49,6 +57,9 @@ export function useCompassHeading(enabled: boolean) {
     const attach = () => {
       if (attached) return;
       attached = true;
+      samples.current = 0;
+      setSettled(false);
+      setListening(true);
       window.addEventListener("deviceorientationabsolute", handler as EventListener);
       window.addEventListener("deviceorientation", handler as EventListener);
     };
@@ -60,11 +71,20 @@ export function useCompassHeading(enabled: boolean) {
       attach();
     }
 
+
     return () => {
       window.removeEventListener("deviceorientationabsolute", handler as EventListener);
       window.removeEventListener("deviceorientation", handler as EventListener);
     };
   }, [enabled, apply]);
+
+  // Safety net: some devices emit readings slowly, so stop showing
+  // "calibrating" after a few seconds once any heading has arrived.
+  useEffect(() => {
+    if (!listening || settled) return;
+    const id = window.setTimeout(() => setSettled(true), 5000);
+    return () => window.clearTimeout(id);
+  }, [listening, settled]);
 
   const request = useCallback(async () => {
     const anyEvent = window.DeviceOrientationEvent as
@@ -75,6 +95,9 @@ export function useCompassHeading(enabled: boolean) {
       const state = await anyEvent.requestPermission();
       if (state !== "granted") return false;
       setNeedsPermission(false);
+      samples.current = 0;
+      setSettled(false);
+      setListening(true);
       const handler = (event: DeviceOrientationEvent) => {
         const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
           .webkitCompassHeading;
@@ -88,8 +111,15 @@ export function useCompassHeading(enabled: boolean) {
     }
   }, [apply]);
 
-  return { heading, needsPermission, request };
+  return {
+    heading,
+    needsPermission,
+    request,
+    /** True while the magnetometer settles right after the compass is enabled. */
+    calibrating: enabled && listening && !settled,
+  };
 }
+
 
 const POINTS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
 

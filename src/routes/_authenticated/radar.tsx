@@ -571,9 +571,16 @@ function RadarPage() {
   // Live compass. In heading-up mode the whole scope counter-rotates with the
   // phone, so the top of the radar is literally the way you are facing.
   const [headingUp, setHeadingUp] = useState(true);
-  const { heading, needsPermission, request: requestCompass } = useCompassHeading(true);
+  const {
+    heading,
+    needsPermission,
+    request: requestCompass,
+    calibrating,
+  } = useCompassHeading(true);
   const compassActive = headingUp && heading != null;
+  const compassCalibrating = headingUp && calibrating;
   const rot = compassActive ? -(heading as number) : 0;
+
 
   // Auto-fitting layout. Beacons keep a constant on-screen size and gap, so
   // pinching to zoom genuinely expands the map and pulls crowded people apart
@@ -1016,6 +1023,14 @@ function RadarPage() {
           />
         )}
 
+        {/* Calibration notice: the magnetometer needs a moment (and a figure-8
+            wave) before the heading can be trusted. */}
+        {compassCalibrating && (
+          <div className="pointer-events-none absolute inset-x-0 top-[10%] mx-auto flex w-max max-w-[80%] items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+            <LoaderCircle className="size-3.5 animate-spin text-primary" />
+            Calibrating compass — move your phone in a figure 8
+          </div>
+        )}
 
         {nearby.isLoading && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
@@ -1037,13 +1052,20 @@ function RadarPage() {
         }}
         className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
-        <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+        {compassCalibrating ? (
+          <LoaderCircle className="size-3.5 animate-spin text-primary" />
+        ) : (
+          <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+        )}
         {needsPermission
           ? "Enable compass"
-          : compassActive
-            ? `Facing ${compassPoint(heading as number)}`
-            : "North up"}
+          : compassCalibrating
+            ? "Calibrating compass…"
+            : compassActive
+              ? `Facing ${compassPoint(heading as number)}`
+              : "North up"}
       </button>
+
       </div>
 
 
