@@ -574,9 +574,11 @@ function RadarPage() {
     const scope = scopeSize || 320;
     const count = people.length;
     const z = Math.max(1, zoom);
+    // Markers shrink as the crowd grows so far more people fit before we have
+    // to de-crowd, with a floor that keeps them tappable.
     const size = Math.max(
-      18,
-      Math.min(44, Math.round(scope / (4.2 + Math.sqrt(Math.max(count, 1)) * 1.5))),
+      14,
+      Math.min(40, Math.round(scope / (4.6 + Math.sqrt(Math.max(count, 1)) * 2.1))),
     );
     // Layer-space size: the whole layer is scaled by `zoom`, so divide to keep
     // the rendered marker the same physical size at any zoom level.
