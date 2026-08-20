@@ -314,7 +314,7 @@ function AdminPage() {
       const { data: profiles } = await supabase
         .from("profiles")
         .select(
-          "id, username, display_name, bio, avatar_url, verified, banned, banned_reason, last_seen, created_at",
+          "id, username, display_name, bio, avatar_url, gender, verified, banned, banned_reason, last_seen, created_at",
         )
         .order("created_at", { ascending: false })
         .limit(200);
@@ -338,7 +338,7 @@ function AdminPage() {
       if (!rows?.length) return [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url, display_name")
+        .select("id, username, avatar_url, display_name, gender")
         .in(
           "id",
           rows.map((r) => r.user_id),
@@ -968,6 +968,7 @@ function AdminPage() {
                   path={p.avatar_url}
                   name={p.display_name}
                   username={p.username}
+                  gender={p.gender as import("@/components/PersonAvatar").Gender}
                   className="size-8"
                 />
                 <div className="min-w-0 flex-1">
@@ -1159,6 +1160,7 @@ function AdminPage() {
                   path={a.person?.avatar_url ?? null}
                   name={a.person?.display_name ?? null}
                   username={a.person?.username ?? "unknown"}
+                  gender={a.person?.gender as import("@/components/PersonAvatar").Gender}
                   className="size-8"
                 />
                 <div className="min-w-0 flex-1">

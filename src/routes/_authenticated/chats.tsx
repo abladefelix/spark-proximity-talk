@@ -23,7 +23,13 @@ export const Route = createFileRoute("/_authenticated/chats")({
 
 type Row = {
   matchId: string;
-  other: { id: string; username: string; display_name: string | null; avatar_url: string | null };
+  other: {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    gender: "male" | "female" | "other" | null;
+  };
   preview: string | null;
   at: string;
 };
@@ -46,7 +52,7 @@ function ChatsPage() {
       const otherIds = matches.map((m) => (m.user_a === me ? m.user_b : m.user_a));
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url")
+        .select("id, username, display_name, avatar_url, gender")
         .in("id", otherIds);
 
       const { data: msgs } = await supabase
@@ -64,11 +70,12 @@ function ChatsPage() {
         const last = msgs?.find((x) => x.match_id === m.id);
         return {
           matchId: m.id,
-          other: profile ?? {
-            id: otherId,
-            username: "someone",
-            display_name: null,
-            avatar_url: null,
+          other: {
+            id: profile?.id ?? otherId,
+            username: profile?.username ?? "someone",
+            display_name: profile?.display_name ?? null,
+            avatar_url: profile?.avatar_url ?? null,
+            gender: (profile?.gender as Row["other"]["gender"]) ?? null,
           },
           preview: last?.content ?? null,
           at: last?.created_at ?? m.created_at,
@@ -118,6 +125,7 @@ function ChatsPage() {
               path={row.other.avatar_url}
               name={row.other.display_name}
               username={row.other.username}
+              gender={row.other.gender}
               className="size-14"
             />
             <div className="min-w-0 flex-1">
