@@ -474,8 +474,9 @@ function RadarPage() {
   }, []);
 
   // Auto-fitting layout: zooms the scope to the furthest person, scales beacon
-  // size with crowd density and pushes overlapping beacons apart.
-  const { beacons, beaconSize } = useMemo(() => {
+  // size with crowd density, groups people who sit on top of each other into a
+  // tappable cluster and pushes the remaining beacons apart.
+  const { clusters, beaconSize } = useMemo(() => {
     const scope = scopeSize || 320;
     const count = people.length;
     const size = Math.max(
@@ -495,12 +496,29 @@ function RadarPage() {
     });
 
     const minGap = size + 6;
+    // Cluster in screen space: zooming in shrinks the merge radius so crowded
+    // groups break apart into individual beacons as you pinch.
+    const mergeGap = minGap / Math.max(1, zoom);
+    type Cluster = { x: number; y: number; members: typeof people };
+    const groups: Cluster[] = [];
+    for (const n of nodes) {
+      const hit = groups.find((g) => Math.hypot(g.x - n.x, g.y - n.y) < mergeGap * 0.75);
+      if (hit) {
+        const k = hit.members.length;
+        hit.x = (hit.x * k + n.x) / (k + 1);
+        hit.y = (hit.y * k + n.y) / (k + 1);
+        hit.members.push(n.person);
+      } else {
+        groups.push({ x: n.x, y: n.y, members: [n.person] });
+      }
+    }
+
     for (let iter = 0; iter < 80; iter++) {
       let moved = false;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]!;
-          const b = nodes[j]!;
+      for (let i = 0; i < groups.length; i++) {
+        for (let j = i + 1; j < groups.length; j++) {
+          const a = groups[i]!;
+          const b = groups[j]!;
           let dx = b.x - a.x;
           let dy = b.y - a.y;
           let d = Math.hypot(dx, dy);
@@ -509,8 +527,8 @@ function RadarPage() {
             dy = Math.sin(i * 2.4) * 0.01;
             d = 0.01;
           }
-          if (d < minGap) {
-            const push = (minGap - d) / 2;
+          if (d < mergeGap) {
+            const push = (mergeGap - d) / 2;
             const ux = dx / d;
             const uy = dy / d;
             a.x -= ux * push;
@@ -521,7 +539,7 @@ function RadarPage() {
           }
         }
       }
-      for (const n of nodes) {
+      for (const n of groups) {
         const d = Math.hypot(n.x, n.y);
         if (d > limit) {
           n.x = (n.x / d) * limit;
@@ -533,13 +551,15 @@ function RadarPage() {
 
     return {
       beaconSize: size,
-      beacons: nodes.map((n) => ({
-        person: n.person,
-        left: `calc(50% + ${n.x}px)`,
-        top: `calc(50% + ${n.y}px)`,
+      clusters: groups.map((g) => ({
+        key: g.members.map((m) => m.id).join("|"),
+        members: g.members,
+        left: `calc(50% + ${g.x}px)`,
+        top: `calc(50% + ${g.y}px)`,
       })),
     };
-  }, [people, scopeSize, radius]);
+  }, [people, scopeSize, radius, zoom]);
+
 
   // ---- Zoom & pan on the radar scope -------------------------------------
   const MIN_ZOOM = 1;
