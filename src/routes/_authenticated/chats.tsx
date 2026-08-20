@@ -125,6 +125,7 @@ function ChatsPage() {
               path={row.other.avatar_url}
               name={row.other.display_name}
               username={row.other.username}
+              gender={row.other.gender}
               className="size-14"
             />
             <div className="min-w-0 flex-1">
