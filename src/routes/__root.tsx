@@ -17,6 +17,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
 
 function useNativeViewportLock() {
@@ -227,10 +228,12 @@ function RootComponent() {
       <ThemeProvider>
         <AccentProvider>
           <AppSettingsProvider>
-            <OfflineBanner />
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-            <Toaster position="top-center" />
+            <ProUpgradeSheetProvider>
+              <OfflineBanner />
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+              <Toaster position="top-center" />
+            </ProUpgradeSheetProvider>
           </AppSettingsProvider>
         </AccentProvider>
       </ThemeProvider>

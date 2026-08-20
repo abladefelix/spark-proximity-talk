@@ -7,6 +7,7 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useChatSheet } from "@/components/ChatSheet";
+import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -49,6 +50,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   const sendPush = useServerFn(sendPushNotification);
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
+  const { open: openPro } = useProUpgradeSheet();
   const settings = useSettings();
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
@@ -143,6 +145,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       if (mine >= billing.free_messages_per_match) {
         toast.error(
           `Free chats are limited to ${billing.free_messages_per_match} messages. Upgrade to keep chatting.`,
+          { action: { label: "Go Pro", onClick: () => openPro() } },
         );
         return;
       }

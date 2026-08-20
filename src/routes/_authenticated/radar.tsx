@@ -36,6 +36,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
+import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
@@ -133,6 +134,7 @@ function RadarPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+  const { open: openPro } = useProUpgradeSheet();
 
 
 
@@ -752,7 +754,7 @@ function RadarPage() {
               if (!next && !isPro) {
                 toast.error("Going invisible is a Pro feature", {
                   description: "Upgrade to hide your beacon while you scan.",
-                  action: { label: "Go Pro", onClick: () => navigate({ to: "/profile" }) },
+                  action: { label: "Go Pro", onClick: () => openPro() },
                 });
                 return;
               }
@@ -806,6 +808,11 @@ function RadarPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
+
+
+
 
 
 
