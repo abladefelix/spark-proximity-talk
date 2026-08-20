@@ -1014,7 +1014,11 @@ function RadarPage() {
                 </DialogTitle>
                 <DialogDescription>
                   @{selected.username} · {formatDistance(selected.distance_m)}
+                  {selected.bearing_deg != null && Number.isFinite(Number(selected.bearing_deg))
+                    ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
+                    : ""}
                   {selected.is_online ? " · active now" : ""}
+                  {accuracyM != null && accuracyM > 100 ? " · low GPS accuracy" : ""}
                 </DialogDescription>
               </DialogHeader>
 
