@@ -228,10 +228,12 @@ function RootComponent() {
       <ThemeProvider>
         <AccentProvider>
           <AppSettingsProvider>
-            <OfflineBanner />
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-            <Toaster position="top-center" />
+            <ProUpgradeSheetProvider>
+              <OfflineBanner />
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+              <Toaster position="top-center" />
+            </ProUpgradeSheetProvider>
           </AppSettingsProvider>
         </AccentProvider>
       </ThemeProvider>
