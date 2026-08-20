@@ -578,54 +578,43 @@ function RadarPage() {
     const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
     const limit = scope * 0.46 - layerSize / 2;
 
-    const nodes = people.map((person) => {
-      // True geographic placement: north is up, bearing runs clockwise.
-      let bearing = person.bearing_deg;
-      if (bearing == null || !Number.isFinite(bearing)) {
-        // Only used if the server could not resolve a bearing.
-        let hash = 0;
-        for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
-        bearing = (hash >>> 0) % 360;
-      }
-      const rad = (Number(bearing) * Math.PI) / 180;
-      const rr = Math.min(1, person.distance_m / viewMax) * limit;
-      return { person, x: Math.sin(rad) * rr, y: -Math.cos(rad) * rr };
-    });
+    const nodes = people
+      .filter((p) => p.bearing_deg != null && Number.isFinite(Number(p.bearing_deg)))
+      .map((person) => {
+        // True geographic placement: north is up, bearing runs clockwise, and
+        // the radius is the real distance scaled against the scan range.
+        const bearing = Number(person.bearing_deg);
+        const rad = (bearing * Math.PI) / 180;
+        const rr = Math.max(
+          layerSize * 0.6,
+          Math.min(1, person.distance_m / viewMax) * limit,
+        );
+        return { person, bearing, radius: rr, angle: rad };
+      });
 
-    // Minimum separation shrinks with zoom in layer units, i.e. stays a fixed
-    // finger-friendly distance on screen while the map underneath expands.
+    // De-crowding is tangential only: people keep their exact distance ring and
+    // slide sideways just far enough to stay tappable, so the direction you
+    // read off the radar stays truthful.
     const minGap = (size + 6) / z;
-    for (let iter = 0; iter < 80; iter++) {
+    for (let iter = 0; iter < 60; iter++) {
       let moved = false;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const a = nodes[i]!;
           const b = nodes[j]!;
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let d = Math.hypot(dx, dy);
-          if (d === 0) {
-            dx = Math.cos(i * 2.4) * 0.01;
-            dy = Math.sin(i * 2.4) * 0.01;
-            d = 0.01;
-          }
-          if (d < minGap) {
-            const push = (minGap - d) / 2;
-            const ux = dx / d;
-            const uy = dy / d;
-            a.x -= ux * push;
-            a.y -= uy * push;
-            b.x += ux * push;
-            b.y += uy * push;
-            moved = true;
-          }
-        }
-      }
-      for (const n of nodes) {
-        const d = Math.hypot(n.x, n.y);
-        if (d > limit) {
-          n.x = (n.x / d) * limit;
-          n.y = (n.y / d) * limit;
+          const ax = Math.sin(a.angle) * a.radius;
+          const ay = -Math.cos(a.angle) * a.radius;
+          const bx = Math.sin(b.angle) * b.radius;
+          const by = -Math.cos(b.angle) * b.radius;
+          const d = Math.hypot(bx - ax, by - ay);
+          if (d >= minGap) continue;
+          const arc = Math.max(1, Math.min(a.radius, b.radius));
+          let delta = ((b.angle - a.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+          if (Math.abs(delta) < 1e-4) delta = (i % 2 === 0 ? 1 : -1) * 1e-4;
+          const need = ((minGap - d) / arc) * 0.5 * Math.sign(delta);
+          a.angle -= need;
+          b.angle += need;
+          moved = true;
         }
       }
       if (!moved) break;
@@ -636,11 +625,13 @@ function RadarPage() {
       markerScale: 1 / z,
       beacons: nodes.map((n) => ({
         person: n.person,
-        left: `calc(50% + ${n.x}px)`,
-        top: `calc(50% + ${n.y}px)`,
+        bearing: n.bearing,
+        left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
+        top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
       })),
     };
   }, [people, scopeSize, radius, zoom]);
+
 
 
 
