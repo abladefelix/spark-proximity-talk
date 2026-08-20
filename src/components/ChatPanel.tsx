@@ -50,6 +50,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   const sendPush = useServerFn(sendPushNotification);
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
+  const { open: openPro } = useProUpgradeSheet();
   const settings = useSettings();
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
