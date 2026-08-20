@@ -155,7 +155,7 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    let lastPublished: { lat: number; lng: number; at: number } | null = null;
+    let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
       const R = 6371000;
       const dLat = ((bLat - aLat) * Math.PI) / 180;
@@ -166,10 +166,34 @@ function RadarPage() {
         Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
       return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
     };
-    const push = async (coords: { latitude: number; longitude: number }, force = false) => {
+    const push = async (
+      coords: { latitude: number; longitude: number; accuracy?: number | null },
+      force = false,
+    ) => {
       if (cancelled) return;
-      lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
+      const accuracy =
+        typeof coords.accuracy === "number" && Number.isFinite(coords.accuracy)
+          ? coords.accuracy
+          : 9999;
+
+      // Accuracy gate: a coarse wifi/IP fix can sit hundreds of metres away and
+      // would place this person in completely the wrong direction for everyone
+      // else. Never let one overwrite a recent precise GPS fix.
+      if (
+        lastPublished &&
+        accuracy > Math.max(60, lastPublished.accuracy * 2.5) &&
+        Date.now() - lastPublished.at < 120000
+      ) {
+        return;
+      }
+
+      lastCoords.current = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy,
+      };
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
+      setAccuracyM(accuracy === 9999 ? null : accuracy);
 
       // Movement filter: publish whenever the person actually moved a few
       // metres, otherwise fall back to the slower presence heartbeat. This
@@ -183,6 +207,7 @@ function RadarPage() {
         );
         if (moved < 4 && Date.now() - lastPublished.at < 15000) return;
       }
+
 
       // Use the locally cached session: a network round-trip here (getUser)
       // can hang on flaky mobile networks and silently kill the heartbeat.
