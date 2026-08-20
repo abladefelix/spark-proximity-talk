@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAvatarUrl } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
+import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 
 export type Gender = "male" | "female" | "other" | null | undefined;
 
@@ -11,47 +12,6 @@ type Props = {
   gender?: Gender;
   className?: string;
 };
-
-function GenderGlyph({ gender, className }: { gender: Gender; className?: string }) {
-  if (gender === "male") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-        <circle cx="10" cy="14" r="5.2" stroke="currentColor" strokeWidth="1.8" />
-        <path
-          d="M14.8 9.2 20 4m0 0h-4.6M20 4v4.6"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
-  if (gender === "female") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-        <circle cx="12" cy="9" r="5.2" stroke="currentColor" strokeWidth="1.8" />
-        <path
-          d="M12 14.2V21M9 18.2h6"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <circle cx="12" cy="8.5" r="3.8" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M4.8 20c.9-3.6 3.7-5.6 7.2-5.6s6.3 2 7.2 5.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 const genderTint: Record<string, string> = {
   male: "bg-sky-500/15 text-sky-500 dark:text-sky-400",
