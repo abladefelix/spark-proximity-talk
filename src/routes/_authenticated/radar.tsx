@@ -293,7 +293,7 @@ function RadarPage() {
           lastCoords.current = {
             latitude: parsed.latitude,
             longitude: parsed.longitude,
-            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : null,
+            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : undefined,
           };
         }
       } catch {
@@ -638,34 +638,6 @@ function RadarPage() {
         );
         return { person, bearing, radius: rr, angle: rad };
       });
-
-    // De-crowding is tangential only: people keep their exact distance ring and
-    // slide sideways just far enough to stay tappable, so the direction you
-    // read off the radar stays truthful.
-    const minGap = (size + 3) / z;
-    for (let iter = 0; iter < 60; iter++) {
-      let moved = false;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]!;
-          const b = nodes[j]!;
-          const ax = Math.sin(a.angle) * a.radius;
-          const ay = -Math.cos(a.angle) * a.radius;
-          const bx = Math.sin(b.angle) * b.radius;
-          const by = -Math.cos(b.angle) * b.radius;
-          const d = Math.hypot(bx - ax, by - ay);
-          if (d >= minGap) continue;
-          const arc = Math.max(1, Math.min(a.radius, b.radius));
-          let delta = ((b.angle - a.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-          if (Math.abs(delta) < 1e-4) delta = (i % 2 === 0 ? 1 : -1) * 1e-4;
-          const need = ((minGap - d) / arc) * 0.5 * Math.sign(delta);
-          a.angle -= need;
-          b.angle += need;
-          moved = true;
-        }
-      }
-      if (!moved) break;
-    }
 
     return {
       beaconSize: size,
