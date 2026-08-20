@@ -54,21 +54,21 @@ type BubbleProps = {
 
 /** Memoized so a new message never re-renders the whole transcript. */
 const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
-  const corner = `rounded-[20px] ${lastOfGroup ? (mine ? "rounded-br-[7px]" : "rounded-bl-[7px]") : ""}`;
+  const corner = `rounded-[18px] ${lastOfGroup ? (mine ? "rounded-br-[6px]" : "rounded-bl-[6px]") : ""}`;
   const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
 
   return (
-    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_56px]">
+    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px]">
       {newDay && (
-        <div className="my-4 flex justify-center">
-          <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+        <div className="my-3 flex justify-center">
+          <span className="rounded-full bg-secondary/70 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
             {dayLabel(m.created_at)}
           </span>
         </div>
       )}
 
       <div
-        className={`flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
+        className={`flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-10" : "justify-start pr-10"}`}
       >
         <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
           {m.kind === "image" ? (
@@ -82,14 +82,14 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: B
                 <img
                   src={m.mediaUrl}
                   alt="Shared in chat"
-                  className="max-h-72 w-full object-cover"
+                  className="max-h-64 w-full object-cover"
                   loading="lazy"
                   decoding="async"
                 />
               </a>
             ) : (
               <div
-                className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}
+                className={`flex h-32 w-48 items-center justify-center ${corner} bg-secondary text-[11px] text-muted-foreground`}
               >
                 Picture unavailable
               </div>
@@ -99,18 +99,18 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: B
               href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center gap-2 px-4 py-2.5 text-[15px] ${corner} ${skin}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[14px] ${corner} ${skin}`}
             >
-              <MapPin className="size-4" />
+              <MapPin className="size-3.5" />
               <span>Meet-up pin</span>
             </a>
           ) : (
-            <div className={`px-3.5 py-[7px] ${corner} ${skin}`}>
-              <p className="whitespace-pre-wrap break-words text-[16px] leading-[1.35]">{m.content}</p>
+            <div className={`px-3 py-[6px] ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.35]">{m.content}</p>
             </div>
           )}
           {lastOfGroup && (
-            <span className="mt-[3px] px-1 text-[10.5px] leading-none text-muted-foreground">
+            <span className="mt-[2px] px-1 text-[10px] leading-none text-muted-foreground">
               {timeLabel(m.created_at)}
             </span>
           )}
@@ -288,7 +288,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     const el = inputRef.current;
     if (!el) return;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 108)}px`;
   }, [text]);
 
   async function send(e?: React.FormEvent) {
@@ -384,87 +384,87 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
 
   return (
     <div className={className ?? "flex h-full min-h-0 flex-col"}>
-      {/* Header */}
-      <header
-        className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background px-1.5 pb-2"
-        style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
-      >
-        <button
-          type="button"
-          onClick={closeChat}
-          aria-label="Back"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-primary transition active:scale-90"
-        >
-          <ChevronLeft className="size-7" strokeWidth={2.5} />
-        </button>
-
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <PersonAvatar
-            path={other?.avatar_url}
-            name={other?.display_name}
-            username={other?.username ?? "?"}
-            gender={other?.gender as import("@/components/PersonAvatar").Gender}
-            className="size-9 rounded-full"
-          />
-          <div className="min-w-0">
-            <p className="flex items-center gap-1 truncate text-[16px] font-semibold leading-tight tracking-[-0.01em]">
-              {name}
-              {other?.verified && <VerifiedBadge className="size-3.5" />}
-            </p>
-            <p className="truncate text-[11.5px] leading-tight text-muted-foreground">
-              {other ? lastSeenLabel(other.last_seen) : ""}
-            </p>
-          </div>
-        </div>
-
-        <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
-      </header>
-
-      {/* Transcript */}
+      {/* Scrollable area; the header is sticky so it stays pinned while messages scroll. */}
       <div
         ref={scrollRef}
         data-scrollable
         data-selectable
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3 pt-4 [transform:translateZ(0)]"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [transform:translateZ(0)]"
         style={{ WebkitOverflowScrolling: "touch", contain: "layout paint" }}
       >
-        <div className="mt-auto" />
+        {/* Header pinned at the top of the chat. */}
+        <header
+          className="sticky top-0 z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background px-1.5 pb-2"
+          style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
+        >
+          <button
+            type="button"
+            onClick={closeChat}
+            aria-label="Back"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary transition active:scale-90"
+          >
+            <ChevronLeft className="size-6" strokeWidth={2.5} />
+          </button>
 
-        <div className="mb-6 flex flex-col items-center px-8 text-center">
-          <PersonAvatar
-            path={other?.avatar_url}
-            name={other?.display_name}
-            username={other?.username ?? "?"}
-            gender={other?.gender as import("@/components/PersonAvatar").Gender}
-            className="size-16 rounded-full"
-          />
-          <p className="mt-2.5 text-[15px] font-semibold leading-tight">{other ? name : ""}</p>
-          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
-            You both signalled nearby — this conversation stays between you two.
-          </p>
-        </div>
-
-        {hasMore && (
-          <div className="mb-3 flex justify-center">
-            <button
-              type="button"
-              onClick={loadEarlier}
-              className="rounded-full bg-secondary px-3.5 py-1.5 text-[12px] font-medium text-muted-foreground transition active:scale-95"
-            >
-              Load earlier messages
-            </button>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <PersonAvatar
+              path={other?.avatar_url}
+              name={other?.display_name}
+              username={other?.username ?? "?"}
+              gender={other?.gender as import("@/components/PersonAvatar").Gender}
+              className="size-8 rounded-full"
+            />
+            <div className="min-w-0">
+              <p className="flex items-center gap-1 truncate text-[15px] font-semibold leading-tight tracking-[-0.01em]">
+                {name}
+                {other?.verified && <VerifiedBadge className="size-3" />}
+              </p>
+              <p className="truncate text-[11px] leading-tight text-muted-foreground">
+                {other ? lastSeenLabel(other.last_seen) : ""}
+              </p>
+            </div>
           </div>
-        )}
 
-        {rows.map((row) => (
-          <Bubble key={row.m.id} {...row} />
-        ))}
+          <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
+        </header>
+
+        <div className="px-3 pb-3 pt-4">
+          <div className="mb-5 flex flex-col items-center px-8 text-center">
+            <PersonAvatar
+              path={other?.avatar_url}
+              name={other?.display_name}
+              username={other?.username ?? "?"}
+              gender={other?.gender as import("@/components/PersonAvatar").Gender}
+              className="size-14 rounded-full"
+            />
+            <p className="mt-2 text-[14px] font-semibold leading-tight">{other ? name : ""}</p>
+            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+              You both signalled nearby — this conversation stays between you two.
+            </p>
+          </div>
+
+          {hasMore && (
+            <div className="mb-3 flex justify-center">
+              <button
+                type="button"
+                onClick={loadEarlier}
+                className="rounded-full bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground transition active:scale-95"
+              >
+                Load earlier messages
+              </button>
+            </div>
+          )}
+
+          {rows.map((row) => (
+            <Bubble key={row.m.id} {...row} />
+          ))}
+        </div>
       </div>
 
-      {/* Composer */}
+      {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2"
+        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
       >
         <input
           ref={fileRef}
@@ -482,12 +482,12 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           aria-label="Upload a picture"
           disabled={uploading}
           onClick={() => fileRef.current?.click()}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
         >
-          {uploading ? <LoaderCircle className="size-5 animate-spin" /> : <ImagePlus className="size-[22px]" />}
+          {uploading ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-[20px]" />}
         </button>
 
-        <div className="flex min-w-0 flex-1 items-end rounded-[20px] bg-secondary px-3.5 py-[7px]">
+        <div className="flex min-w-0 flex-1 items-end rounded-[18px] bg-secondary px-3 py-[6px]">
           <textarea
             ref={inputRef}
             value={text}
@@ -495,7 +495,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             placeholder={settings.chat_prompt_text}
             rows={1}
             maxLength={settings.max_message_len}
-            className="max-h-[120px] w-full resize-none border-0 bg-transparent p-0 text-[16px] leading-[1.35] outline-none placeholder:text-muted-foreground/70"
+            className="max-h-[108px] w-full resize-none border-0 bg-transparent p-0 text-[14px] leading-[1.35] outline-none placeholder:text-muted-foreground/70"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -516,11 +516,10 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             e.preventDefault();
             void send();
           }}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
         >
-          <ArrowUp className="size-5" strokeWidth={2.5} />
+          <ArrowUp className="size-4" strokeWidth={2.5} />
         </button>
-
       </form>
     </div>
   );
