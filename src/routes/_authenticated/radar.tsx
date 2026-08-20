@@ -479,7 +479,7 @@ function RadarPage() {
   // Auto-fitting layout. Beacons keep a constant on-screen size and gap, so
   // pinching to zoom genuinely expands the map and pulls crowded people apart
   // instead of stacking them.
-  const { beacons, beaconSize } = useMemo(() => {
+  const { beacons, beaconSize, markerScale } = useMemo(() => {
     const scope = scopeSize || 320;
     const count = people.length;
     const z = Math.max(1, zoom);
@@ -542,7 +542,8 @@ function RadarPage() {
     }
 
     return {
-      beaconSize: layerSize,
+      beaconSize: size,
+      markerScale: 1 / z,
       beacons: nodes.map((n) => ({
         person: n.person,
         left: `calc(50% + ${n.x}px)`,
@@ -773,7 +774,11 @@ function RadarPage() {
             >
               <span
                 className="relative flex items-center justify-center"
-                style={{ width: beaconSize, height: beaconSize }}
+                style={{
+                  width: beaconSize,
+                  height: beaconSize,
+                  transform: `scale(${markerScale})`,
+                }}
               >
                 {(() => {
                   const token = genderToken(person.gender);
