@@ -53,7 +53,7 @@ type BubbleProps = {
 };
 
 /** Memoized so a new message never re-renders the whole transcript. */
-const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
+const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
   // WhatsApp-style geometry: small 8px radius, a pointed tail only on the
   // first bubble of a run, and the timestamp tucked inside the bubble.
   const tail = !grouped;
