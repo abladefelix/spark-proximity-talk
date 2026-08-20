@@ -896,19 +896,6 @@ export type Database = {
         }[]
       }
       claim_first_admin: { Args: never; Returns: boolean }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_match_member: {
-        Args: { _match_id: string; _user_id: string }
-        Returns: boolean
-      }
-      is_pro: { Args: { _user_id: string }; Returns: boolean }
-      is_staff: { Args: { _user_id: string }; Returns: boolean }
       my_profile_private: {
         Args: never
         Returns: {
