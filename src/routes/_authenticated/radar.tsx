@@ -947,8 +947,35 @@ function RadarPage() {
           <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
         )}
 
+        {/* Facing indicator: fixed to the screen, marks the way you are pointed. */}
+        {compassActive && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-[6%] size-0 -translate-x-1/2 border-x-[6px] border-b-[10px] border-x-transparent border-b-primary/70"
+          />
+        )}
 
-
+        <button
+          type="button"
+          onClick={() => {
+            if (needsPermission) {
+              void requestCompass().then((ok) => {
+                if (ok) setHeadingUp(true);
+                else toast.error("Compass access was declined");
+              });
+              return;
+            }
+            setHeadingUp((v) => !v);
+          }}
+          className="absolute bottom-[6%] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur"
+        >
+          <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+          {needsPermission
+            ? "Enable compass"
+            : compassActive
+              ? `Facing ${compassPoint(heading as number)}`
+              : "North up"}
+        </button>
 
         {nearby.isLoading && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
