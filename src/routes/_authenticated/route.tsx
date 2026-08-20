@@ -31,6 +31,7 @@ function AuthedLayout() {
   useNotifications(user?.id ?? null);
 
   return (
+    <BiometricGate>
     <ChatSheetProvider>
       <PushManager userId={user?.id ?? null} />
       <div
