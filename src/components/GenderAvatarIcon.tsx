@@ -4,8 +4,9 @@ export type AvatarGender = "male" | "female" | "other" | null | undefined;
 
 /**
  * Hair-silhouette beacon icons for the radar.
- * Bold, filled shapes so male (short hair), female (long hair), and neutral
- * read instantly inside the glowing ring.
+ * Bold, filled shapes so male (short hair) and female (long hair) read
+ * instantly inside the glowing ring. Neutral gender is intentionally bare —
+ * only the glow ring marks the beacon.
  */
 export function GenderAvatarIcon({
   gender,
@@ -52,16 +53,7 @@ export function GenderAvatarIcon({
     );
   }
 
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={cn(className)}
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      {/* neutral simple head & shoulders */}
-      <circle cx="12" cy="9.2" r="4.1" />
-      <path d="M12 14.4c-3.6 0-6.6 2.4-7.3 5.6-.2.9.5 1.8 1.5 1.8h11.6c1 0 1.7-.9 1.5-1.8-.7-3.2-3.7-5.6-7.3-5.6Z" />
-    </svg>
-  );
+  // Neutral gender intentionally has no icon inside the beacon; the glow ring is enough.
+  return null;
 }
+
