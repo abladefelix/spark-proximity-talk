@@ -565,6 +565,9 @@ function RadarPage() {
     };
   }, [people, scopeSize, radius, zoom]);
 
+  const clusterMembers = clusters.find((c) => c.key === clusterKey)?.members ?? [];
+
+
   // ---- Zoom & pan on the radar scope -------------------------------------
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 6;
