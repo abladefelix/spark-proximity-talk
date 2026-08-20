@@ -41,6 +41,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
 import { useSettings } from "@/hooks/useAppSettings";
+import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 
 
