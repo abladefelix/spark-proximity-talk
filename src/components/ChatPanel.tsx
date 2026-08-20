@@ -502,17 +502,16 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             event.target.value = "";
           }}
         />
-        <button
-          type="button"
-          aria-label="Upload a picture"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
-        >
-          {uploading ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-[20px]" />}
-        </button>
-
-        <div className="flex min-w-0 flex-1 items-end rounded-[18px] bg-secondary px-3 py-[6px]">
+        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[22px] bg-card px-2 py-[6px] shadow-sm ring-1 ring-border/50">
+          <button
+            type="button"
+            aria-label="Upload a picture"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
+          >
+            {uploading ? <LoaderCircle className="size-[18px] animate-spin" /> : <ImagePlus className="size-[19px]" />}
+          </button>
           <textarea
             ref={inputRef}
             value={text}
@@ -520,7 +519,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             placeholder={settings.chat_prompt_text}
             rows={1}
             maxLength={settings.max_message_len}
-            className="max-h-[108px] w-full resize-none border-0 bg-transparent p-0 text-[14px] leading-[1.35] outline-none placeholder:text-muted-foreground/70"
+            className="max-h-[108px] w-full resize-none border-0 bg-transparent py-[5px] pr-1 text-[15px] leading-[1.3] outline-none placeholder:text-muted-foreground/70"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -541,10 +540,11 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             e.preventDefault();
             void send();
           }}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
+          className="mb-[1px] flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition active:scale-90 disabled:opacity-40"
         >
-          <ArrowUp className="size-4" strokeWidth={2.5} />
+          <ArrowUp className="size-[18px]" strokeWidth={2.5} />
         </button>
+
       </form>
     </div>
   );
