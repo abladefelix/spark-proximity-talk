@@ -792,11 +792,16 @@ function RadarPage() {
                           className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
                         />
                       )}
-                      {/* the dot */}
+                      {/* gendered avatar marker */}
                       <span
-                        className={`relative z-10 rounded-full ring-2 ring-background heartbeat-glow ${dotClass}`}
-                        style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
-                      />
+                        className={`relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`}
+                        style={{ width: beaconSize * 0.62, height: beaconSize * 0.62 }}
+                      >
+                        <GenderAvatarIcon
+                          gender={person.gender}
+                          className={`h-[76%] w-[76%] ${iconClass}`}
+                        />
+                      </span>
                     </>
                   );
                 })()}
