@@ -13,7 +13,6 @@ import {
   Flag,
   MapPin,
   Compass,
-  Ruler,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -626,7 +625,7 @@ function RadarPage() {
     request: requestCompass,
     calibrating,
   } = useCompassHeading(true);
-  const { unit, toggleUnit } = useDistanceUnit();
+  const { unit } = useDistanceUnit();
   const compassActive = headingUp && heading != null;
   const compassCalibrating = headingUp && calibrating;
   const rot = compassActive ? -(heading as number) : 0;
@@ -1094,16 +1093,6 @@ function RadarPage() {
             : compassActive
               ? `Facing ${compassPoint(heading as number)}`
               : "North up"}
-      </button>
-
-      {/* Distance unit toggle: metres/kilometres or feet/miles. */}
-      <button
-        type="button"
-        onClick={toggleUnit}
-        className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
-      >
-        <Ruler className="size-3.5 text-primary" />
-        {unit === "imperial" ? "Feet / miles" : "Metres / km"}
       </button>
 
       {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
