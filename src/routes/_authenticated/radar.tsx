@@ -604,7 +604,7 @@ function RadarPage() {
     // De-crowding is tangential only: people keep their exact distance ring and
     // slide sideways just far enough to stay tappable, so the direction you
     // read off the radar stays truthful.
-    const minGap = (size + 6) / z;
+    const minGap = (size + 3) / z;
     for (let iter = 0; iter < 60; iter++) {
       let moved = false;
       for (let i = 0; i < nodes.length; i++) {
