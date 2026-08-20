@@ -830,8 +830,8 @@ function RadarPage() {
               </span>
 
             </button>
-            );
-          })}
+          ))}
+
 
         </div>
 
