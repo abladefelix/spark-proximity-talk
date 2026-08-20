@@ -5,6 +5,7 @@ import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { BiometricGate } from "@/components/BiometricGate";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
