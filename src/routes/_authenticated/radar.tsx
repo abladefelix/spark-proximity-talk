@@ -36,7 +36,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
-import { ProUpgradeCard } from "@/components/ProUpgradeCard";
+import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
