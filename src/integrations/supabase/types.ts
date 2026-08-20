@@ -666,6 +666,22 @@ export type Database = {
         }[]
       }
       admin_exists: { Args: never; Returns: boolean }
+      admin_maintenance_overview: {
+        Args: never
+        Returns: {
+          empty_matches: number
+          expired_signals: number
+          old_notifications: number
+          old_reports: number
+          stale_locations: number
+        }[]
+      }
+      admin_purge_empty_matches: { Args: { _days?: number }; Returns: number }
+      admin_purge_old_notifications: {
+        Args: { _days?: number }
+        Returns: number
+      }
+      admin_purge_old_reports: { Args: { _days?: number }; Returns: number }
       admin_purge_stale_locations: { Args: never; Returns: number }
       admin_review_reactivation: {
         Args: { _approve: boolean; _id: string }

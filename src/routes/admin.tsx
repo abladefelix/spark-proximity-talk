@@ -27,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -280,6 +281,32 @@ function AdminPage() {
     },
   });
 
+  const { data: maint } = useQuery({
+    queryKey: ["admin-maintenance"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await (
+        supabase.rpc as unknown as (
+          name: string,
+        ) => Promise<{
+          data:
+            | {
+                expired_signals: number;
+                stale_locations: number;
+                empty_matches: number;
+                old_notifications: number;
+                old_reports: number;
+              }[]
+            | null;
+          error: { message: string } | null;
+        }>
+      )("admin_maintenance_overview");
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
+
   const { data: people = [] } = useQuery({
     queryKey: ["admin-people"],
     enabled: isStaff,
@@ -390,6 +417,7 @@ function AdminPage() {
       "admin-appeals",
 
       "admin-access",
+      "admin-maintenance",
     ]) {
       queryClient.invalidateQueries({ queryKey: [key] });
     }
@@ -507,6 +535,22 @@ function AdminPage() {
     refreshAll();
   }
 
+  async function runMaintenance(fn: string, label: string, args?: Record<string, unknown>) {
+    const { data, error } = await (
+      supabase.rpc as unknown as (
+        name: string,
+        params?: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>
+    )(fn, args);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(typeof data === "number" ? `${label}: ${data} removed` : label);
+    refreshAll();
+  }
+
+
   async function setBanned(userId: string, banned: boolean) {
     const reason = banned
       ? (window.prompt("Reason for the ban (shown to them)") ?? "").trim()
@@ -601,14 +645,64 @@ function AdminPage() {
                 Maintenance
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Cleanup jobs
+              </DropdownMenuLabel>
               <DropdownMenuItem onSelect={() => void purgeSignals()}>
-                Purge expired signals
+                <span className="flex-1">Purge expired signals</span>
+                <span className="text-xs text-muted-foreground">{maint?.expired_signals ?? 0}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void purgeLocations()}>
-                Clear stale locations
+                <span className="flex-1">Clear stale locations</span>
+                <span className="text-xs text-muted-foreground">{maint?.stale_locations ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_empty_matches", "Empty matches", { _days: 3 })
+                }
+              >
+                <span className="flex-1">Clear empty matches (3d+)</span>
+                <span className="text-xs text-muted-foreground">{maint?.empty_matches ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_old_notifications", "Old notifications", {
+                    _days: 30,
+                  })
+                }
+              >
+                <span className="flex-1">Clear notifications (30d+)</span>
+                <span className="text-xs text-muted-foreground">
+                  {maint?.old_notifications ?? 0}
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_old_reports", "Old reports", { _days: 90 })
+                }
+              >
+                <span className="flex-1">Clear reports (90d+)</span>
+                <span className="text-xs text-muted-foreground">{maint?.old_reports ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => void purgeOldChats()}>
+                Purge chats past history limit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  void purgeSignals();
+                  void purgeLocations();
+                  void runMaintenance("admin_purge_empty_matches", "Empty matches", { _days: 3 });
+                  void runMaintenance("admin_purge_old_notifications", "Old notifications", {
+                    _days: 30,
+                  });
+                }}
+              >
+                Run all routine jobs
               </DropdownMenuItem>
             </DropdownMenuContent>
+
           </DropdownMenu>
         </div>
       </div>
