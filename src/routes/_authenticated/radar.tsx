@@ -84,6 +84,10 @@ type NearbyPerson = {
   verified: boolean;
   is_online: boolean;
   gender: "male" | "female" | "other" | null;
+  /** True compass bearing from me to them, 0 = north, clockwise. */
+  bearing_deg?: number | null;
+  /** Seconds since their location was last published. */
+  updated_age_s?: number | null;
 };
 
 function formatDistance(m: number) {
