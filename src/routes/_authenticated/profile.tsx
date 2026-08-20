@@ -76,7 +76,15 @@ function ProfilePage() {
     queryFn: async () => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) return null;
-      const { data } = await supabase.from("profiles").select("*").eq("id", me).maybeSingle();
+      // Private columns (ban state, date of birth) are not readable directly;
+      // they come from the my_profile_private RPC where needed.
+      const { data } = await supabase
+        .from("profiles")
+        .select(
+          "id, username, display_name, bio, avatar_url, verified, gender, chat_background, radar_sound, radar_tone, last_seen, created_at, updated_at",
+        )
+        .eq("id", me)
+        .maybeSingle();
       return data;
     },
   });
