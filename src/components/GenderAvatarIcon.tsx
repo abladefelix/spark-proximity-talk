@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 export type AvatarGender = "male" | "female" | "other" | null | undefined;
 
 /**
- * Modern gender-symbol beacon icons for the radar.
- * Simple, bold glyphs so male/female/neutral read instantly at small sizes.
+ * Bold, filled gender-symbol beacon icons for the radar.
+ * Designed to read instantly at small sizes inside a glowing ring.
  */
 export function GenderAvatarIcon({
   gender,
@@ -18,17 +18,14 @@ export function GenderAvatarIcon({
       <svg
         viewBox="0 0 24 24"
         className={cn(className)}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
         aria-hidden="true"
       >
-        <circle cx="9.5" cy="14.5" r="5.5" />
-        <path d="M20 6 14.5 11.5" />
-        <path d="M20 6h-5" />
-        <path d="M20 6v5" />
+        {/* bold filled male symbol: circle + arrow */}
+        <circle cx="9.5" cy="14.5" r="4.8" />
+        <path d="M19.2 5.5 14.1 10.6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M19.2 5.5V10" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M19.2 5.5H14.7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
       </svg>
     );
   }
@@ -38,16 +35,13 @@ export function GenderAvatarIcon({
       <svg
         viewBox="0 0 24 24"
         className={cn(className)}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
         aria-hidden="true"
       >
-        <circle cx="12" cy="9.5" r="5.5" />
-        <path d="M12 15v6" />
-        <path d="M9 19h6" />
+        {/* bold filled female symbol: circle + cross */}
+        <circle cx="12" cy="9.5" r="4.8" />
+        <path d="M12 14.3V20" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M9.4 17.15H14.6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
       </svg>
     );
   }
@@ -56,16 +50,13 @@ export function GenderAvatarIcon({
     <svg
       viewBox="0 0 24 24"
       className={cn(className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill="currentColor"
       aria-hidden="true"
     >
-      <circle cx="12" cy="9.5" r="5.5" />
-      <path d="M12 15v5" />
-      <path d="m9 20 3-1 3 1" />
+      {/* bold filled neutral/transgender symbol */}
+      <circle cx="12" cy="9.5" r="4.8" />
+      <path d="M12 14.3V20" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M9.4 19.2 12 17.2 14.6 19.2" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
