@@ -555,6 +555,7 @@ export type Database = {
           banned: boolean
           banned_at: string | null
           banned_reason: string | null
+          beacon_style: string
           bio: string | null
           chat_background: string | null
           created_at: string
@@ -574,6 +575,7 @@ export type Database = {
           banned?: boolean
           banned_at?: string | null
           banned_reason?: string | null
+          beacon_style?: string
           bio?: string | null
           chat_background?: string | null
           created_at?: string
@@ -593,6 +595,7 @@ export type Database = {
           banned?: boolean
           banned_at?: string | null
           banned_reason?: string | null
+          beacon_style?: string
           bio?: string | null
           chat_background?: string | null
           created_at?: string
