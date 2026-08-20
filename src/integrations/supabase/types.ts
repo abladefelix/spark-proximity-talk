@@ -921,7 +921,9 @@ export type Database = {
       nearby_people: {
         Args: { radius_m?: number }
         Returns: {
+          accuracy_m: number
           avatar_url: string
+          bearing_deg: number
           bio: string
           display_name: string
           distance_m: number
@@ -931,6 +933,7 @@ export type Database = {
           is_online: boolean
           match_id: string
           they_signaled: boolean
+          updated_age_s: number
           username: string
           verified: boolean
         }[]
