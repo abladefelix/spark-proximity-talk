@@ -83,23 +83,52 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     },
   });
 
-  const { data: messages = [] } = useQuery({
-    queryKey: ["messages", matchId],
+  // Only the most recent slice is rendered; older history loads on demand so a
+  // long conversation never mounts thousands of nodes at once.
+  const PAGE = 40;
+  const [limit, setLimit] = useState(PAGE);
+  // Signed URLs are expensive to mint, so reuse them across refetches.
+  const signedCache = useRef(new Map<string, string>());
+
+  const signImages = useCallback(async (rows: Message[]) => {
+    const missing = rows
+      .filter((m) => m.kind === "image" && !signedCache.current.has(m.content))
+      .map((m) => m.content);
+    if (missing.length) {
+      const { data: signed } = await supabase.storage
+        .from("chat-media")
+        .createSignedUrls(missing, 3600);
+      for (const item of signed ?? []) {
+        if (item.signedUrl) signedCache.current.set(item.path, item.signedUrl);
+      }
+    }
+    return rows.map((m) =>
+      m.kind === "image" ? { ...m, mediaUrl: signedCache.current.get(m.content) } : m,
+    );
+  }, []);
+
+  const { data: page } = useQuery({
+    queryKey: ["messages", matchId, limit],
+    // Keep the previous window on screen while a bigger page streams in.
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
         .select("id, sender_id, content, created_at, kind, lat, lng")
         .eq("match_id", matchId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(limit + 1);
       if (error) throw error;
       const rows = (data ?? []) as Message[];
-      const imagePaths = rows.filter((m) => m.kind === "image").map((m) => m.content);
-      if (!imagePaths.length) return rows;
-      const { data: signed } = await supabase.storage.from("chat-media").createSignedUrls(imagePaths, 3600);
-      const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
-      return rows.map((m) => (m.kind === "image" ? { ...m, mediaUrl: urls.get(m.content) } : m));
+      const hasMore = rows.length > limit;
+      const window = (hasMore ? rows.slice(0, limit) : rows).reverse();
+      return { messages: await signImages(window), hasMore };
     },
   });
+
+  const messages = page?.messages ?? [];
+  const hasMore = page?.hasMore ?? false;
 
   useEffect(() => {
     const channel = supabase
@@ -107,13 +136,24 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["messages", matchId] }),
+        async (payload) => {
+          // Append the single new row instead of refetching the whole thread.
+          const row = payload.new as Message;
+          const [withMedia] = await signImages([row]);
+          queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
+            ["messages", matchId, limit],
+            (prev) =>
+              !prev || prev.messages.some((m) => m.id === row.id)
+                ? prev
+                : { ...prev, messages: [...prev.messages, withMedia] },
+          );
+        },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId, queryClient]);
+  }, [matchId, queryClient, limit, signImages]);
 
   // Always keep the newest message in view.
   useLayoutEffect(() => {
