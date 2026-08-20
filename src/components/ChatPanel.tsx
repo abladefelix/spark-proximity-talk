@@ -312,11 +312,26 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       }
     }
     setText("");
-    const { error } = await supabase.from("messages").insert({ match_id: matchId, sender_id: me, content });
+    // Show the bubble immediately; realtime de-dupes by id when the row echoes back.
+    const { data: inserted, error } = await supabase
+      .from("messages")
+      .insert({ match_id: matchId, sender_id: me, content })
+      .select("id, sender_id, content, created_at, kind, lat, lng")
+      .maybeSingle();
     if (error) {
       toast.error("Message didn't send");
       setText(content);
       return;
+    }
+    if (inserted) {
+      const row = inserted as Message;
+      queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
+        ["messages", matchId, limit],
+        (prev) =>
+          !prev || prev.messages.some((m) => m.id === row.id)
+            ? prev
+            : { ...prev, messages: [...prev.messages, row] },
+      );
     }
     if (other?.id) {
       sendPush({
