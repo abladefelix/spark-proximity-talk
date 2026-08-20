@@ -373,6 +373,7 @@ export type Database = {
       }
       locations: {
         Row: {
+          accuracy_m: number | null
           is_visible: boolean
           lat: number
           lng: number
@@ -380,6 +381,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accuracy_m?: number | null
           is_visible?: boolean
           lat: number
           lng: number
@@ -387,6 +389,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accuracy_m?: number | null
           is_visible?: boolean
           lat?: number
           lng?: number

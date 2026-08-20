@@ -92,6 +92,8 @@ type NearbyPerson = {
   bearing_deg?: number | null;
   /** Seconds since their location was last published. */
   updated_age_s?: number | null;
+  /** Horizontal accuracy radius reported by their device. */
+  accuracy_m?: number | null;
   /** Pro members get a priority beacon. */
   is_pro?: boolean | null;
   /** Pro members' chosen beacon colour (null unless they're Pro). */
@@ -100,7 +102,8 @@ type NearbyPerson = {
 
 
 function formatDistance(m: number) {
-  if (m < 1000) return `${Math.max(1, Math.round(m))} m`;
+  if (m < 100) return `${Math.max(0, Math.round(m * 10) / 10).toFixed(1)} m`;
+  if (m < 1000) return `${Math.round(m)} m`;
   return `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`;
 }
 
@@ -170,6 +173,8 @@ function RadarPage() {
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
+    let publishInFlight = false;
+    let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
     const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
       const R = 6371000;
       const dLat = ((bLat - aLat) * Math.PI) / 180;
@@ -190,6 +195,16 @@ function RadarPage() {
           ? coords.accuracy
           : 9999;
 
+      if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) return;
+
+      // Native and WebView providers can report at the same time. Serialize
+      // writes and retain only the newest fix so an older async write cannot
+      // land after a newer one and make the beacon jump backwards.
+      if (publishInFlight) {
+        pendingFix = coords;
+        return;
+      }
+
       // Accuracy gate: a coarse wifi/IP fix can sit hundreds of metres away and
       // would place this person in completely the wrong direction for everyone
       // else. Never let one overwrite a recent precise GPS fix.
@@ -209,9 +224,8 @@ function RadarPage() {
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
       setAccuracyM(accuracy === 9999 ? null : accuracy);
 
-      // Movement filter: publish whenever the person actually moved a few
-      // metres, otherwise fall back to the slower presence heartbeat. This
-      // keeps moving beacons tracking in near real time without spamming.
+      // Track motion promptly. The threshold follows the reported horizontal
+      // uncertainty so stationary GPS noise is not presented as real motion.
       if (!force && lastPublished) {
         const moved = metresBetween(
           lastPublished.lat,
@@ -219,7 +233,8 @@ function RadarPage() {
           coords.latitude,
           coords.longitude,
         );
-        if (moved < 4 && Date.now() - lastPublished.at < 15000) return;
+        const movementFloor = Math.max(1, Math.min(3, accuracy * 0.2));
+        if (moved < movementFloor && Date.now() - lastPublished.at < 5000) return;
       }
 
 
@@ -231,34 +246,43 @@ function RadarPage() {
         myIdRef.current = me;
       }
       if (!me) return;
-      lastPublished = {
-        lat: coords.latitude,
-        lng: coords.longitude,
-        at: Date.now(),
-        accuracy,
-      };
-      const { error } = await supabase.from("locations").upsert(
-        {
-          user_id: me,
+      publishInFlight = true;
+      try {
+        const publishedAt = Date.now();
+        const { error } = await supabase.from("locations").upsert(
+          {
+            user_id: me,
+            lat: coords.latitude,
+            lng: coords.longitude,
+            accuracy_m: accuracy === 9999 ? null : accuracy,
+            is_visible: visible,
+            updated_at: new Date(publishedAt).toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+        if (error) {
+          setGeoError(error.message);
+          return;
+        }
+        lastPublished = {
           lat: coords.latitude,
           lng: coords.longitude,
-          is_visible: visible,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-      if (error) {
-        setGeoError(error.message);
-        return;
+          at: publishedAt,
+          accuracy,
+        };
+        setGeoError(null);
+        setLocated(true);
+        queryClient.invalidateQueries({ queryKey: ["nearby"] });
+      } finally {
+        publishInFlight = false;
+        const next = pendingFix;
+        pendingFix = null;
+        if (next && !cancelled) void push(next);
       }
-      setGeoError(null);
-      setLocated(true);
-      queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
 
-    // Do not leave the radar waiting for the native bridge. A previously
-    // confirmed fix is safe to re-publish immediately while iOS gets a fresh
-    // reading, and prevents a cold/resumed app from appearing offline.
+    // Retain the cached fix only for local continuity. Never publish it: an old
+    // coordinate is worse than a short wait for a fresh high-accuracy fix.
     const cachedLocation = localStorage.getItem("skan-last-location");
     if (cachedLocation) {
       try {
@@ -268,11 +292,13 @@ function RadarPage() {
           accuracy?: unknown;
         };
         if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
-          void push({
+          const cachedAccuracy =
+            typeof parsed.accuracy === "number" ? parsed.accuracy : undefined;
+          lastCoords.current = {
             latitude: parsed.latitude,
             longitude: parsed.longitude,
-            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : null,
-          });
+            ...(cachedAccuracy === undefined ? {} : { accuracy: cachedAccuracy }),
+          };
         }
       } catch {
         localStorage.removeItem("skan-last-location");
@@ -281,9 +307,9 @@ function RadarPage() {
     const refreshFix = () => {
       if (isNative) {
         void Geolocation.getCurrentPosition({
-          enableHighAccuracy: false,
-          maximumAge: 60000,
-          timeout: 30000,
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 15000,
         })
           .then((position) => push(position.coords))
           .catch(() => {
@@ -294,7 +320,7 @@ function RadarPage() {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
-                { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
               );
             }
           });
@@ -302,7 +328,7 @@ function RadarPage() {
         navigator.geolocation.getCurrentPosition(
           (position) => void push(position.coords),
           () => {},
-          { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
         );
       }
     };
@@ -326,12 +352,12 @@ function RadarPage() {
           navigator.geolocation.getCurrentPosition(
             (position) => void push(position.coords),
             () => {},
-            { enableHighAccuracy: false, maximumAge: 300000, timeout: 15000 },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
           );
           browserWatch = navigator.geolocation.watchPosition(
             (position) => void push(position.coords),
             () => {},
-            { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
           );
         }
         try {
@@ -347,7 +373,7 @@ function RadarPage() {
           setAskLocation(false);
           setPermDenied(false);
           nativeWatch = await Geolocation.watchPosition(
-            { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
+             { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
             (position, error) => {
               if (position) void push(position.coords);
               else if (error) {
@@ -363,9 +389,9 @@ function RadarPage() {
           // not an error: the watcher above remains active until iOS gets a fix.
           try {
             const position = await Geolocation.getCurrentPosition({
-              enableHighAccuracy: false,
-              maximumAge: 300000,
-              timeout: 60000,
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 15000,
             });
             await push(position.coords);
           } catch {
@@ -375,12 +401,12 @@ function RadarPage() {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
-                { enableHighAccuracy: false, maximumAge: 300000, timeout: 30000 },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
               );
               browserWatch = navigator.geolocation.watchPosition(
                 (position) => void push(position.coords),
                 () => {},
-                { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
               );
             }
           }
@@ -397,12 +423,12 @@ function RadarPage() {
       navigator.geolocation.getCurrentPosition(
         (position) => void push(position.coords),
         (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: false, maximumAge: 300000, timeout: 60000 },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
       );
       browserWatch = navigator.geolocation.watchPosition(
         (position) => void push(position.coords),
         (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
       );
     })();
 
@@ -413,7 +439,7 @@ function RadarPage() {
       const coords = lastCoords.current;
       if (coords) void push(coords, true);
       else refreshFix();
-    }, 20000);
+    }, 10000);
 
     // Backgrounded tabs and suspended apps stop the heartbeat, so the person
     // goes stale for everyone else. Re-publish (and refresh) on foreground.
@@ -455,7 +481,7 @@ function RadarPage() {
     // published location, so the radar is never blank just because the
     // device watcher is slow.
     enabled: true,
-    refetchInterval: 5000,
+    refetchInterval: 2000,
     refetchOnWindowFocus: true,
     placeholderData: (prev) => prev,
 
@@ -616,34 +642,6 @@ function RadarPage() {
         );
         return { person, bearing, radius: rr, angle: rad };
       });
-
-    // De-crowding is tangential only: people keep their exact distance ring and
-    // slide sideways just far enough to stay tappable, so the direction you
-    // read off the radar stays truthful.
-    const minGap = (size + 3) / z;
-    for (let iter = 0; iter < 60; iter++) {
-      let moved = false;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]!;
-          const b = nodes[j]!;
-          const ax = Math.sin(a.angle) * a.radius;
-          const ay = -Math.cos(a.angle) * a.radius;
-          const bx = Math.sin(b.angle) * b.radius;
-          const by = -Math.cos(b.angle) * b.radius;
-          const d = Math.hypot(bx - ax, by - ay);
-          if (d >= minGap) continue;
-          const arc = Math.max(1, Math.min(a.radius, b.radius));
-          let delta = ((b.angle - a.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-          if (Math.abs(delta) < 1e-4) delta = (i % 2 === 0 ? 1 : -1) * 1e-4;
-          const need = ((minGap - d) / arc) * 0.5 * Math.sign(delta);
-          a.angle -= need;
-          b.angle += need;
-          moved = true;
-        }
-      }
-      if (!moved) break;
-    }
 
     return {
       beaconSize: size,
@@ -1129,7 +1127,9 @@ function RadarPage() {
                     <p className="text-xs text-muted-foreground">
                       @{selected.username}
                       {selected.is_online ? " · active now" : ""}
-                      {accuracyM != null && accuracyM > 100 ? " · low GPS accuracy" : ""}
+                      {accuracyM != null || selected.accuracy_m != null
+                        ? ` · GPS ±${Math.round(Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0))} m`
+                        : ""}
                     </p>
                   </div>
                 </DialogDescription>
