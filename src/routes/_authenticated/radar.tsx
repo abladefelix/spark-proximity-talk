@@ -41,6 +41,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
 import { useSettings } from "@/hooks/useAppSettings";
+import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 
 
@@ -104,7 +105,14 @@ function RadarPage() {
   const queryClient = useQueryClient();
   const { data: maxRadius } = useMaxRadius();
   const settings = useSettings();
-  const cap = maxRadius ?? DEFAULT_MAX_RADIUS;
+  const { data: billing } = useBillingInfo();
+  const isPro = useIsPro();
+  const adminCap = maxRadius ?? DEFAULT_MAX_RADIUS;
+  // Free members are capped at the free-tier range while payments are live.
+  const cap =
+    billing?.enabled && billing.pro_extended_radius && !isPro
+      ? Math.min(adminCap, billing.free_max_radius_m || adminCap)
+      : adminCap;
   const [radiusPref, setRadiusPref] = useState(settings.default_radius_m);
   useEffect(() => {
     const saved = Number(localStorage.getItem("skan-radius") ?? "");
@@ -112,6 +120,7 @@ function RadarPage() {
     else setRadiusPref(settings.default_radius_m);
   }, [settings.default_radius_m]);
   const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
+
   const [visible, setVisible] = useState(true);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [located, setLocated] = useState(false);

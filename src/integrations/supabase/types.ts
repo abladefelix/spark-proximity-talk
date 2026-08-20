@@ -221,6 +221,81 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_settings: {
+        Row: {
+          currency: string
+          enabled: boolean
+          free_daily_signals: number
+          free_max_radius_m: number
+          free_messages_per_match: number
+          id: string
+          monthly_amount: number
+          monthly_plan_code: string | null
+          paystack_public_key: string | null
+          paystack_secret_key: string | null
+          pro_custom_beacon: boolean
+          pro_extended_radius: boolean
+          pro_label: string
+          pro_pitch: string
+          pro_priority_beacon: boolean
+          pro_see_who_signaled: boolean
+          pro_unlimited_messages: boolean
+          pro_unlimited_signals: boolean
+          provider: string
+          updated_at: string
+          yearly_amount: number
+          yearly_plan_code: string | null
+        }
+        Insert: {
+          currency?: string
+          enabled?: boolean
+          free_daily_signals?: number
+          free_max_radius_m?: number
+          free_messages_per_match?: number
+          id?: string
+          monthly_amount?: number
+          monthly_plan_code?: string | null
+          paystack_public_key?: string | null
+          paystack_secret_key?: string | null
+          pro_custom_beacon?: boolean
+          pro_extended_radius?: boolean
+          pro_label?: string
+          pro_pitch?: string
+          pro_priority_beacon?: boolean
+          pro_see_who_signaled?: boolean
+          pro_unlimited_messages?: boolean
+          pro_unlimited_signals?: boolean
+          provider?: string
+          updated_at?: string
+          yearly_amount?: number
+          yearly_plan_code?: string | null
+        }
+        Update: {
+          currency?: string
+          enabled?: boolean
+          free_daily_signals?: number
+          free_max_radius_m?: number
+          free_messages_per_match?: number
+          id?: string
+          monthly_amount?: number
+          monthly_plan_code?: string | null
+          paystack_public_key?: string | null
+          paystack_secret_key?: string | null
+          pro_custom_beacon?: boolean
+          pro_extended_radius?: boolean
+          pro_label?: string
+          pro_pitch?: string
+          pro_priority_beacon?: boolean
+          pro_see_who_signaled?: boolean
+          pro_unlimited_messages?: boolean
+          pro_unlimited_signals?: boolean
+          provider?: string
+          updated_at?: string
+          yearly_amount?: number
+          yearly_plan_code?: string | null
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked: string
@@ -438,6 +513,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          plan: string
+          raw: Json | null
+          reference: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          plan?: string
+          raw?: Json | null
+          reference: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          plan?: string
+          raw?: Json | null
+          reference?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -600,6 +711,42 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          expires_at: string | null
+          id: string
+          plan: string
+          reference: string | null
+          source: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string
+          plan?: string
+          reference?: string | null
+          source?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string
+          plan?: string
+          reference?: string | null
+          source?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -665,6 +812,15 @@ export type Database = {
           signups: number
         }[]
       }
+      admin_billing_stats: {
+        Args: never
+        Returns: {
+          active_subs: number
+          expiring_30d: number
+          paid_total: number
+          revenue_minor: number
+        }[]
+      }
       admin_exists: { Args: never; Returns: boolean }
       admin_maintenance_overview: {
         Args: never
@@ -691,6 +847,15 @@ export type Database = {
         Args: { _banned: boolean; _reason?: string; _user_id: string }
         Returns: undefined
       }
+      admin_set_subscription: {
+        Args: {
+          _active: boolean
+          _days?: number
+          _plan?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       admin_stats: {
         Args: never
         Returns: {
@@ -708,6 +873,28 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      billing_public_info: {
+        Args: never
+        Returns: {
+          currency: string
+          enabled: boolean
+          free_daily_signals: number
+          free_max_radius_m: number
+          free_messages_per_match: number
+          monthly_amount: number
+          pro_custom_beacon: boolean
+          pro_extended_radius: boolean
+          pro_label: string
+          pro_pitch: string
+          pro_priority_beacon: boolean
+          pro_see_who_signaled: boolean
+          pro_unlimited_messages: boolean
+          pro_unlimited_signals: boolean
+          provider: string
+          public_key: string
+          yearly_amount: number
+        }[]
+      }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -720,6 +907,7 @@ export type Database = {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
+      is_pro: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       nearby_people: {
         Args: { radius_m?: number }
