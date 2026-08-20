@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 export type AvatarGender = "male" | "female" | "other" | null | undefined;
@@ -10,15 +11,18 @@ export type AvatarGender = "male" | "female" | "other" | null | undefined;
 export function GenderAvatarIcon({
   gender,
   className,
+  style,
 }: {
   gender: AvatarGender;
   className?: string;
+  style?: CSSProperties;
 }) {
   if (gender === "male") {
     return (
       <svg
         viewBox="0 0 24 24"
         className={cn(className)}
+        style={style}
         fill="none"
         stroke="currentColor"
         strokeWidth={2.4}
@@ -39,6 +43,7 @@ export function GenderAvatarIcon({
       <svg
         viewBox="0 0 24 24"
         className={cn(className)}
+        style={style}
         fill="none"
         stroke="currentColor"
         strokeWidth={2.4}

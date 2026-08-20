@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
+import { Crown } from "lucide-react";
 
 
 type Incoming = {
@@ -23,6 +26,11 @@ export function IncomingSignals() {
   const { openChat } = useChatSheet();
   const queryClient = useQueryClient();
   const sendPush = useServerFn(sendPushNotification);
+  const { data: billing } = useBillingInfo();
+  const isPro = useIsPro();
+  const { open: openPro } = useProUpgradeSheet();
+  // Pro perk: free members see that someone signalled them, but not who.
+  const hideIdentity = Boolean(billing?.enabled && billing.pro_see_who_signaled && !isPro);
 
 
   const { data: incoming = [] } = useQuery({
@@ -147,20 +155,32 @@ export function IncomingSignals() {
           key={person.id}
           className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-3 py-2.5"
         >
-          <PersonAvatar
-            path={person.avatar_url}
-            name={person.display_name}
-            username={person.username}
-            gender={person.gender}
-            className="size-10 shrink-0"
-          />
+          <div className={hideIdentity ? "shrink-0 overflow-hidden rounded-full blur-[6px]" : "shrink-0"}>
+            <PersonAvatar
+              path={person.avatar_url}
+              name={person.display_name}
+              username={person.username}
+              gender={person.gender}
+              className="size-10 shrink-0"
+            />
+          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">
-              {person.display_name ?? person.username}
+              {hideIdentity ? "Someone nearby" : (person.display_name ?? person.username)}
             </p>
-            <p className="text-xs text-muted-foreground">
-              wants to chat{index > 0 ? ` · #${index + 1} in queue` : ""}
-            </p>
+            {hideIdentity ? (
+              <button
+                type="button"
+                onClick={() => openPro()}
+                className="flex items-center gap-1 text-xs font-medium text-primary"
+              >
+                <Crown className="size-3" /> Go Pro to see who
+              </button>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                wants to chat{index > 0 ? ` · #${index + 1} in queue` : ""}
+              </p>
+            )}
           </div>
           <Button
             size="sm"

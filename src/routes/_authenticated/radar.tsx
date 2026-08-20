@@ -37,6 +37,7 @@ import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
+import { beaconColor } from "@/lib/beacon-styles";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
@@ -91,7 +92,12 @@ type NearbyPerson = {
   bearing_deg?: number | null;
   /** Seconds since their location was last published. */
   updated_age_s?: number | null;
+  /** Pro members get a priority beacon. */
+  is_pro?: boolean | null;
+  /** Pro members' chosen beacon colour (null unless they're Pro). */
+  beacon_style?: string | null;
 };
+
 
 function formatDistance(m: number) {
   return m < 950 ? `${Math.max(1, Math.round(m))} m away` : `${(m / 1000).toFixed(1)} km away`;
@@ -114,6 +120,7 @@ function RadarPage() {
   const settings = useSettings();
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
+  const proPriorityOn = Boolean(billing?.pro_priority_beacon);
   const adminCap = maxRadius ?? DEFAULT_MAX_RADIUS;
   // Free members are capped at the free-tier range while payments are live.
   const cap =
@@ -633,13 +640,18 @@ function RadarPage() {
     return {
       beaconSize: size,
       markerScale: 1 / z,
-      beacons: nodes.map((n) => ({
-        person: n.person,
-        bearing: n.bearing,
-        left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
-        top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
-      })),
+      beacons: nodes
+        // Pro beacons render last so they always sit on top of the stack.
+        .slice()
+        .sort((a, b) => Number(Boolean(a.person.is_pro)) - Number(Boolean(b.person.is_pro)))
+        .map((n) => ({
+          person: n.person,
+          bearing: n.bearing,
+          left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
+          top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
+        })),
     };
+
   }, [people, scopeSize, radius, zoom]);
 
 
@@ -882,8 +894,11 @@ function RadarPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
           />
 
-          {beacons.map(({ person, left, top }) => (
-
+          {beacons.map(({ person, left, top }) => {
+            const priority = Boolean(person.is_pro) && proPriorityOn;
+            const custom = beaconColor(person.beacon_style);
+            const scaleUp = priority ? 1.16 : 1;
+            return (
             <button
               key={person.id}
               type="button"
@@ -891,8 +906,13 @@ function RadarPage() {
                 if (dragged.current) return;
                 setSelectedId(person.id);
               }}
-              style={{ left, top, opacity: person.is_online ? 1 : 0.5 }}
-              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
+              style={{
+                left,
+                top,
+                opacity: person.is_online ? 1 : 0.5,
+                zIndex: priority ? 3 : 2,
+              }}
+              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
             >
               <span
@@ -900,7 +920,7 @@ function RadarPage() {
                 style={{
                   width: beaconSize,
                   height: beaconSize,
-                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
+                  transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
                 }}
               >
                 {(() => {
@@ -930,24 +950,43 @@ function RadarPage() {
                       {/* soft glow pool */}
                       <span
                         aria-hidden
-                        className={`absolute inset-0 rounded-full blur-md ${glowClass}`}
+                        className={custom ? "absolute inset-0 rounded-full blur-md" : `absolute inset-0 rounded-full blur-md ${glowClass}`}
+                        style={custom ? { background: custom, opacity: 0.35 } : undefined}
                       />
                       {/* ping for people who signaled you */}
                       {person.they_signaled && !person.match_id && (
                         <span
                           aria-hidden
-                          className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
+                          className={custom ? "beacon-ping absolute inset-0 rounded-full border" : `beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
+                          style={custom ? { borderColor: custom } : undefined}
+                        />
+                      )}
+                      {/* Pro priority halo */}
+                      {priority && (
+                        <span
+                          aria-hidden
+                          className="absolute inset-[-14%] rounded-full border"
+                          style={{ borderColor: custom ?? "oklch(0.82 0.16 85)", opacity: 0.7 }}
                         />
                       )}
                       {/* gendered avatar marker; neutral gender is intentionally bare — only the ring + glow */}
                       <span
-                        className={`relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`}
-                        style={{ width: beaconSize * 0.62, height: beaconSize * 0.62 }}
+                        className={
+                          custom
+                            ? "relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow"
+                            : `relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`
+                        }
+                        style={{
+                          width: beaconSize * 0.62,
+                          height: beaconSize * 0.62,
+                          ...(custom ? { ["--tw-ring-color" as any]: custom } : {}),
+                        }}
                       >
                         {person.gender && person.gender !== "other" && (
                           <GenderAvatarIcon
                             gender={person.gender}
-                            className={`h-[76%] w-[76%] ${iconClass}`}
+                            className={custom ? "h-[76%] w-[76%]" : `h-[76%] w-[76%] ${iconClass}`}
+                            {...(custom ? { style: { color: custom } } : {})}
                           />
                         )}
                       </span>
@@ -958,7 +997,9 @@ function RadarPage() {
               </span>
 
             </button>
-          ))}
+            );
+          })}
+
 
 
         </div>
