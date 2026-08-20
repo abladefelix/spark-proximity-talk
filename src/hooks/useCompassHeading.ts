@@ -78,6 +78,14 @@ export function useCompassHeading(enabled: boolean) {
     };
   }, [enabled, apply]);
 
+  // Safety net: some devices emit readings slowly, so stop showing
+  // "calibrating" after a few seconds once any heading has arrived.
+  useEffect(() => {
+    if (!listening || settled) return;
+    const id = window.setTimeout(() => setSettled(true), 5000);
+    return () => window.clearTimeout(id);
+  }, [listening, settled]);
+
   const request = useCallback(async () => {
     const anyEvent = window.DeviceOrientationEvent as
       | (typeof DeviceOrientationEvent & { requestPermission?: () => Promise<PermissionState> })
@@ -87,6 +95,9 @@ export function useCompassHeading(enabled: boolean) {
       const state = await anyEvent.requestPermission();
       if (state !== "granted") return false;
       setNeedsPermission(false);
+      samples.current = 0;
+      setSettled(false);
+      setListening(true);
       const handler = (event: DeviceOrientationEvent) => {
         const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
           .webkitCompassHeading;
@@ -100,8 +111,15 @@ export function useCompassHeading(enabled: boolean) {
     }
   }, [apply]);
 
-  return { heading, needsPermission, request };
+  return {
+    heading,
+    needsPermission,
+    request,
+    /** True while the magnetometer settles right after the compass is enabled. */
+    calibrating: enabled && listening && !settled,
+  };
 }
+
 
 const POINTS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
 
