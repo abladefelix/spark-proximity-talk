@@ -7,6 +7,7 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useChatSheet } from "@/components/ChatSheet";
+import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
