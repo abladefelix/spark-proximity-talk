@@ -817,7 +817,7 @@ function RadarPage() {
       )}
 
 
-      <div className="flex min-h-0 flex-1 items-center justify-center py-4">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-4">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -962,9 +962,8 @@ function RadarPage() {
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
         )}
       </section>
-      </div>
 
-      {/* Compass toggle: fixed just above the bottom toolbar so it is always reachable. */}
+      {/* Compass toggle: sits directly under the radar scope. */}
       <button
         type="button"
         onClick={() => {
@@ -977,7 +976,7 @@ function RadarPage() {
           }
           setHeadingUp((v) => !v);
         }}
-        className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
         <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
         {needsPermission
@@ -986,6 +985,8 @@ function RadarPage() {
             ? `Facing ${compassPoint(heading as number)}`
             : "North up"}
       </button>
+      </div>
+
 
 
 
