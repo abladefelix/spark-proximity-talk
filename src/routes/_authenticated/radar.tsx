@@ -431,6 +431,7 @@ function RadarPage() {
   
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
+
   async function blockPerson(person: NearbyPerson) {
     const me = (await supabase.auth.getUser()).data.user?.id;
     if (!me) return;
