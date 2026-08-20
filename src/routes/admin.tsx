@@ -314,7 +314,7 @@ function AdminPage() {
       const { data: profiles } = await supabase
         .from("profiles")
         .select(
-          "id, username, display_name, bio, avatar_url, verified, banned, banned_reason, last_seen, created_at",
+          "id, username, display_name, bio, avatar_url, gender, verified, banned, banned_reason, last_seen, created_at",
         )
         .order("created_at", { ascending: false })
         .limit(200);
