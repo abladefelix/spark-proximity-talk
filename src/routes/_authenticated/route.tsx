@@ -5,6 +5,7 @@ import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { BiometricGate } from "@/components/BiometricGate";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -30,6 +31,7 @@ function AuthedLayout() {
   useNotifications(user?.id ?? null);
 
   return (
+    <BiometricGate>
     <ChatSheetProvider>
       <PushManager userId={user?.id ?? null} />
       <div
@@ -45,6 +47,7 @@ function AuthedLayout() {
         <BottomNav />
       </div>
     </ChatSheetProvider>
+    </BiometricGate>
   );
 }
 
