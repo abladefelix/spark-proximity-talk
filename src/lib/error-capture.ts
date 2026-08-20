@@ -49,6 +49,32 @@ function isErrorLike(value: unknown): value is Error {
   return value instanceof Error;
 }
 
+// A client that closes the socket mid-response (reload, navigation, native
+// WebView suspend) surfaces as node's `Error: aborted` from _http_server.
+// That is cancellation, not an app failure — never record or report it.
+export function isClientDisconnect(value: unknown): boolean {
+  let current: unknown = value;
+  for (let depth = 0; depth < CAUSE_DEPTH_LIMIT && current != null; depth++) {
+    if (!(current instanceof Error)) return false;
+    const message = current.message.toLowerCase();
+    if (
+      current.name === "AbortError" ||
+      message === "aborted" ||
+      message.includes("request aborted") ||
+      message.includes("aborted\n    at abortincoming") ||
+      message.includes("premature close") ||
+      message.includes("connection reset") ||
+      message.includes("epipe") ||
+      message.includes("econnreset")
+    ) {
+      return true;
+    }
+    if (typeof current.stack === "string" && current.stack.includes("abortIncoming")) return true;
+    current = current.cause;
+  }
+  return false;
+}
+
 // Wrap console.error so errors logged by any layer — including h3's internal
 // unhandled-error logging, which this file cannot hook directly — are both
 // recorded for consumeLastCapturedError and expanded before serialization.
