@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 export type AvatarGender = "male" | "female" | "other" | null | undefined;
@@ -14,7 +15,7 @@ export function GenderAvatarIcon({
 }: {
   gender: AvatarGender;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) {
   if (gender === "male") {
     return (
