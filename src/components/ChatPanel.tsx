@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowUp, ChevronLeft, ImagePlus, LoaderCircle, MapPin } from "lucide-react";
@@ -44,6 +44,82 @@ const dayLabel = (iso: string) => {
 const timeLabel = (iso: string) =>
   new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
+type BubbleProps = {
+  m: Message;
+  mine: boolean;
+  newDay: boolean;
+  grouped: boolean;
+  lastOfGroup: boolean;
+};
+
+/** Memoized so a new message never re-renders the whole transcript. */
+const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
+  const corner = `rounded-[20px] ${lastOfGroup ? (mine ? "rounded-br-[7px]" : "rounded-bl-[7px]") : ""}`;
+  const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
+
+  return (
+    <div className="shrink-0">
+      {newDay && (
+        <div className="my-4 flex justify-center">
+          <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            {dayLabel(m.created_at)}
+          </span>
+        </div>
+      )}
+
+      <div
+        className={`flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
+      >
+        <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
+          {m.kind === "image" ? (
+            m.mediaUrl ? (
+              <a
+                href={m.mediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`block overflow-hidden ${corner} bg-secondary`}
+              >
+                <img
+                  src={m.mediaUrl}
+                  alt="Shared in chat"
+                  className="max-h-72 w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+            ) : (
+              <div
+                className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}
+              >
+                Picture unavailable
+              </div>
+            )
+          ) : m.kind === "pin" && m.lat != null && m.lng != null ? (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className={`flex items-center gap-2 px-4 py-2.5 text-[15px] ${corner} ${skin}`}
+            >
+              <MapPin className="size-4" />
+              <span>Meet-up pin</span>
+            </a>
+          ) : (
+            <div className={`px-3.5 py-[7px] ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[16px] leading-[1.35]">{m.content}</p>
+            </div>
+          )}
+          {lastOfGroup && (
+            <span className="mt-[3px] px-1 text-[10.5px] leading-none text-muted-foreground">
+              {timeLabel(m.created_at)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export function ChatPanel({ matchId, className }: { matchId: string; leading?: React.ReactNode; className?: string }) {
   const queryClient = useQueryClient();
   const { closeChat } = useChatSheet();
@@ -83,23 +159,56 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     },
   });
 
-  const { data: messages = [] } = useQuery({
-    queryKey: ["messages", matchId],
+  // Only the most recent slice is rendered; older history loads on demand so a
+  // long conversation never mounts thousands of nodes at once.
+  const PAGE = 40;
+  const [limit, setLimit] = useState(PAGE);
+  // Signed URLs are expensive to mint, so reuse them across refetches.
+  const signedCache = useRef(new Map<string, string>());
+
+  const signImages = useCallback(async (rows: Message[]): Promise<Message[]> => {
+    const missing = rows
+      .filter((m) => m.kind === "image" && !signedCache.current.has(m.content))
+      .map((m) => m.content);
+    if (missing.length) {
+      const { data: signed } = await supabase.storage
+        .from("chat-media")
+        .createSignedUrls(missing, 3600);
+      for (const item of signed ?? []) {
+        const url = item.signedUrl;
+        const path = item.path;
+        if (url && path) signedCache.current.set(path, url);
+      }
+    }
+    return rows.map((m) => {
+      if (m.kind !== "image") return m;
+      const url = signedCache.current.get(m.content);
+      return url ? { ...m, mediaUrl: url } : m;
+    });
+  }, []);
+
+  const { data: page } = useQuery({
+    queryKey: ["messages", matchId, limit],
+    // Keep the previous window on screen while a bigger page streams in.
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
         .select("id, sender_id, content, created_at, kind, lat, lng")
         .eq("match_id", matchId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(limit + 1);
       if (error) throw error;
       const rows = (data ?? []) as Message[];
-      const imagePaths = rows.filter((m) => m.kind === "image").map((m) => m.content);
-      if (!imagePaths.length) return rows;
-      const { data: signed } = await supabase.storage.from("chat-media").createSignedUrls(imagePaths, 3600);
-      const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
-      return rows.map((m) => (m.kind === "image" ? { ...m, mediaUrl: urls.get(m.content) } : m));
+      const hasMore = rows.length > limit;
+      const window = (hasMore ? rows.slice(0, limit) : rows).reverse();
+      return { messages: await signImages(window), hasMore };
     },
   });
+
+  const messages = page?.messages ?? [];
+  const hasMore = page?.hasMore ?? false;
 
   useEffect(() => {
     const channel = supabase
@@ -107,20 +216,72 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["messages", matchId] }),
+        async (payload) => {
+          // Append the single new row instead of refetching the whole thread.
+          const row = payload.new as Message;
+          const signedRows = await signImages([row]);
+          const withMedia = signedRows[0] ?? row;
+          queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
+            ["messages", matchId, limit],
+            (prev) =>
+              !prev || prev.messages.some((m) => m.id === row.id)
+                ? prev
+                : { ...prev, messages: [...prev.messages, withMedia] },
+          );
+        },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId, queryClient]);
+  }, [matchId, queryClient, limit, signImages]);
 
-  // Always keep the newest message in view.
+  // Keep the newest message in view, but don't yank the view when older
+  // history is prepended.
+  const newestId = messages[messages.length - 1]?.id;
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+  }, [newestId]);
+
+  // Grouping/day-separator maths run once per transcript change, not per render.
+  const rows = useMemo<BubbleProps[]>(
+    () =>
+      messages.map((m, index) => {
+        const prev = messages[index - 1];
+        const next = messages[index + 1];
+        const newDay =
+          !prev ||
+          new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+        return {
+          m,
+          mine: m.sender_id === me,
+          newDay,
+          grouped:
+            !newDay &&
+            prev?.sender_id === m.sender_id &&
+            new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000,
+          lastOfGroup:
+            !next ||
+            next.sender_id !== m.sender_id ||
+            new Date(next.created_at).getTime() - new Date(m.created_at).getTime() >= 5 * 60000,
+        };
+      }),
+    [messages, me],
+  );
+
+  const loadEarlier = useCallback(() => {
+    const el = scrollRef.current;
+    const before = el?.scrollHeight ?? 0;
+    setLimit((n) => n + PAGE);
+    // Hold the reading position once the older page renders above.
+    requestAnimationFrame(() => {
+      const node = scrollRef.current;
+      if (node) node.scrollTop += node.scrollHeight - before;
+    });
+  }, []);
+
 
   // Grow the composer with its content, capped so the transcript keeps room.
   useLayoutEffect(() => {
@@ -271,78 +432,21 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           </p>
         </div>
 
-        {messages.map((m, index) => {
-          const mine = m.sender_id === me;
-          const prev = messages[index - 1];
-          const next = messages[index + 1];
-          const newDay =
-            !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
-          const grouped =
-            !newDay &&
-            prev?.sender_id === m.sender_id &&
-            new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000;
-          const lastOfGroup =
-            !next ||
-            next.sender_id !== m.sender_id ||
-            new Date(next.created_at).getTime() - new Date(m.created_at).getTime() >= 5 * 60000;
+        {hasMore && (
+          <div className="mb-3 flex justify-center">
+            <button
+              type="button"
+              onClick={loadEarlier}
+              className="rounded-full bg-secondary px-3.5 py-1.5 text-[12px] font-medium text-muted-foreground transition active:scale-95"
+            >
+              Load earlier messages
+            </button>
+          </div>
+        )}
 
-          const corner = `rounded-[20px] ${lastOfGroup ? (mine ? "rounded-br-[7px]" : "rounded-bl-[7px]") : ""}`;
-          const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
-
-          return (
-            <div key={m.id} className="shrink-0">
-              {newDay && (
-                <div className="my-4 flex justify-center">
-                  <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                    {dayLabel(m.created_at)}
-                  </span>
-                </div>
-              )}
-
-              <div
-                className={`flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
-              >
-                <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
-                  {m.kind === "image" ? (
-                    m.mediaUrl ? (
-                      <a
-                        href={m.mediaUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`block overflow-hidden ${corner} bg-secondary`}
-                      >
-                        <img src={m.mediaUrl} alt="Shared in chat" className="max-h-72 w-full object-cover" loading="lazy" />
-                      </a>
-                    ) : (
-                      <div className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}>
-                        Picture unavailable
-                      </div>
-                    )
-                  ) : m.kind === "pin" && m.lat != null && m.lng != null ? (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-[15px] ${corner} ${skin}`}
-                    >
-                      <MapPin className="size-4" />
-                      <span>Meet-up pin</span>
-                    </a>
-                  ) : (
-                    <div className={`px-3.5 py-[7px] ${corner} ${skin}`}>
-                      <p className="whitespace-pre-wrap break-words text-[16px] leading-[1.35]">{m.content}</p>
-                    </div>
-                  )}
-                  {lastOfGroup && (
-                    <span className="mt-[3px] px-1 text-[10.5px] leading-none text-muted-foreground">
-                      {timeLabel(m.created_at)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {rows.map((row) => (
+          <Bubble key={row.m.id} {...row} />
+        ))}
       </div>
 
       {/* Composer */}
