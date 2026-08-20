@@ -80,6 +80,12 @@ export function isClientDisconnect(value: unknown): boolean {
 // recorded for consumeLastCapturedError and expanded before serialization.
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
+  // Downgrade client disconnects to a quiet debug line: logging them as errors
+  // is what surfaces "Error: aborted" as a runtime error / blank-screen report.
+  if (args.some((arg) => isErrorLike(arg) && isClientDisconnect(arg))) {
+    console.debug("client disconnected before the response finished");
+    return;
+  }
   const expanded = args.map((arg) => {
     if (!isErrorLike(arg)) return arg;
     record(arg);
@@ -89,10 +95,14 @@ console.error = (...args: unknown[]) => {
 };
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+  globalThis.addEventListener("error", (event) => {
+    const error = (event as ErrorEvent).error ?? event;
+    if (!isClientDisconnect(error)) record(error);
+  });
+  globalThis.addEventListener("unhandledrejection", (event) => {
+    const reason = (event as PromiseRejectionEvent).reason;
+    if (!isClientDisconnect(reason)) record(reason);
+  });
 }
 
 export function consumeLastCapturedError(): unknown {
