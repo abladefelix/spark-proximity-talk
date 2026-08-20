@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ function ProfilePage() {
   const [gender, setGender] = useState<string>("unset");
   const [saving, setSaving] = useState(false);
   const [notifState, setNotifState] = useState<string>("default");
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   useEffect(() => {
     setNotifState(notificationPermission());
