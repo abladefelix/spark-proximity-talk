@@ -4,17 +4,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 function isRequestCancellation(error: unknown, request: Request): boolean {
-  if (request.signal.aborted) return true;
-  if (!(error instanceof Error)) return false;
-
-  const message = error.message.toLowerCase();
-  return (
-    error.name === "AbortError" ||
-    message === "aborted" ||
-    message.includes("request aborted") ||
-    message.includes("premature close") ||
-    message.includes("connection reset")
-  );
+  return request.signal.aborted || isClientDisconnect(error);
 }
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
