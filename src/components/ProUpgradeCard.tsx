@@ -75,6 +75,30 @@ export function ProUpgradeCard() {
         data: { plan, callbackUrl: `${window.location.origin}/profile` },
       });
       if (cancelled.current) return;
+
+      if (res.accessCode) {
+        const { openPaystackPopup } = await import("@/lib/paystack-popup");
+        try {
+          const outcome = await openPaystackPopup(res.accessCode);
+          if (outcome === "cancelled") {
+            toast.message("Payment cancelled");
+            setBusy(null);
+            return;
+          }
+          const verified = await verify({ data: { reference: res.reference } });
+          if (verified.status === "success") {
+            toast.success("You're Pro now. Enjoy!");
+            await queryClient.invalidateQueries({ queryKey: MY_SUB_KEY });
+          } else {
+            toast.message("Payment received — confirming shortly.");
+          }
+          setBusy(null);
+          return;
+        } catch {
+          // Popup unavailable (blocked script / offline) — fall back to redirect.
+        }
+      }
+
       window.location.href = res.authorizationUrl;
     } catch (e) {
       if (cancelled.current) return;

@@ -5,6 +5,7 @@ export type CheckoutPlan = "monthly" | "yearly";
 
 export type CheckoutResult = {
   authorizationUrl: string;
+  accessCode: string | null;
   reference: string;
 };
 
@@ -75,6 +76,7 @@ export const startCheckout = createServerFn({ method: "POST" })
 
     return {
       authorizationUrl: json.data.authorization_url as string,
+      accessCode: (json.data.access_code as string) ?? null,
       reference,
     };
   });
