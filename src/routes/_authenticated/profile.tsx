@@ -141,29 +141,6 @@ function ProfilePage() {
     queryClient.invalidateQueries({ queryKey: ["nearby"] });
   }
 
-  async function submitVerification(file: File) {
-    const me = profile?.id;
-    if (!me) return;
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${me}/selfie-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("verifications").upload(path, file);
-    if (upErr) {
-      toast.error("Upload failed");
-      return;
-    }
-    const { error } = await supabase
-      .from("verification_requests")
-      .upsert(
-        { user_id: me, selfie_path: path, status: "pending", reviewed_at: null },
-        { onConflict: "user_id" },
-      );
-    if (error) {
-      toast.error("Couldn't submit for verification");
-      return;
-    }
-    toast.success("Selfie sent — we'll review it shortly");
-    queryClient.invalidateQueries({ queryKey: ["verification"] });
-  }
 
   async function enableNotifications() {
     const result = await requestNotificationPermission();
