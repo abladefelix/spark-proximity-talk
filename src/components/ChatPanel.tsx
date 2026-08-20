@@ -53,72 +53,85 @@ type BubbleProps = {
 };
 
 /** Memoized so a new message never re-renders the whole transcript. */
-const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
-  const corner = `rounded-[18px] ${lastOfGroup ? (mine ? "rounded-br-[6px]" : "rounded-bl-[6px]") : ""}`;
-  const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
+const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
+  // WhatsApp-style geometry: small 8px radius, a pointed tail only on the
+  // first bubble of a run, and the timestamp tucked inside the bubble.
+  const tail = !grouped;
+  const corner = `rounded-[10px] ${tail ? (mine ? "rounded-tr-[3px]" : "rounded-tl-[3px]") : ""}`;
+  const skin = mine
+    ? "bg-primary text-primary-foreground"
+    : "bg-card text-foreground border border-border/50";
+
+  const stamp = (
+    <span
+      className={`ml-2 shrink-0 translate-y-[3px] text-[10px] leading-none ${
+        mine ? "text-primary-foreground/70" : "text-muted-foreground"
+      }`}
+    >
+      {timeLabel(m.created_at)}
+    </span>
+  );
 
   return (
     <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px]">
       {newDay && (
         <div className="my-3 flex justify-center">
-          <span className="rounded-full bg-secondary/70 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+          <span className="rounded-[7px] bg-card px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground shadow-sm">
             {dayLabel(m.created_at)}
           </span>
         </div>
       )}
 
       <div
-        className={`flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-10" : "justify-start pr-10"}`}
+        className={`relative flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
       >
-        <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
+        <div className={`relative flex max-w-[82%] flex-col ${mine ? "items-end" : "items-start"}`}>
           {m.kind === "image" ? (
-            m.mediaUrl ? (
-              <a
-                href={m.mediaUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={`block overflow-hidden ${corner} bg-secondary`}
-              >
-                <img
-                  src={m.mediaUrl}
-                  alt="Shared in chat"
-                  className="max-h-64 w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-            ) : (
-              <div
-                className={`flex h-32 w-48 items-center justify-center ${corner} bg-secondary text-[11px] text-muted-foreground`}
-              >
-                Picture unavailable
-              </div>
-            )
+            <div className={`relative overflow-hidden ${corner} ${skin} p-[3px] shadow-sm`}>
+              {m.mediaUrl ? (
+                <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[8px]">
+                  <img
+                    src={m.mediaUrl}
+                    alt="Shared in chat"
+                    className="max-h-72 w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </a>
+              ) : (
+                <div className="flex h-32 w-48 items-center justify-center rounded-[8px] bg-secondary text-[11px] text-muted-foreground">
+                  Picture unavailable
+                </div>
+              )}
+              <span className="absolute bottom-2 right-2 rounded-full bg-foreground/55 px-1.5 py-[2px] text-[10px] leading-none text-background">
+                {timeLabel(m.created_at)}
+              </span>
+            </div>
           ) : m.kind === "pin" && m.lat != null && m.lng != null ? (
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center gap-1.5 px-3 py-2 text-[14px] ${corner} ${skin}`}
+              className={`flex items-end px-2.5 py-[6px] shadow-sm ${corner} ${skin}`}
             >
-              <MapPin className="size-3.5" />
-              <span>Meet-up pin</span>
+              <span className="flex items-center gap-1.5 text-[14.5px]">
+                <MapPin className="size-3.5" />
+                Meet-up pin
+              </span>
+              {stamp}
             </a>
           ) : (
-            <div className={`px-3 py-[6px] ${corner} ${skin}`}>
-              <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.35]">{m.content}</p>
+            <div className={`flex items-end px-2.5 py-[5px] shadow-sm ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[14.5px] leading-[1.32]">{m.content}</p>
+              {stamp}
             </div>
-          )}
-          {lastOfGroup && (
-            <span className="mt-[2px] px-1 text-[10px] leading-none text-muted-foreground">
-              {timeLabel(m.created_at)}
-            </span>
           )}
         </div>
       </div>
     </div>
   );
 });
+
 
 export function ChatPanel({ matchId, className }: { matchId: string; leading?: React.ReactNode; className?: string }) {
   const queryClient = useQueryClient();
@@ -428,20 +441,32 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
         </header>
 
-        <div className="px-3 pb-3 pt-4">
-          <div className="mb-5 flex flex-col items-center px-8 text-center">
+        <div className="px-3 pb-3 pt-3">
+          {/* WhatsApp-style intro: a small encryption note, then a contact card. */}
+          <div className="mx-auto mb-3 max-w-[85%] rounded-[10px] bg-accent/40 px-3 py-2 text-center text-[11px] leading-snug text-muted-foreground">
+            Messages here stay between you two. You matched by being nearby — meet in public places.
+          </div>
+
+          <div className="mb-4 flex flex-col items-center rounded-[14px] bg-card px-6 py-5 text-center shadow-sm">
             <PersonAvatar
               path={other?.avatar_url}
               name={other?.display_name}
               username={other?.username ?? "?"}
               gender={other?.gender as import("@/components/PersonAvatar").Gender}
-              className="size-14 rounded-full"
+              className="size-20 rounded-full"
             />
-            <p className="mt-2 text-[14px] font-semibold leading-tight">{other ? name : ""}</p>
-            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-              You both signalled nearby — this conversation stays between you two.
+            <p className="mt-3 flex items-center gap-1 text-[15px] font-semibold leading-tight">
+              {other ? name : ""}
+              {other?.verified && <VerifiedBadge className="size-3.5" />}
+            </p>
+            {other?.username && (
+              <p className="mt-0.5 text-[12px] text-muted-foreground">@{other.username}</p>
+            )}
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Not a contact • Matched nearby
             </p>
           </div>
+
 
           {hasMore && (
             <div className="mb-3 flex justify-center">
@@ -464,7 +489,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
+        className="z-20 flex shrink-0 items-end gap-1.5 bg-background/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5"
       >
         <input
           ref={fileRef}
@@ -477,17 +502,16 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             event.target.value = "";
           }}
         />
-        <button
-          type="button"
-          aria-label="Upload a picture"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
-        >
-          {uploading ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-[20px]" />}
-        </button>
-
-        <div className="flex min-w-0 flex-1 items-end rounded-[18px] bg-secondary px-3 py-[6px]">
+        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[22px] bg-card px-2 py-[6px] shadow-sm ring-1 ring-border/50">
+          <button
+            type="button"
+            aria-label="Upload a picture"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
+          >
+            {uploading ? <LoaderCircle className="size-[18px] animate-spin" /> : <ImagePlus className="size-[19px]" />}
+          </button>
           <textarea
             ref={inputRef}
             value={text}
@@ -495,7 +519,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             placeholder={settings.chat_prompt_text}
             rows={1}
             maxLength={settings.max_message_len}
-            className="max-h-[108px] w-full resize-none border-0 bg-transparent p-0 text-[14px] leading-[1.35] outline-none placeholder:text-muted-foreground/70"
+            className="max-h-[108px] w-full resize-none border-0 bg-transparent py-[5px] pr-1 text-[15px] leading-[1.3] outline-none placeholder:text-muted-foreground/70"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -516,10 +540,11 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             e.preventDefault();
             void send();
           }}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-30"
+          className="mb-[1px] flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition active:scale-90 disabled:opacity-40"
         >
-          <ArrowUp className="size-4" strokeWidth={2.5} />
+          <ArrowUp className="size-[18px]" strokeWidth={2.5} />
         </button>
+
       </form>
     </div>
   );
