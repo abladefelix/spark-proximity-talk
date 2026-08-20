@@ -276,7 +276,7 @@ function RadarPage() {
           browserWatch = navigator.geolocation.watchPosition(
             (position) => void push(position.coords),
             () => {},
-            { enableHighAccuracy: false, maximumAge: 300000, timeout: 30000 },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 },
           );
         }
         try {
@@ -292,7 +292,7 @@ function RadarPage() {
           setAskLocation(false);
           setPermDenied(false);
           nativeWatch = await Geolocation.watchPosition(
-            { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
             (position, error) => {
               if (position) void push(position.coords);
               else if (error) {
@@ -325,7 +325,7 @@ function RadarPage() {
               browserWatch = navigator.geolocation.watchPosition(
                 (position) => void push(position.coords),
                 () => {},
-                { enableHighAccuracy: false, maximumAge: 300000, timeout: 60000 },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
               );
             }
           }
@@ -347,7 +347,7 @@ function RadarPage() {
       browserWatch = navigator.geolocation.watchPosition(
         (position) => void push(position.coords),
         (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
       );
     })();
 
@@ -356,7 +356,7 @@ function RadarPage() {
     // and ask for a fresh one when the watcher never delivered anything.
     const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
-      if (coords) void push(coords);
+      if (coords) void push(coords, true);
       else refreshFix();
     }, 20000);
 
@@ -365,7 +365,7 @@ function RadarPage() {
     const onWake = () => {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
-      if (coords) void push(coords);
+      if (coords) void push(coords, true);
       refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
