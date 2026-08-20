@@ -52,9 +52,10 @@ export function UserDetailsDialog({
             {data ? (
               <>
                 <PersonAvatar
-                  path={null}
+                  path={data.avatarUrl}
                   name={data.displayName}
                   username={data.username}
+                  gender={data.gender as import("@/components/PersonAvatar").Gender}
                   className="size-8"
                 />
                 <span className="truncate">{data.displayName ?? data.username}</span>
