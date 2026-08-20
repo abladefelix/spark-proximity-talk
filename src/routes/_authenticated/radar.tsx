@@ -47,6 +47,7 @@ import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
+import { GeoKalman } from "@/lib/geo-filter";
 import {
   useDistanceUnit,
   formatDistance,
@@ -187,17 +188,20 @@ function RadarPage() {
         Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
       return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
     };
+    const filter = new GeoKalman();
     const push = async (
-      coords: { latitude: number; longitude: number; accuracy?: number | null },
+      raw: { latitude: number; longitude: number; accuracy?: number | null },
       force = false,
     ) => {
       if (cancelled) return;
-      const accuracy =
-        typeof coords.accuracy === "number" && Number.isFinite(coords.accuracy)
-          ? coords.accuracy
-          : 9999;
+      if (!Number.isFinite(raw.latitude) || !Number.isFinite(raw.longitude)) return;
 
-      if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) return;
+      // Smooth GPS jitter before publishing so distances stay steady while
+      // standing still, yet still follow real movement.
+      const smoothed = filter.process(raw);
+      if (!smoothed) return;
+      const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
+      const accuracy = smoothed.accuracy;
 
       // Native and WebView providers can report at the same time. Serialize
       // writes and retain only the newest fix so an older async write cannot
@@ -224,7 +228,7 @@ function RadarPage() {
         accuracy,
       };
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
-      setAccuracyM(accuracy === 9999 ? null : accuracy);
+      setAccuracyM(accuracy);
 
       // Track motion promptly. The threshold follows the reported horizontal
       // uncertainty so stationary GPS noise is not presented as real motion.
@@ -256,7 +260,7 @@ function RadarPage() {
             user_id: me,
             lat: coords.latitude,
             lng: coords.longitude,
-            accuracy_m: accuracy === 9999 ? null : accuracy,
+            accuracy_m: accuracy,
             is_visible: visible,
             updated_at: new Date(publishedAt).toISOString(),
           },
