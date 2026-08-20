@@ -155,12 +155,14 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     };
   }, [matchId, queryClient, limit, signImages]);
 
-  // Always keep the newest message in view.
+  // Keep the newest message in view, but don't yank the view when older
+  // history is prepended.
+  const newestId = messages[messages.length - 1]?.id;
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+  }, [newestId]);
 
   // Grow the composer with its content, capped so the transcript keeps room.
   useLayoutEffect(() => {
