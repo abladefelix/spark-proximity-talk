@@ -638,13 +638,18 @@ function RadarPage() {
     return {
       beaconSize: size,
       markerScale: 1 / z,
-      beacons: nodes.map((n) => ({
-        person: n.person,
-        bearing: n.bearing,
-        left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
-        top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
-      })),
+      beacons: nodes
+        // Pro beacons render last so they always sit on top of the stack.
+        .slice()
+        .sort((a, b) => Number(Boolean(a.person.is_pro)) - Number(Boolean(b.person.is_pro)))
+        .map((n) => ({
+          person: n.person,
+          bearing: n.bearing,
+          left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
+          top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
+        })),
     };
+
   }, [people, scopeSize, radius, zoom]);
 
 
