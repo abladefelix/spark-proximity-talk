@@ -643,14 +643,64 @@ function AdminPage() {
                 Maintenance
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Cleanup jobs
+              </DropdownMenuLabel>
               <DropdownMenuItem onSelect={() => void purgeSignals()}>
-                Purge expired signals
+                <span className="flex-1">Purge expired signals</span>
+                <span className="text-xs text-muted-foreground">{maint?.expired_signals ?? 0}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void purgeLocations()}>
-                Clear stale locations
+                <span className="flex-1">Clear stale locations</span>
+                <span className="text-xs text-muted-foreground">{maint?.stale_locations ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_empty_matches", "Empty matches", { _days: 3 })
+                }
+              >
+                <span className="flex-1">Clear empty matches (3d+)</span>
+                <span className="text-xs text-muted-foreground">{maint?.empty_matches ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_old_notifications", "Old notifications", {
+                    _days: 30,
+                  })
+                }
+              >
+                <span className="flex-1">Clear notifications (30d+)</span>
+                <span className="text-xs text-muted-foreground">
+                  {maint?.old_notifications ?? 0}
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  void runMaintenance("admin_purge_old_reports", "Old reports", { _days: 90 })
+                }
+              >
+                <span className="flex-1">Clear reports (90d+)</span>
+                <span className="text-xs text-muted-foreground">{maint?.old_reports ?? 0}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => void purgeChatsNow()}>
+                Purge chats past history limit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  void purgeSignals();
+                  void purgeLocations();
+                  void runMaintenance("admin_purge_empty_matches", "Empty matches", { _days: 3 });
+                  void runMaintenance("admin_purge_old_notifications", "Old notifications", {
+                    _days: 30,
+                  });
+                }}
+              >
+                Run all routine jobs
               </DropdownMenuItem>
             </DropdownMenuContent>
+
           </DropdownMenu>
         </div>
       </div>
