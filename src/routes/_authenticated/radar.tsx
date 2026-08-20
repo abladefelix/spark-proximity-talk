@@ -798,16 +798,19 @@ function RadarPage() {
                           className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
                         />
                       )}
-                      {/* gendered avatar marker */}
+                      {/* gendered avatar marker; neutral gender is intentionally bare — only the ring + glow */}
                       <span
                         className={`relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`}
                         style={{ width: beaconSize * 0.62, height: beaconSize * 0.62 }}
                       >
-                        <GenderAvatarIcon
-                          gender={person.gender}
-                          className={`h-[76%] w-[76%] ${iconClass}`}
-                        />
+                        {person.gender && person.gender !== "other" && (
+                          <GenderAvatarIcon
+                            gender={person.gender}
+                            className={`h-[76%] w-[76%] ${iconClass}`}
+                          />
+                        )}
                       </span>
+
                     </>
                   );
                 })()}
