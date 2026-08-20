@@ -792,6 +792,19 @@ function RadarPage() {
           }}
         >
           <div className="radar-grid absolute inset-0" />
+          {/* Compass reference: beacons sit at their true bearing, north up. */}
+          <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
+            N
+          </span>
+          <span className="pointer-events-none absolute right-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            E
+          </span>
+          <span className="pointer-events-none absolute bottom-[2%] left-1/2 -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            S
+          </span>
+          <span className="pointer-events-none absolute left-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            W
+          </span>
           <div className="absolute inset-[16%] rounded-full border border-border/70" />
           <div className="absolute inset-[33%] rounded-full border border-border/50" />
           <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
