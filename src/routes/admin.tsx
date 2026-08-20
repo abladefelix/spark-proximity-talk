@@ -103,19 +103,27 @@ function Stat({
   icon: Icon,
   label,
   value,
+  onClick,
 }: {
   icon: typeof Users;
   label: string;
   value: number | string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`View ${label} details`}
+      className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-left transition-colors hover:border-primary/50 hover:bg-muted/50"
+    >
       <Icon className="size-3.5 shrink-0 text-primary" />
       <span className="text-sm font-semibold tabular-nums">{value}</span>
       <span className="truncate text-[11px] text-muted-foreground">{label}</span>
-    </div>
+    </button>
   );
 }
+
 
 
 function AdminPage() {
