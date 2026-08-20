@@ -21,11 +21,10 @@ export function SuspendedGate({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) return null;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("banned, banned_reason")
-        .eq("id", me)
-        .maybeSingle();
+      // Ban status is not readable from the profile table by ordinary members.
+      const { data: privateRows } = await supabase.rpc("my_profile_private");
+      const profile = (privateRows as any[] | null)?.[0] ?? null;
+
       const { data: appeal } = await supabase
         .from("reactivation_requests")
         .select("id, status, created_at")
