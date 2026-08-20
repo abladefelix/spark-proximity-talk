@@ -15,7 +15,7 @@ import {
 import { startCheckout, verifyCheckout } from "@/lib/paystack.functions";
 
 function proFeatures(b: BillingInfo) {
-  const items: string[] = [];
+  const items: string[] = ["Verification review by our team after payment"];
   if (b.pro_unlimited_signals) items.push("Unlimited signals every day");
   if (b.pro_extended_radius) items.push("Scan the full radar range");
   if (b.pro_unlimited_messages) items.push("Unlimited messages in every chat");
