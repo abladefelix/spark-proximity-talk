@@ -27,6 +27,9 @@ export function PersonAvatar({ path, name, username, gender, className }: Props)
   });
 
   const tint = (gender && genderTint[gender]) || "bg-secondary text-secondary-foreground";
+  const fallback = url ? null : (
+    <GenderAvatarIcon gender={gender} className="h-3/4 w-3/4" />
+  );
 
   return (
     <div
@@ -38,9 +41,12 @@ export function PersonAvatar({ path, name, username, gender, className }: Props)
     >
       {url ? (
         <img src={url} alt={name ?? username} className="h-full w-full object-cover" />
+      ) : fallback ? (
+        fallback
       ) : (
-        <GenderAvatarIcon gender={gender ?? "other"} className="h-3/4 w-3/4" />
+        <span className="text-[0.55em] leading-none">{(name ?? username ?? "?").charAt(0).toUpperCase()}</span>
       )}
     </div>
   );
 }
+
