@@ -92,6 +92,8 @@ type NearbyPerson = {
   bearing_deg?: number | null;
   /** Seconds since their location was last published. */
   updated_age_s?: number | null;
+  /** Horizontal accuracy radius reported by their device. */
+  accuracy_m?: number | null;
   /** Pro members get a priority beacon. */
   is_pro?: boolean | null;
   /** Pro members' chosen beacon colour (null unless they're Pro). */
@@ -290,10 +292,12 @@ function RadarPage() {
           accuracy?: unknown;
         };
         if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          const cachedAccuracy =
+            typeof parsed.accuracy === "number" ? parsed.accuracy : undefined;
           lastCoords.current = {
             latitude: parsed.latitude,
             longitude: parsed.longitude,
-            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : undefined,
+            ...(cachedAccuracy === undefined ? {} : { accuracy: cachedAccuracy }),
           };
         }
       } catch {
