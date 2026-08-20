@@ -27,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -416,6 +417,7 @@ function AdminPage() {
       "admin-appeals",
 
       "admin-access",
+      "admin-maintenance",
     ]) {
       queryClient.invalidateQueries({ queryKey: [key] });
     }
@@ -684,7 +686,7 @@ function AdminPage() {
                 <span className="text-xs text-muted-foreground">{maint?.old_reports ?? 0}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => void purgeChatsNow()}>
+              <DropdownMenuItem onSelect={() => void purgeOldChats()}>
                 Purge chats past history limit
               </DropdownMenuItem>
               <DropdownMenuItem
