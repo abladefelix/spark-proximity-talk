@@ -44,7 +44,7 @@ export function ActiveChats() {
           .in("id", otherIds),
         supabase
           .from("messages")
-          .select("match_id, content, created_at")
+          .select("match_id, content, created_at, kind")
           .in(
             "match_id",
             matches.map((m) => m.id),
@@ -64,7 +64,7 @@ export function ActiveChats() {
             display_name: p?.display_name ?? null,
             avatar_url: p?.avatar_url ?? null,
             gender: (p?.gender ?? null) as Row["gender"],
-            preview: last?.content ?? null,
+            preview: last ? (last.kind === "image" ? "📷 Photo" : last.kind === "pin" ? "📍 Meet-up pin" : last.content) : null,
             lastAt: new Date(last?.created_at ?? m.created_at).getTime(),
           };
         })

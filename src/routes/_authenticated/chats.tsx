@@ -57,7 +57,7 @@ function ChatsPage() {
 
       const { data: msgs } = await supabase
         .from("messages")
-        .select("match_id, content, created_at")
+        .select("match_id, content, created_at, kind")
         .in(
           "match_id",
           matches.map((m) => m.id),
@@ -77,7 +77,7 @@ function ChatsPage() {
             avatar_url: profile?.avatar_url ?? null,
             gender: (profile?.gender as Row["other"]["gender"]) ?? null,
           },
-          preview: last?.content ?? null,
+          preview: last ? (last.kind === "image" ? "📷 Photo" : last.kind === "pin" ? "📍 Meet-up pin" : last.content) : null,
           at: last?.created_at ?? m.created_at,
         };
       });
