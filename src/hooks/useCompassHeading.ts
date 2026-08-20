@@ -57,6 +57,9 @@ export function useCompassHeading(enabled: boolean) {
     const attach = () => {
       if (attached) return;
       attached = true;
+      samples.current = 0;
+      setSettled(false);
+      setListening(true);
       window.addEventListener("deviceorientationabsolute", handler as EventListener);
       window.addEventListener("deviceorientation", handler as EventListener);
     };
@@ -67,6 +70,7 @@ export function useCompassHeading(enabled: boolean) {
     } else if (anyEvent) {
       attach();
     }
+
 
     return () => {
       window.removeEventListener("deviceorientationabsolute", handler as EventListener);
