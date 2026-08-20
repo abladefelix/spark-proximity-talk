@@ -431,6 +431,7 @@ function RadarPage() {
   
   const selected = people.find((p) => p.id === selectedId) ?? null;
 
+
   async function blockPerson(person: NearbyPerson) {
     const me = (await supabase.auth.getUser()).data.user?.id;
     if (!me) return;
@@ -473,9 +474,14 @@ function RadarPage() {
     return () => ro.disconnect();
   }, []);
 
+  const [zoom, setZoom] = useState(1);
+  const [clusterKey, setClusterKey] = useState<string | null>(null);
+
   // Auto-fitting layout: zooms the scope to the furthest person, scales beacon
-  // size with crowd density and pushes overlapping beacons apart.
-  const { beacons, beaconSize } = useMemo(() => {
+
+  // size with crowd density, groups people who sit on top of each other into a
+  // tappable cluster and pushes the remaining beacons apart.
+  const { clusters, beaconSize } = useMemo(() => {
     const scope = scopeSize || 320;
     const count = people.length;
     const size = Math.max(
@@ -495,12 +501,29 @@ function RadarPage() {
     });
 
     const minGap = size + 6;
+    // Cluster in screen space: zooming in shrinks the merge radius so crowded
+    // groups break apart into individual beacons as you pinch.
+    const mergeGap = minGap / Math.max(1, zoom);
+    type Cluster = { x: number; y: number; members: typeof people };
+    const groups: Cluster[] = [];
+    for (const n of nodes) {
+      const hit = groups.find((g) => Math.hypot(g.x - n.x, g.y - n.y) < mergeGap * 0.75);
+      if (hit) {
+        const k = hit.members.length;
+        hit.x = (hit.x * k + n.x) / (k + 1);
+        hit.y = (hit.y * k + n.y) / (k + 1);
+        hit.members.push(n.person);
+      } else {
+        groups.push({ x: n.x, y: n.y, members: [n.person] });
+      }
+    }
+
     for (let iter = 0; iter < 80; iter++) {
       let moved = false;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]!;
-          const b = nodes[j]!;
+      for (let i = 0; i < groups.length; i++) {
+        for (let j = i + 1; j < groups.length; j++) {
+          const a = groups[i]!;
+          const b = groups[j]!;
           let dx = b.x - a.x;
           let dy = b.y - a.y;
           let d = Math.hypot(dx, dy);
@@ -509,8 +532,8 @@ function RadarPage() {
             dy = Math.sin(i * 2.4) * 0.01;
             d = 0.01;
           }
-          if (d < minGap) {
-            const push = (minGap - d) / 2;
+          if (d < mergeGap) {
+            const push = (mergeGap - d) / 2;
             const ux = dx / d;
             const uy = dy / d;
             a.x -= ux * push;
@@ -521,7 +544,7 @@ function RadarPage() {
           }
         }
       }
-      for (const n of nodes) {
+      for (const n of groups) {
         const d = Math.hypot(n.x, n.y);
         if (d > limit) {
           n.x = (n.x / d) * limit;
@@ -533,21 +556,25 @@ function RadarPage() {
 
     return {
       beaconSize: size,
-      beacons: nodes.map((n) => ({
-        person: n.person,
-        left: `calc(50% + ${n.x}px)`,
-        top: `calc(50% + ${n.y}px)`,
+      clusters: groups.map((g) => ({
+        key: g.members.map((m) => m.id).join("|"),
+        members: g.members,
+        left: `calc(50% + ${g.x}px)`,
+        top: `calc(50% + ${g.y}px)`,
       })),
     };
-  }, [people, scopeSize, radius]);
+  }, [people, scopeSize, radius, zoom]);
+
+  const clusterMembers = clusters.find((c) => c.key === clusterKey)?.members ?? [];
+
 
   // ---- Zoom & pan on the radar scope -------------------------------------
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 6;
-  const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   viewRef.current = { zoom, pan };
+
 
   const clampPan = (z: number, p: { x: number; y: number }) => {
     const scope = scopeSize || 320;
@@ -746,7 +773,57 @@ function RadarPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
           />
 
-          {beacons.map(({ person, left, top }) => (
+          {clusters.map((cluster) => {
+            const { members, left, top, key } = cluster;
+            if (members.length > 1) {
+              const nearest = members.reduce((a, b) => (a.distance_m <= b.distance_m ? a : b));
+              const pinged = members.some((m) => m.they_signaled && !m.match_id);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    if (dragged.current) return;
+                    setClusterKey(key);
+                  }}
+                  style={{ left, top }}
+                  aria-label={`${members.length} people about ${formatDistance(nearest.distance_m)} away — tap to pick one`}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
+                >
+                  <span
+                    className="relative flex items-center justify-center"
+                    style={{ width: beaconSize, height: beaconSize }}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 rounded-full bg-primary/25 blur-md"
+                    />
+                    {pinged && (
+                      <span
+                        aria-hidden
+                        className="beacon-ping absolute inset-0 rounded-full border border-primary/60"
+                      />
+                    )}
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 -translate-x-[9%] -translate-y-[9%] rounded-full border border-border/70 bg-background/60"
+                    />
+                    <span
+                      className="relative z-10 flex items-center justify-center rounded-full bg-background font-semibold text-primary ring-2 ring-primary heartbeat-glow"
+                      style={{
+                        width: beaconSize * 0.72,
+                        height: beaconSize * 0.72,
+                        fontSize: Math.max(10, beaconSize * 0.3),
+                      }}
+                    >
+                      {members.length}
+                    </span>
+                  </span>
+                </button>
+              );
+            }
+            const person = members[0]!;
+            return (
             <button
               key={person.id}
               type="button"
@@ -817,8 +894,9 @@ function RadarPage() {
               </span>
 
             </button>
+            );
+          })}
 
-          ))}
         </div>
 
         {settings.radar_sweep_enabled && (
@@ -834,6 +912,50 @@ function RadarPage() {
       </section>
       </div>
 
+      {/* Crowd picker: several people standing on the same spot */}
+      <Dialog open={clusterMembers.length > 1} onOpenChange={(o) => !o && setClusterKey(null)}>
+        <DialogContent className="max-w-xs rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {clusterMembers.length} people right here
+            </DialogTitle>
+            <DialogDescription>Pick someone, or pinch the radar to zoom in.</DialogDescription>
+          </DialogHeader>
+          <div className="-mx-2 max-h-[52vh] space-y-1 overflow-y-auto px-2">
+            {clusterMembers.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setClusterKey(null);
+                  setSelectedId(p.id);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-secondary/60"
+              >
+                <PersonAvatar
+                  path={p.avatar_url}
+                  name={p.display_name}
+                  username={p.username}
+                  gender={p.gender}
+                  className="size-10 shrink-0"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 truncate text-sm font-medium">
+                    {p.display_name ?? p.username}
+                    {p.verified && <VerifiedBadge className="size-3.5" />}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {formatDistance(p.distance_m)}
+                    {p.is_online ? " · active now" : ""}
+                    {p.they_signaled && !p.match_id ? " · signaled you" : ""}
+                  </span>
+                </span>
+                {p.match_id && <Check className="size-4 shrink-0 text-muted-foreground" />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
       <Dialog
