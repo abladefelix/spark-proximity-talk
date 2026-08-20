@@ -94,6 +94,27 @@ console.error = (...args: unknown[]) => {
   originalConsoleError(...expanded);
 };
 
+// In dev the app runs on a Node HTTP server. When a client closes the socket
+// mid-response, node emits `Error: aborted` from abortIncoming as an
+// uncaughtException — outside any middleware. Swallow it there too, otherwise
+// it is reported as a runtime error with a blank screen.
+const nodeProcess = (globalThis as { process?: NodeJS.Process }).process;
+if (nodeProcess && typeof nodeProcess.on === "function") {
+  nodeProcess.on("uncaughtException", (error: unknown) => {
+    if (isClientDisconnect(error)) {
+      console.debug("client disconnected before the response finished");
+      return;
+    }
+    record(error);
+    originalConsoleError(describeError(error));
+  });
+  nodeProcess.on("unhandledRejection", (reason: unknown) => {
+    if (isClientDisconnect(reason)) return;
+    record(reason);
+    originalConsoleError(describeError(reason));
+  });
+}
+
 if (typeof globalThis.addEventListener === "function") {
   globalThis.addEventListener("error", (event) => {
     const error = (event as ErrorEvent).error ?? event;
