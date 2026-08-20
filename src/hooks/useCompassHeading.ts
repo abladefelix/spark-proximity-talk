@@ -10,7 +10,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export function useCompassHeading(enabled: boolean) {
   const [heading, setHeading] = useState<number | null>(null);
   const [needsPermission, setNeedsPermission] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [settled, setSettled] = useState(false);
   const smoothed = useRef<number | null>(null);
+  const samples = useRef(0);
 
   const apply = useCallback((next: number) => {
     const prev = smoothed.current;
@@ -23,8 +26,13 @@ export function useCompassHeading(enabled: boolean) {
       delta *= 0.25;
       smoothed.current = (prev + delta + 360) % 360;
     }
+    samples.current += 1;
+    // The first readings lag behind reality while the magnetometer settles,
+    // so only trust the rose once enough samples have flowed through.
+    if (samples.current >= 12) setSettled(true);
     setHeading(smoothed.current);
   }, []);
+
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
