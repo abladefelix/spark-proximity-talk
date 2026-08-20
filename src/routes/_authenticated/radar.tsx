@@ -597,7 +597,26 @@ function RadarPage() {
 
   // Live compass. In heading-up mode the whole scope counter-rotates with the
   // phone, so the top of the radar is literally the way you are facing.
-  const [headingUp, setHeadingUp] = useState(true);
+  // Defaults to enabled and is persisted across sessions.
+  const [headingUp, setHeadingUp] = useState(() => {
+    try {
+      const saved = localStorage.getItem("skan-compass");
+      return saved === null ? true : saved === "true";
+    } catch {
+      return true;
+    }
+  });
+  const toggleHeadingUp = () => {
+    setHeadingUp((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("skan-compass", String(next));
+      } catch {
+        /* storage unavailable */
+      }
+      return next;
+    });
+  };
   const {
     heading,
     needsPermission,
@@ -1050,12 +1069,12 @@ function RadarPage() {
         onClick={() => {
           if (needsPermission) {
             void requestCompass().then((ok) => {
-              if (ok) setHeadingUp(true);
+              if (ok) toggleHeadingUp();
               else toast.error("Compass access was declined");
             });
             return;
           }
-          setHeadingUp((v) => !v);
+          toggleHeadingUp();
         }}
         className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
