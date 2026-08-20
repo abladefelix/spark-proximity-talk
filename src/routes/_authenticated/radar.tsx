@@ -192,13 +192,16 @@ function RadarPage() {
     const push = async (
       raw: { latitude: number; longitude: number; accuracy?: number | null },
       force = false,
+      preSmoothed = false,
     ) => {
       if (cancelled) return;
       if (!Number.isFinite(raw.latitude) || !Number.isFinite(raw.longitude)) return;
 
       // Smooth GPS jitter before publishing so distances stay steady while
       // standing still, yet still follow real movement.
-      const smoothed = filter.process(raw);
+      const smoothed = preSmoothed
+        ? { latitude: raw.latitude, longitude: raw.longitude, accuracy: raw.accuracy ?? filter.accuracy ?? 50 }
+        : filter.process(raw);
       if (!smoothed) return;
       const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
       const accuracy = smoothed.accuracy;
@@ -443,7 +446,7 @@ function RadarPage() {
     // and ask for a fresh one when the watcher never delivered anything.
     const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
-      if (coords) void push(coords, true);
+      if (coords) void push(coords, true, true);
       else refreshFix();
     }, 10000);
 
@@ -452,7 +455,7 @@ function RadarPage() {
     const onWake = () => {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
-      if (coords) void push(coords, true);
+      if (coords) void push(coords, true, true);
       refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
