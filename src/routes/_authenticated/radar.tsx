@@ -84,6 +84,10 @@ type NearbyPerson = {
   verified: boolean;
   is_online: boolean;
   gender: "male" | "female" | "other" | null;
+  /** True compass bearing from me to them, 0 = north, clockwise. */
+  bearing_deg?: number | null;
+  /** Seconds since their location was last published. */
+  updated_age_s?: number | null;
 };
 
 function formatDistance(m: number) {
@@ -148,10 +152,34 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    const push = async (coords: { latitude: number; longitude: number }) => {
+    let lastPublished: { lat: number; lng: number; at: number } | null = null;
+    const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+      const R = 6371000;
+      const dLat = ((bLat - aLat) * Math.PI) / 180;
+      const dLng = ((bLng - aLng) * Math.PI) / 180;
+      const la = (aLat * Math.PI) / 180;
+      const lb = (bLat * Math.PI) / 180;
+      const h =
+        Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    };
+    const push = async (coords: { latitude: number; longitude: number }, force = false) => {
       if (cancelled) return;
       lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
+
+      // Movement filter: publish whenever the person actually moved a few
+      // metres, otherwise fall back to the slower presence heartbeat. This
+      // keeps moving beacons tracking in near real time without spamming.
+      if (!force && lastPublished) {
+        const moved = metresBetween(
+          lastPublished.lat,
+          lastPublished.lng,
+          coords.latitude,
+          coords.longitude,
+        );
+        if (moved < 4 && Date.now() - lastPublished.at < 15000) return;
+      }
 
       // Use the locally cached session: a network round-trip here (getUser)
       // can hang on flaky mobile networks and silently kill the heartbeat.
@@ -161,6 +189,7 @@ function RadarPage() {
         myIdRef.current = me;
       }
       if (!me) return;
+      lastPublished = { lat: coords.latitude, lng: coords.longitude, at: Date.now() };
       const { error } = await supabase.from("locations").upsert(
         {
           user_id: me,
@@ -247,7 +276,7 @@ function RadarPage() {
           browserWatch = navigator.geolocation.watchPosition(
             (position) => void push(position.coords),
             () => {},
-            { enableHighAccuracy: false, maximumAge: 300000, timeout: 30000 },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 },
           );
         }
         try {
@@ -263,7 +292,7 @@ function RadarPage() {
           setAskLocation(false);
           setPermDenied(false);
           nativeWatch = await Geolocation.watchPosition(
-            { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
             (position, error) => {
               if (position) void push(position.coords);
               else if (error) {
@@ -296,7 +325,7 @@ function RadarPage() {
               browserWatch = navigator.geolocation.watchPosition(
                 (position) => void push(position.coords),
                 () => {},
-                { enableHighAccuracy: false, maximumAge: 300000, timeout: 60000 },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
               );
             }
           }
@@ -318,7 +347,7 @@ function RadarPage() {
       browserWatch = navigator.geolocation.watchPosition(
         (position) => void push(position.coords),
         (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: true, maximumAge: 300000, timeout: 60000 },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 60000 },
       );
     })();
 
@@ -327,7 +356,7 @@ function RadarPage() {
     // and ask for a fresh one when the watcher never delivered anything.
     const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
-      if (coords) void push(coords);
+      if (coords) void push(coords, true);
       else refreshFix();
     }, 20000);
 
@@ -336,7 +365,7 @@ function RadarPage() {
     const onWake = () => {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
-      if (coords) void push(coords);
+      if (coords) void push(coords, true);
       refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
@@ -504,11 +533,17 @@ function RadarPage() {
     const limit = scope * 0.46 - layerSize / 2;
 
     const nodes = people.map((person) => {
-      let hash = 0;
-      for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
-      const angle = ((hash >>> 0) % 360) * (Math.PI / 180);
+      // True geographic placement: north is up, bearing runs clockwise.
+      let bearing = person.bearing_deg;
+      if (bearing == null || !Number.isFinite(bearing)) {
+        // Only used if the server could not resolve a bearing.
+        let hash = 0;
+        for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
+        bearing = (hash >>> 0) % 360;
+      }
+      const rad = (Number(bearing) * Math.PI) / 180;
       const rr = Math.min(1, person.distance_m / viewMax) * limit;
-      return { person, x: Math.cos(angle) * rr, y: Math.sin(angle) * rr };
+      return { person, x: Math.sin(rad) * rr, y: -Math.cos(rad) * rr };
     });
 
     // Minimum separation shrinks with zoom in layer units, i.e. stays a fixed
@@ -757,6 +792,19 @@ function RadarPage() {
           }}
         >
           <div className="radar-grid absolute inset-0" />
+          {/* Compass reference: beacons sit at their true bearing, north up. */}
+          <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
+            N
+          </span>
+          <span className="pointer-events-none absolute right-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            E
+          </span>
+          <span className="pointer-events-none absolute bottom-[2%] left-1/2 -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            S
+          </span>
+          <span className="pointer-events-none absolute left-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+            W
+          </span>
           <div className="absolute inset-[16%] rounded-full border border-border/70" />
           <div className="absolute inset-[33%] rounded-full border border-border/50" />
           <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
