@@ -51,6 +51,9 @@ export default {
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
+      if (isClientDisconnect(error) || request.signal.aborted) {
+        return new Response(null, { status: 499, statusText: "Client Closed Request" });
+      }
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,
