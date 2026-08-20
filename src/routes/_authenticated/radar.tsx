@@ -809,6 +809,17 @@ function RadarPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showPro} onOpenChange={setShowPro}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{billing?.pro_label ?? "Go Pro"}</DialogTitle>
+            <DialogDescription>{billing?.pro_pitch ?? "Unlock the full radar experience."}</DialogDescription>
+          </DialogHeader>
+          <ProUpgradeCard />
+        </DialogContent>
+      </Dialog>
+
+
 
 
       {geoError && (
