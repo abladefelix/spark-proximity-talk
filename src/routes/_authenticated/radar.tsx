@@ -964,6 +964,30 @@ function RadarPage() {
       </section>
       </div>
 
+      {/* Compass toggle sits below the radar scope, not on top of it. */}
+      <button
+        type="button"
+        onClick={() => {
+          if (needsPermission) {
+            void requestCompass().then((ok) => {
+              if (ok) setHeadingUp(true);
+              else toast.error("Compass access was declined");
+            });
+            return;
+          }
+          setHeadingUp((v) => !v);
+        }}
+        className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur"
+      >
+        <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+        {needsPermission
+          ? "Enable compass"
+          : compassActive
+            ? `Facing ${compassPoint(heading as number)}`
+            : "North up"}
+      </button>
+
+
 
 
 
