@@ -17,6 +17,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
 
 function useNativeViewportLock() {
