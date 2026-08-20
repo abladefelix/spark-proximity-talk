@@ -54,21 +54,21 @@ type BubbleProps = {
 
 /** Memoized so a new message never re-renders the whole transcript. */
 const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
-  const corner = `rounded-[20px] ${lastOfGroup ? (mine ? "rounded-br-[7px]" : "rounded-bl-[7px]") : ""}`;
+  const corner = `rounded-[18px] ${lastOfGroup ? (mine ? "rounded-br-[6px]" : "rounded-bl-[6px]") : ""}`;
   const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
 
   return (
-    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_56px]">
+    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px]">
       {newDay && (
-        <div className="my-4 flex justify-center">
-          <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+        <div className="my-3 flex justify-center">
+          <span className="rounded-full bg-secondary/70 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
             {dayLabel(m.created_at)}
           </span>
         </div>
       )}
 
       <div
-        className={`flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
+        className={`flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-10" : "justify-start pr-10"}`}
       >
         <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
           {m.kind === "image" ? (
@@ -82,14 +82,14 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: B
                 <img
                   src={m.mediaUrl}
                   alt="Shared in chat"
-                  className="max-h-72 w-full object-cover"
+                  className="max-h-64 w-full object-cover"
                   loading="lazy"
                   decoding="async"
                 />
               </a>
             ) : (
               <div
-                className={`flex h-36 w-52 items-center justify-center ${corner} bg-secondary text-xs text-muted-foreground`}
+                className={`flex h-32 w-48 items-center justify-center ${corner} bg-secondary text-[11px] text-muted-foreground`}
               >
                 Picture unavailable
               </div>
@@ -99,18 +99,18 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: B
               href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center gap-2 px-4 py-2.5 text-[15px] ${corner} ${skin}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[14px] ${corner} ${skin}`}
             >
-              <MapPin className="size-4" />
+              <MapPin className="size-3.5" />
               <span>Meet-up pin</span>
             </a>
           ) : (
-            <div className={`px-3.5 py-[7px] ${corner} ${skin}`}>
-              <p className="whitespace-pre-wrap break-words text-[16px] leading-[1.35]">{m.content}</p>
+            <div className={`px-3 py-[6px] ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.35]">{m.content}</p>
             </div>
           )}
           {lastOfGroup && (
-            <span className="mt-[3px] px-1 text-[10.5px] leading-none text-muted-foreground">
+            <span className="mt-[2px] px-1 text-[10px] leading-none text-muted-foreground">
               {timeLabel(m.created_at)}
             </span>
           )}
