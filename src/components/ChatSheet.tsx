@@ -26,9 +26,12 @@ function ChatBackdrop() {
   if (!css) return null;
 
   return (
+    // No backdrop-filter here: a full-screen blur layer forces the compositor to
+    // repaint the whole chat on every scroll frame. A flat wash is just as soft
+    // and keeps scrolling at 60fps.
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0 opacity-50 dark:opacity-40" style={{ background: css }} />
-      <div className="absolute inset-0 bg-background/75 backdrop-blur-2xl" />
+      <div className="absolute inset-0 opacity-[0.22] dark:opacity-[0.16]" style={{ background: css }} />
+      <div className="absolute inset-0 bg-background/70" />
     </div>
   );
 }
