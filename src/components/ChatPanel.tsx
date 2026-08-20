@@ -176,7 +176,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
         .createSignedUrls(missing, 3600);
       for (const item of signed ?? []) {
         const url = item.signedUrl;
-        if (url) signedCache.current.set(item.path, url);
+        const path = item.path;
+        if (url && path) signedCache.current.set(path, url);
       }
     }
     return rows.map((m) => {
