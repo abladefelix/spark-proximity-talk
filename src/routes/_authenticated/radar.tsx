@@ -101,11 +101,8 @@ type NearbyPerson = {
 };
 
 
-function formatDistance(m: number) {
-  if (m < 100) return `${Math.max(0, Math.round(m * 10) / 10).toFixed(1)} m`;
-  if (m < 1000) return `${Math.round(m)} m`;
-  return `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`;
-}
+
+
 
 function genderToken(gender: NearbyPerson["gender"]) {
   if (gender === "male") return "gender-male";
