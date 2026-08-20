@@ -24,6 +24,8 @@ export function formatDistance(m: number, unit: DistanceUnit = "metric") {
     const mi = metres / 1609.344;
     return `${mi.toFixed(mi < 10 ? 2 : 1)} mi`;
   }
+  // Up close, feet give a finer, more "exact spot" reading than metres.
+  if (metres < 15) return `${Math.round(metres * 3.28084)} ft`;
   if (metres < 100) return `${(Math.round(metres * 10) / 10).toFixed(1)} m`;
   if (metres < 1000) return `${Math.round(metres)} m`;
   return `${(metres / 1000).toFixed(metres < 10000 ? 2 : 1)} km`;
