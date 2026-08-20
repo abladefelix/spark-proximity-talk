@@ -880,7 +880,7 @@ function RadarPage() {
                 style={{
                   width: beaconSize,
                   height: beaconSize,
-                  transform: `scale(${markerScale})`,
+                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
                 }}
               >
                 {(() => {
