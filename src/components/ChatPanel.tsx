@@ -58,7 +58,7 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: B
   const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
 
   return (
-    <div className="shrink-0">
+    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_56px]">
       {newDay && (
         <div className="my-4 flex justify-center">
           <span className="rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
@@ -318,7 +318,6 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       setText(content);
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
     if (other?.id) {
       sendPush({
         data: {
@@ -363,9 +362,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     if (messageError) {
       await supabase.storage.from("chat-media").remove([path]);
       toast.error("Picture didn't send");
-      return;
     }
-    queryClient.invalidateQueries({ queryKey: ["messages", matchId] });
   }
 
   const name = other?.display_name ?? other?.username ?? "Chat";
@@ -374,7 +371,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     <div className={className ?? "flex h-full min-h-0 flex-col"}>
       {/* Header */}
       <header
-        className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background/70 px-1.5 pb-2 backdrop-blur-xl"
+        className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background px-1.5 pb-2"
         style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
       >
         <button
@@ -413,8 +410,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
         ref={scrollRef}
         data-scrollable
         data-selectable
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3 pt-4"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3 pt-4 [transform:translateZ(0)]"
+        style={{ WebkitOverflowScrolling: "touch", contain: "layout paint" }}
       >
         <div className="mt-auto" />
 
@@ -452,7 +449,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       {/* Composer */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background/70 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl"
+        className="z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2"
       >
         <input
           ref={fileRef}
