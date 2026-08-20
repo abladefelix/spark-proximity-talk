@@ -23,6 +23,7 @@ export type AdminUserDetails = {
   displayName: string | null;
   bio: string | null;
   gender: string | null;
+  avatarUrl: string | null;
   verified: boolean;
   banned: boolean;
   bannedReason: string | null;
