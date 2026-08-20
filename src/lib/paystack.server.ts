@@ -15,6 +15,14 @@ export async function activateFromTransaction(tx: any): Promise<{
   const plan: Plan = tx?.metadata?.plan === "yearly" ? "yearly" : "monthly";
   const reference: string = tx?.reference;
 
+  // Only email a receipt the first time this reference is confirmed.
+  const { data: existing } = await (supabaseAdmin as any)
+    .from("payments")
+    .select("status")
+    .eq("reference", reference)
+    .maybeSingle();
+  const alreadyPaid = existing?.status === "success";
+
   await (supabaseAdmin as any)
     .from("payments")
     .upsert(
@@ -58,6 +66,21 @@ export async function activateFromTransaction(tx: any): Promise<{
     },
     { onConflict: "user_id" },
   );
+
+  if (!alreadyPaid) {
+    const { sendPaymentReceipt } = await import("@/lib/receipt-email.server");
+    await sendPaymentReceipt({
+      userId,
+      email: tx?.customer?.email ?? null,
+      name: tx?.customer?.first_name ?? null,
+      reference,
+      plan,
+      amount: Number(tx?.amount ?? 0),
+      currency: tx?.currency ?? "GHS",
+      paidAt: tx?.paid_at ?? new Date().toISOString(),
+      expiresAt: expires.toISOString(),
+    });
+  }
 
   return { status: "success", plan, expiresAt: expires.toISOString() };
 }

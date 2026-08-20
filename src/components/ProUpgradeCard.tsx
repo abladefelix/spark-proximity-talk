@@ -113,6 +113,11 @@ export function ProUpgradeCard() {
               </li>
             ))}
           </ul>
+          {billing.monthly_amount <= 0 && billing.yearly_amount <= 0 ? (
+            <p className="mt-4 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+              Pricing isn't set up yet. Please check back soon.
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             {billing.monthly_amount > 0 ? (
               <Button
