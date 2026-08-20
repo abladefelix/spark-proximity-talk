@@ -395,7 +395,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("verification_requests")
-        .select("id, user_id, selfie_path, status, created_at")
+        .select("id, user_id, selfie_path, status, created_at, source")
         .eq("status", "pending")
         .order("created_at", { ascending: true });
       if (!rows?.length) return [];
@@ -408,9 +408,9 @@ function AdminPage() {
         );
       const signed = await Promise.all(
         rows.map(async (r) => {
-          const { data } = await supabase.storage
-            .from("verifications")
-            .createSignedUrl(r.selfie_path, 300);
+          const { data } = r.selfie_path
+            ? await supabase.storage.from("verifications").createSignedUrl(r.selfie_path, 300)
+            : { data: null as { signedUrl: string } | null };
           return {
             ...r,
             selfieUrl: data?.signedUrl ?? null,
@@ -1091,9 +1091,14 @@ function AdminPage() {
                 ) : (
                   <div className="size-10 rounded-lg bg-muted" />
                 )}
-                <p className="min-w-0 flex-1 truncate text-sm font-medium">
-                  @{v.person?.username ?? "unknown"}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    @{v.person?.username ?? "unknown"}
+                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {v.source === "pro" ? "Pro payment — awaiting verification" : "Selfie submission"}
+                  </p>
+                </div>
                 <Button
                   size="sm"
                   variant="heat"

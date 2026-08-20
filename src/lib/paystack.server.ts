@@ -67,6 +67,36 @@ export async function activateFromTransaction(tx: any): Promise<{
     { onConflict: "user_id" },
   );
 
+  // Paid members go into the verification queue so an admin can confirm them
+  // and grant the verified badge. Never override a selfie request in flight.
+  const { data: profile } = await (supabaseAdmin as any)
+    .from("profiles")
+    .select("verified")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile?.verified) {
+    const { data: existingRequest } = await (supabaseAdmin as any)
+      .from("verification_requests")
+      .select("id, status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!existingRequest) {
+      await (supabaseAdmin as any).from("verification_requests").insert({
+        user_id: userId,
+        selfie_path: null,
+        status: "pending",
+        source: "pro",
+      });
+    } else if (existingRequest.status !== "pending") {
+      await (supabaseAdmin as any)
+        .from("verification_requests")
+        .update({ status: "pending", source: "pro", reviewed_at: null })
+        .eq("id", existingRequest.id);
+    }
+  }
+
   if (!alreadyPaid) {
     const { sendPaymentReceipt } = await import("@/lib/receipt-email.server");
     await sendPaymentReceipt({
