@@ -47,6 +47,7 @@ function AuthedLayout() {
         <BottomNav />
       </div>
     </ChatSheetProvider>
+    </BiometricGate>
   );
 }
 
