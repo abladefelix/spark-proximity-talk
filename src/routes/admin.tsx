@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   Ban,
   EyeOff,
+  Crown,
 
   Flag,
   Loader2,
@@ -1088,6 +1089,15 @@ function AdminPage() {
                     height={40}
                     className="size-10 rounded-lg object-cover"
                   />
+                ) : v.person?.avatar_url ? (
+                  <img
+                    src={v.person.avatar_url}
+                    alt={`Profile photo of @${v.person?.username ?? "user"}`}
+                    loading="lazy"
+                    width={40}
+                    height={40}
+                    className="size-10 rounded-lg object-cover"
+                  />
                 ) : (
                   <div className="size-10 rounded-lg bg-muted" />
                 )}
@@ -1095,9 +1105,13 @@ function AdminPage() {
                   <p className="truncate text-sm font-medium">
                     @{v.person?.username ?? "unknown"}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {v.source === "pro" ? "Pro payment — awaiting verification" : "Selfie submission"}
-                  </p>
+                  {v.source === "pro" ? (
+                    <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      <Crown className="size-3" /> Paid — awaiting badge
+                    </span>
+                  ) : (
+                    <p className="truncate text-[11px] text-muted-foreground">Selfie submission</p>
+                  )}
                 </div>
                 <Button
                   size="sm"
