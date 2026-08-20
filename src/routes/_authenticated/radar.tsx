@@ -892,8 +892,11 @@ function RadarPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
           />
 
-          {beacons.map(({ person, left, top }) => (
-
+          {beacons.map(({ person, left, top }) => {
+            const priority = Boolean(person.is_pro) && proPriorityOn;
+            const custom = beaconColor(person.beacon_style);
+            const scaleUp = priority ? 1.16 : 1;
+            return (
             <button
               key={person.id}
               type="button"
@@ -901,8 +904,13 @@ function RadarPage() {
                 if (dragged.current) return;
                 setSelectedId(person.id);
               }}
-              style={{ left, top, opacity: person.is_online ? 1 : 0.5 }}
-              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}`}
+              style={{
+                left,
+                top,
+                opacity: person.is_online ? 1 : 0.5,
+                zIndex: priority ? 3 : 2,
+              }}
+              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
             >
               <span
@@ -910,7 +918,7 @@ function RadarPage() {
                 style={{
                   width: beaconSize,
                   height: beaconSize,
-                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
+                  transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
                 }}
               >
                 {(() => {
@@ -940,24 +948,43 @@ function RadarPage() {
                       {/* soft glow pool */}
                       <span
                         aria-hidden
-                        className={`absolute inset-0 rounded-full blur-md ${glowClass}`}
+                        className={custom ? "absolute inset-0 rounded-full blur-md" : `absolute inset-0 rounded-full blur-md ${glowClass}`}
+                        style={custom ? { background: custom, opacity: 0.35 } : undefined}
                       />
                       {/* ping for people who signaled you */}
                       {person.they_signaled && !person.match_id && (
                         <span
                           aria-hidden
-                          className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
+                          className={custom ? "beacon-ping absolute inset-0 rounded-full border" : `beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
+                          style={custom ? { borderColor: custom } : undefined}
+                        />
+                      )}
+                      {/* Pro priority halo */}
+                      {priority && (
+                        <span
+                          aria-hidden
+                          className="absolute inset-[-14%] rounded-full border"
+                          style={{ borderColor: custom ?? "oklch(0.82 0.16 85)", opacity: 0.7 }}
                         />
                       )}
                       {/* gendered avatar marker; neutral gender is intentionally bare — only the ring + glow */}
                       <span
-                        className={`relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`}
-                        style={{ width: beaconSize * 0.62, height: beaconSize * 0.62 }}
+                        className={
+                          custom
+                            ? "relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow"
+                            : `relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`
+                        }
+                        style={{
+                          width: beaconSize * 0.62,
+                          height: beaconSize * 0.62,
+                          ...(custom ? { ["--tw-ring-color" as any]: custom } : {}),
+                        }}
                       >
                         {person.gender && person.gender !== "other" && (
                           <GenderAvatarIcon
                             gender={person.gender}
-                            className={`h-[76%] w-[76%] ${iconClass}`}
+                            className={custom ? "h-[76%] w-[76%]" : `h-[76%] w-[76%] ${iconClass}`}
+                            style={custom ? { color: custom } : undefined}
                           />
                         )}
                       </span>
@@ -968,7 +995,9 @@ function RadarPage() {
               </span>
 
             </button>
-          ))}
+            );
+          })}
+
 
 
         </div>
