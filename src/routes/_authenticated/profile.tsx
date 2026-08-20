@@ -247,6 +247,39 @@ function ProfilePage() {
         </div>
       </section>
 
+      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
+        <DialogContent className="max-w-sm">
+          <div className="flex flex-col items-center gap-4 pt-2">
+            <PersonAvatar
+              path={profile?.avatar_url}
+              name={profile?.display_name}
+              gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
+              username={profile?.username ?? "?"}
+              className="size-56 rounded-full"
+            />
+            <p className="text-sm font-semibold">@{profile?.username ?? "…"}</p>
+            <label className="w-full">
+              <span className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground">
+                <Camera className="size-4" /> Change photo
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    void uploadPhoto(file);
+                    setPhotoOpen(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       <section className="mt-6">
         <GoProButton variant="full" />
       </section>
