@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -5,9 +6,13 @@ import { Check, Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { approveUserEmail, listPendingEmails } from "@/lib/emails.functions";
+import { Pager, paginate } from "@/components/admin/Pager";
+
+const PER_PAGE = 10;
 
 export function EmailsTab() {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
   const fetchPending = useServerFn(listPendingEmails);
   const approve = useServerFn(approveUserEmail);
 
@@ -34,8 +39,9 @@ export function EmailsTab() {
   }
 
   return (
+    <>
     <ul className="divide-y divide-border rounded-xl border border-border">
-      {pending.map((u) => (
+      {paginate(pending, page, PER_PAGE).map((u) => (
         <li key={u.id} className="flex items-center gap-2.5 px-2.5 py-2">
           <MailCheck className="size-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0 flex-1">
@@ -62,5 +68,7 @@ export function EmailsTab() {
         </li>
       )}
     </ul>
+    <Pager page={page} perPage={PER_PAGE} total={pending.length} onPageChange={setPage} label="emails" />
+    </>
   );
 }

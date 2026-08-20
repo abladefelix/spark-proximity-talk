@@ -222,7 +222,7 @@ function ProfilePage() {
   }
 
   return (
-    <main className="px-5 pt-8">
+    <main className="px-5 pb-12 pt-8">
       <h1 className="text-2xl font-semibold">You</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         This is what people see when your signal lands.

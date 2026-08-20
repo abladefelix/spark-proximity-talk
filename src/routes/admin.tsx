@@ -38,6 +38,8 @@ import { useMaxRadius } from "@/hooks/useMaxRadius";
 import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 
+import { StatDetailDialog, type StatMetric } from "@/components/admin/StatDetailDialog";
+import { Pager, paginate } from "@/components/admin/Pager";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
@@ -99,29 +101,44 @@ function AdminRoute() {
 
 type Role = "admin" | "moderator" | "user";
 
+const PER_PAGE = 10;
+
 function Stat({
   icon: Icon,
   label,
   value,
+  onClick,
 }: {
   icon: typeof Users;
   label: string;
   value: number | string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`View ${label} details`}
+      className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-left transition-colors hover:border-primary/50 hover:bg-muted/50"
+    >
       <Icon className="size-3.5 shrink-0 text-primary" />
       <span className="text-sm font-semibold tabular-nums">{value}</span>
       <span className="truncate text-[11px] text-muted-foreground">{label}</span>
-    </div>
+    </button>
   );
 }
+
 
 
 function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
+  const [statMetric, setStatMetric] = useState<StatMetric | null>(null);
+  const [peoplePage, setPeoplePage] = useState(0);
+  const [reportsPage, setReportsPage] = useState(0);
+  const [verifyPage, setVerifyPage] = useState(0);
+  const [appealsPage, setAppealsPage] = useState(0);
   const { data: accentHue } = useAccentHue();
   const [customColor, setCustomColor] = useState("#ffb020");
   const { data: branding } = useBranding();
@@ -705,12 +722,12 @@ function AdminPage() {
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-1.5">
-        <Stat icon={Users} label="people" value={Number(stats?.people ?? 0)} />
-        <Stat icon={Radio} label="online" value={Number(stats?.online ?? 0)} />
-        <Stat icon={BadgeCheck} label="verified" value={Number(stats?.verified ?? 0)} />
-        <Stat icon={Radio} label="signals" value={Number(stats?.signals ?? 0)} />
-        <Stat icon={Users} label="matches" value={Number(stats?.matches ?? 0)} />
-        <Stat icon={Flag} label="reports" value={Number(stats?.reports ?? 0)} />
+        <Stat icon={Users} label="people" value={Number(stats?.people ?? 0)} onClick={() => setStatMetric("people")} />
+        <Stat icon={Radio} label="online" value={Number(stats?.online ?? 0)} onClick={() => setStatMetric("online")} />
+        <Stat icon={BadgeCheck} label="verified" value={Number(stats?.verified ?? 0)} onClick={() => setStatMetric("verified")} />
+        <Stat icon={Radio} label="signals" value={Number(stats?.signals ?? 0)} onClick={() => setStatMetric("signals")} />
+        <Stat icon={Users} label="matches" value={Number(stats?.matches ?? 0)} onClick={() => setStatMetric("matches")} />
+        <Stat icon={Flag} label="reports" value={Number(stats?.reports ?? 0)} onClick={() => setStatMetric("reports")} />
       </div>
 
       {isAdmin && (
@@ -962,13 +979,16 @@ function AdminPage() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPeoplePage(0);
+              }}
               placeholder="Search people"
               className="h-9 pl-9"
             />
           </div>
           <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
-            {filtered.map((p) => (
+            {paginate(filtered, peoplePage, PER_PAGE).map((p) => (
               <li key={p.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <PersonAvatar
                   path={p.avatar_url}
@@ -1052,11 +1072,12 @@ function AdminPage() {
               <li className="py-6 text-center text-sm text-muted-foreground">No one matches that.</li>
             )}
           </ul>
+          <Pager page={peoplePage} perPage={PER_PAGE} total={filtered.length} onPageChange={setPeoplePage} label="people" />
         </TabsContent>
 
         <TabsContent value="verify" className="mt-3">
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {verifications.map((v) => (
+            {paginate(verifications, verifyPage, PER_PAGE).map((v) => (
               <li key={v.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 {v.selfieUrl ? (
                   <img
@@ -1093,11 +1114,12 @@ function AdminPage() {
               <li className="py-6 text-center text-sm text-muted-foreground">Nothing to review.</li>
             )}
           </ul>
+          <Pager page={verifyPage} perPage={PER_PAGE} total={verifications.length} onPageChange={setVerifyPage} label="requests" />
         </TabsContent>
 
         <TabsContent value="reports" className="mt-3">
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {reports.map((r) => (
+            {paginate(reports, reportsPage, PER_PAGE).map((r) => (
               <li key={r.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium leading-tight">
@@ -1156,11 +1178,12 @@ function AdminPage() {
               <li className="py-6 text-center text-sm text-muted-foreground">No reports.</li>
             )}
           </ul>
+          <Pager page={reportsPage} perPage={PER_PAGE} total={reports.length} onPageChange={setReportsPage} label="reports" />
         </TabsContent>
 
         <TabsContent value="appeals" className="mt-3">
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {appeals.map((a) => (
+            {paginate(appeals, appealsPage, PER_PAGE).map((a) => (
               <li key={a.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <PersonAvatar
                   path={a.person?.avatar_url ?? null}
@@ -1191,9 +1214,18 @@ function AdminPage() {
               </li>
             )}
           </ul>
+          <Pager page={appealsPage} perPage={PER_PAGE} total={appeals.length} onPageChange={setAppealsPage} label="appeals" />
         </TabsContent>
       </Tabs>
     </div>
+    <StatDetailDialog
+      metric={statMetric}
+      onOpenChange={(open) => !open && setStatMetric(null)}
+      onViewUser={(id) => {
+        setStatMetric(null);
+        setDetailsUserId(id);
+      }}
+    />
     <UserDetailsDialog
       userId={detailsUserId}
       onOpenChange={(open) => !open && setDetailsUserId(null)}
