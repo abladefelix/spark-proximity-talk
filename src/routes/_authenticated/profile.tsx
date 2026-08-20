@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ function ProfilePage() {
   const [gender, setGender] = useState<string>("unset");
   const [saving, setSaving] = useState(false);
   const [notifState, setNotifState] = useState<string>("default");
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   useEffect(() => {
     setNotifState(notificationPermission());
@@ -209,13 +211,20 @@ function ProfilePage() {
 
       <section className="mt-6 flex items-center gap-4">
         <div className="relative">
-          <PersonAvatar
-            path={profile?.avatar_url}
-            name={profile?.display_name}
-            gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
-            username={profile?.username ?? "?"}
-            className="size-24 rounded-full"
-          />
+          <button
+            type="button"
+            aria-label="View profile photo"
+            onClick={() => setPhotoOpen(true)}
+            className="rounded-full outline-none ring-primary/50 focus-visible:ring-2"
+          >
+            <PersonAvatar
+              path={profile?.avatar_url}
+              name={profile?.display_name}
+              gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
+              username={profile?.username ?? "?"}
+              className="size-24 rounded-full"
+            />
+          </button>
           <label className="absolute -bottom-2 -right-2 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary">
             <Camera className="size-4 text-primary-foreground" />
             <input
@@ -237,6 +246,39 @@ function ProfilePage() {
           <p className="text-xs text-muted-foreground">Username can't be changed</p>
         </div>
       </section>
+
+      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
+        <DialogContent className="max-w-sm">
+          <div className="flex flex-col items-center gap-4 pt-2">
+            <PersonAvatar
+              path={profile?.avatar_url}
+              name={profile?.display_name}
+              gender={gender === "unset" ? null : (gender as "male" | "female" | "other")}
+              username={profile?.username ?? "?"}
+              className="size-56 rounded-full"
+            />
+            <p className="text-sm font-semibold">@{profile?.username ?? "…"}</p>
+            <label className="w-full">
+              <span className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground">
+                <Camera className="size-4" /> Change photo
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    void uploadPhoto(file);
+                    setPhotoOpen(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <section className="mt-6">
         <GoProButton variant="full" />
