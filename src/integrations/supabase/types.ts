@@ -773,7 +773,8 @@ export type Database = {
           created_at: string
           id: string
           reviewed_at: string | null
-          selfie_path: string
+          selfie_path: string | null
+          source: string
           status: string
           user_id: string
         }
@@ -781,7 +782,8 @@ export type Database = {
           created_at?: string
           id?: string
           reviewed_at?: string | null
-          selfie_path: string
+          selfie_path?: string | null
+          source?: string
           status?: string
           user_id: string
         }
@@ -789,7 +791,8 @@ export type Database = {
           created_at?: string
           id?: string
           reviewed_at?: string | null
-          selfie_path?: string
+          selfie_path?: string | null
+          source?: string
           status?: string
           user_id?: string
         }
