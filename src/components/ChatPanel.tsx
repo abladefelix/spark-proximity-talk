@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowUp, ChevronLeft, ImagePlus, LoaderCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useChatSheet } from "@/components/ChatSheet";
@@ -46,6 +47,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   const queryClient = useQueryClient();
   const { closeChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
+  const { data: billing } = useBillingInfo();
+  const isPro = useIsPro();
   const settings = useSettings();
   const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
@@ -129,6 +132,21 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     e?.preventDefault();
     const content = text.trim();
     if (!content || !me) return;
+    // Free-tier message cap (admin controlled, skipped for Pro members).
+    if (
+      billing?.enabled &&
+      billing.pro_unlimited_messages &&
+      !isPro &&
+      billing.free_messages_per_match > 0
+    ) {
+      const mine = messages.filter((m: any) => m.sender_id === me).length;
+      if (mine >= billing.free_messages_per_match) {
+        toast.error(
+          `Free chats are limited to ${billing.free_messages_per_match} messages. Upgrade to keep chatting.`,
+        );
+        return;
+      }
+    }
     setText("");
     const { error } = await supabase.from("messages").insert({ match_id: matchId, sender_id: me, content });
     if (error) {
