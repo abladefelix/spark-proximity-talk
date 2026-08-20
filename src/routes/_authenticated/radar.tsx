@@ -37,6 +37,7 @@ import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
+import { beaconColor } from "@/lib/beacon-styles";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
 
@@ -119,6 +120,7 @@ function RadarPage() {
   const settings = useSettings();
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
+  const proPriorityOn = Boolean(billing?.pro_priority_beacon);
   const adminCap = maxRadius ?? DEFAULT_MAX_RADIUS;
   // Free members are capped at the free-tier range while payments are live.
   const cap =
