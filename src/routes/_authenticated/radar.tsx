@@ -754,7 +754,7 @@ function RadarPage() {
               if (!next && !isPro) {
                 toast.error("Going invisible is a Pro feature", {
                   description: "Upgrade to hide your beacon while you scan.",
-                  action: { label: "Go Pro", onClick: () => setShowPro(true) },
+                  action: { label: "Go Pro", onClick: () => openPro() },
                 });
                 return;
               }
