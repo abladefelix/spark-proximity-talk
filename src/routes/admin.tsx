@@ -507,6 +507,22 @@ function AdminPage() {
     refreshAll();
   }
 
+  async function runMaintenance(fn: string, label: string, args?: Record<string, unknown>) {
+    const { data, error } = await (
+      supabase.rpc as unknown as (
+        name: string,
+        params?: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>
+    )(fn, args);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(typeof data === "number" ? `${label}: ${data} removed` : label);
+    refreshAll();
+  }
+
+
   async function setBanned(userId: string, banned: boolean) {
     const reason = banned
       ? (window.prompt("Reason for the ban (shown to them)") ?? "").trim()
