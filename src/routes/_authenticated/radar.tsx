@@ -832,12 +832,13 @@ function RadarPage() {
         <div
           className="absolute inset-0 origin-center will-change-transform"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transition: gesture.current ? "none" : "transform 120ms ease-out",
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rot}deg)`,
+            transition: gesture.current ? "none" : "transform 200ms linear",
           }}
         >
           <div className="radar-grid absolute inset-0" />
-          {/* Compass reference: beacons sit at their true bearing, north up. */}
+          {/* Compass rose: beacons sit at their true bearing. In heading-up mode
+              the rose turns with the phone so N always points at real north. */}
           <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
             N
           </span>
