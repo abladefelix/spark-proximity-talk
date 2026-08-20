@@ -12,6 +12,7 @@ import {
   Ban,
   Flag,
   MapPin,
+  Compass,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadi
 import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
+import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 
 
 
@@ -137,7 +139,12 @@ function RadarPage() {
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
-  const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
+  const lastCoords = useRef<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  } | null>(null);
+  const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const myIdRef = useRef<string | null>(user.id);
 
   // Keep my location fresh while the radar is open.
@@ -153,7 +160,7 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
-    let lastPublished: { lat: number; lng: number; at: number } | null = null;
+    let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
       const R = 6371000;
       const dLat = ((bLat - aLat) * Math.PI) / 180;
@@ -164,10 +171,34 @@ function RadarPage() {
         Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
       return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
     };
-    const push = async (coords: { latitude: number; longitude: number }, force = false) => {
+    const push = async (
+      coords: { latitude: number; longitude: number; accuracy?: number | null },
+      force = false,
+    ) => {
       if (cancelled) return;
-      lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude };
+      const accuracy =
+        typeof coords.accuracy === "number" && Number.isFinite(coords.accuracy)
+          ? coords.accuracy
+          : 9999;
+
+      // Accuracy gate: a coarse wifi/IP fix can sit hundreds of metres away and
+      // would place this person in completely the wrong direction for everyone
+      // else. Never let one overwrite a recent precise GPS fix.
+      if (
+        lastPublished &&
+        accuracy > Math.max(60, lastPublished.accuracy * 2.5) &&
+        Date.now() - lastPublished.at < 120000
+      ) {
+        return;
+      }
+
+      lastCoords.current = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy,
+      };
       localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
+      setAccuracyM(accuracy === 9999 ? null : accuracy);
 
       // Movement filter: publish whenever the person actually moved a few
       // metres, otherwise fall back to the slower presence heartbeat. This
@@ -182,6 +213,7 @@ function RadarPage() {
         if (moved < 4 && Date.now() - lastPublished.at < 15000) return;
       }
 
+
       // Use the locally cached session: a network round-trip here (getUser)
       // can hang on flaky mobile networks and silently kill the heartbeat.
       let me = myIdRef.current;
@@ -190,7 +222,12 @@ function RadarPage() {
         myIdRef.current = me;
       }
       if (!me) return;
-      lastPublished = { lat: coords.latitude, lng: coords.longitude, at: Date.now() };
+      lastPublished = {
+        lat: coords.latitude,
+        lng: coords.longitude,
+        at: Date.now(),
+        accuracy,
+      };
       const { error } = await supabase.from("locations").upsert(
         {
           user_id: me,
@@ -216,9 +253,17 @@ function RadarPage() {
     const cachedLocation = localStorage.getItem("skan-last-location");
     if (cachedLocation) {
       try {
-        const parsed = JSON.parse(cachedLocation) as { latitude?: unknown; longitude?: unknown };
+        const parsed = JSON.parse(cachedLocation) as {
+          latitude?: unknown;
+          longitude?: unknown;
+          accuracy?: unknown;
+        };
         if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
-          void push({ latitude: parsed.latitude, longitude: parsed.longitude });
+          void push({
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            accuracy: typeof parsed.accuracy === "number" ? parsed.accuracy : null,
+          });
         }
       } catch {
         localStorage.removeItem("skan-last-location");
@@ -515,6 +560,13 @@ function RadarPage() {
 
   const [zoom, setZoom] = useState(1);
 
+  // Live compass. In heading-up mode the whole scope counter-rotates with the
+  // phone, so the top of the radar is literally the way you are facing.
+  const [headingUp, setHeadingUp] = useState(true);
+  const { heading, needsPermission, request: requestCompass } = useCompassHeading(true);
+  const compassActive = headingUp && heading != null;
+  const rot = compassActive ? -(heading as number) : 0;
+
   // Auto-fitting layout. Beacons keep a constant on-screen size and gap, so
   // pinching to zoom genuinely expands the map and pulls crowded people apart
   // instead of stacking them.
@@ -533,54 +585,43 @@ function RadarPage() {
     const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
     const limit = scope * 0.46 - layerSize / 2;
 
-    const nodes = people.map((person) => {
-      // True geographic placement: north is up, bearing runs clockwise.
-      let bearing = person.bearing_deg;
-      if (bearing == null || !Number.isFinite(bearing)) {
-        // Only used if the server could not resolve a bearing.
-        let hash = 0;
-        for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
-        bearing = (hash >>> 0) % 360;
-      }
-      const rad = (Number(bearing) * Math.PI) / 180;
-      const rr = Math.min(1, person.distance_m / viewMax) * limit;
-      return { person, x: Math.sin(rad) * rr, y: -Math.cos(rad) * rr };
-    });
+    const nodes = people
+      .filter((p) => p.bearing_deg != null && Number.isFinite(Number(p.bearing_deg)))
+      .map((person) => {
+        // True geographic placement: north is up, bearing runs clockwise, and
+        // the radius is the real distance scaled against the scan range.
+        const bearing = Number(person.bearing_deg);
+        const rad = (bearing * Math.PI) / 180;
+        const rr = Math.max(
+          layerSize * 0.6,
+          Math.min(1, person.distance_m / viewMax) * limit,
+        );
+        return { person, bearing, radius: rr, angle: rad };
+      });
 
-    // Minimum separation shrinks with zoom in layer units, i.e. stays a fixed
-    // finger-friendly distance on screen while the map underneath expands.
+    // De-crowding is tangential only: people keep their exact distance ring and
+    // slide sideways just far enough to stay tappable, so the direction you
+    // read off the radar stays truthful.
     const minGap = (size + 6) / z;
-    for (let iter = 0; iter < 80; iter++) {
+    for (let iter = 0; iter < 60; iter++) {
       let moved = false;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const a = nodes[i]!;
           const b = nodes[j]!;
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let d = Math.hypot(dx, dy);
-          if (d === 0) {
-            dx = Math.cos(i * 2.4) * 0.01;
-            dy = Math.sin(i * 2.4) * 0.01;
-            d = 0.01;
-          }
-          if (d < minGap) {
-            const push = (minGap - d) / 2;
-            const ux = dx / d;
-            const uy = dy / d;
-            a.x -= ux * push;
-            a.y -= uy * push;
-            b.x += ux * push;
-            b.y += uy * push;
-            moved = true;
-          }
-        }
-      }
-      for (const n of nodes) {
-        const d = Math.hypot(n.x, n.y);
-        if (d > limit) {
-          n.x = (n.x / d) * limit;
-          n.y = (n.y / d) * limit;
+          const ax = Math.sin(a.angle) * a.radius;
+          const ay = -Math.cos(a.angle) * a.radius;
+          const bx = Math.sin(b.angle) * b.radius;
+          const by = -Math.cos(b.angle) * b.radius;
+          const d = Math.hypot(bx - ax, by - ay);
+          if (d >= minGap) continue;
+          const arc = Math.max(1, Math.min(a.radius, b.radius));
+          let delta = ((b.angle - a.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+          if (Math.abs(delta) < 1e-4) delta = (i % 2 === 0 ? 1 : -1) * 1e-4;
+          const need = ((minGap - d) / arc) * 0.5 * Math.sign(delta);
+          a.angle -= need;
+          b.angle += need;
+          moved = true;
         }
       }
       if (!moved) break;
@@ -591,11 +632,13 @@ function RadarPage() {
       markerScale: 1 / z,
       beacons: nodes.map((n) => ({
         person: n.person,
-        left: `calc(50% + ${n.x}px)`,
-        top: `calc(50% + ${n.y}px)`,
+        bearing: n.bearing,
+        left: `calc(50% + ${Math.sin(n.angle) * n.radius}px)`,
+        top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
       })),
     };
   }, [people, scopeSize, radius, zoom]);
+
 
 
 
@@ -789,12 +832,13 @@ function RadarPage() {
         <div
           className="absolute inset-0 origin-center will-change-transform"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transition: gesture.current ? "none" : "transform 120ms ease-out",
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rot}deg)`,
+            transition: gesture.current ? "none" : "transform 200ms linear",
           }}
         >
           <div className="radar-grid absolute inset-0" />
-          {/* Compass reference: beacons sit at their true bearing, north up. */}
+          {/* Compass rose: beacons sit at their true bearing. In heading-up mode
+              the rose turns with the phone so N always points at real north. */}
           <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
             N
           </span>
@@ -836,7 +880,7 @@ function RadarPage() {
                 style={{
                   width: beaconSize,
                   height: beaconSize,
-                  transform: `scale(${markerScale})`,
+                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
                 }}
               >
                 {(() => {
@@ -903,8 +947,35 @@ function RadarPage() {
           <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
         )}
 
+        {/* Facing indicator: fixed to the screen, marks the way you are pointed. */}
+        {compassActive && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-[6%] size-0 -translate-x-1/2 border-x-[6px] border-b-[10px] border-x-transparent border-b-primary/70"
+          />
+        )}
 
-
+        <button
+          type="button"
+          onClick={() => {
+            if (needsPermission) {
+              void requestCompass().then((ok) => {
+                if (ok) setHeadingUp(true);
+                else toast.error("Compass access was declined");
+              });
+              return;
+            }
+            setHeadingUp((v) => !v);
+          }}
+          className="absolute bottom-[6%] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur"
+        >
+          <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+          {needsPermission
+            ? "Enable compass"
+            : compassActive
+              ? `Facing ${compassPoint(heading as number)}`
+              : "North up"}
+        </button>
 
         {nearby.isLoading && (
           <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
@@ -943,7 +1014,11 @@ function RadarPage() {
                 </DialogTitle>
                 <DialogDescription>
                   @{selected.username} · {formatDistance(selected.distance_m)}
+                  {selected.bearing_deg != null && Number.isFinite(Number(selected.bearing_deg))
+                    ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
+                    : ""}
                   {selected.is_online ? " · active now" : ""}
+                  {accuracyM != null && accuracyM > 100 ? " · low GPS accuracy" : ""}
                 </DialogDescription>
               </DialogHeader>
 
