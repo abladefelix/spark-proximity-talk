@@ -166,7 +166,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   // Signed URLs are expensive to mint, so reuse them across refetches.
   const signedCache = useRef(new Map<string, string>());
 
-  const signImages = useCallback(async (rows: Message[]) => {
+  const signImages = useCallback(async (rows: Message[]): Promise<Message[]> => {
     const missing = rows
       .filter((m) => m.kind === "image" && !signedCache.current.has(m.content))
       .map((m) => m.content);
@@ -175,12 +175,15 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
         .from("chat-media")
         .createSignedUrls(missing, 3600);
       for (const item of signed ?? []) {
-        if (item.signedUrl) signedCache.current.set(item.path, item.signedUrl);
+        const url = item.signedUrl;
+        if (url) signedCache.current.set(item.path, url);
       }
     }
-    return rows.map((m) =>
-      m.kind === "image" ? { ...m, mediaUrl: signedCache.current.get(m.content) } : m,
-    );
+    return rows.map((m) => {
+      if (m.kind !== "image") return m;
+      const url = signedCache.current.get(m.content);
+      return url ? { ...m, mediaUrl: url } : m;
+    });
   }, []);
 
   const { data: page } = useQuery({
