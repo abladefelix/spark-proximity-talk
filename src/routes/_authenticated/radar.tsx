@@ -560,6 +560,13 @@ function RadarPage() {
 
   const [zoom, setZoom] = useState(1);
 
+  // Live compass. In heading-up mode the whole scope counter-rotates with the
+  // phone, so the top of the radar is literally the way you are facing.
+  const [headingUp, setHeadingUp] = useState(true);
+  const { heading, needsPermission, request: requestCompass } = useCompassHeading(true);
+  const compassActive = headingUp && heading != null;
+  const rot = compassActive ? -(heading as number) : 0;
+
   // Auto-fitting layout. Beacons keep a constant on-screen size and gap, so
   // pinching to zoom genuinely expands the map and pulls crowded people apart
   // instead of stacking them.
