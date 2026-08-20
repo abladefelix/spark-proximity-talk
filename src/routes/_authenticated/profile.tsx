@@ -32,6 +32,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
 import { ProUpgradeCard } from "@/components/ProUpgradeCard";
+import { GoProButton } from "@/components/GoProButton";
 import { ChatBackgroundSetting } from "@/components/ChatBackgroundSetting";
 import { RadarSoundSetting } from "@/components/RadarSoundSetting";
 import { BiometricSetting } from "@/components/BiometricSetting";
@@ -256,6 +257,10 @@ function ProfilePage() {
           </p>
           <p className="text-xs text-muted-foreground">Username can't be changed</p>
         </div>
+      </section>
+
+      <section className="mt-6">
+        <GoProButton variant="full" />
       </section>
 
       <section className="mt-8 space-y-4">
