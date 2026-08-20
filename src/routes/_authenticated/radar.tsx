@@ -1078,13 +1078,21 @@ function RadarPage() {
                   {selected.display_name ?? selected.username}
                   {selected.verified && <VerifiedBadge className="size-5" />}
                 </DialogTitle>
-                <DialogDescription>
-                  @{selected.username} · {formatDistance(selected.distance_m)}
-                  {selected.bearing_deg != null && Number.isFinite(Number(selected.bearing_deg))
-                    ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
-                    : ""}
-                  {selected.is_online ? " · active now" : ""}
-                  {accuracyM != null && accuracyM > 100 ? " · low GPS accuracy" : ""}
+                <DialogDescription asChild>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-primary">
+                      {formatDistance(selected.distance_m)} away
+                      {selected.bearing_deg != null &&
+                      Number.isFinite(Number(selected.bearing_deg))
+                        ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
+                        : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      @{selected.username}
+                      {selected.is_online ? " · active now" : ""}
+                      {accuracyM != null && accuracyM > 100 ? " · low GPS accuracy" : ""}
+                    </p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
 
