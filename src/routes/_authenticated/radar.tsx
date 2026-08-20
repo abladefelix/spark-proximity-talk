@@ -698,6 +698,7 @@ function RadarPage() {
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
+          <GoProButton />
           <NotificationBell />
           <ThemeToggle />
 
