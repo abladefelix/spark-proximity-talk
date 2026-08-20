@@ -508,11 +508,17 @@ function RadarPage() {
     const limit = scope * 0.46 - layerSize / 2;
 
     const nodes = people.map((person) => {
-      let hash = 0;
-      for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
-      const angle = ((hash >>> 0) % 360) * (Math.PI / 180);
+      // True geographic placement: north is up, bearing runs clockwise.
+      let bearing = person.bearing_deg;
+      if (bearing == null || !Number.isFinite(bearing)) {
+        // Only used if the server could not resolve a bearing.
+        let hash = 0;
+        for (let i = 0; i < person.id.length; i++) hash = (hash * 31 + person.id.charCodeAt(i)) | 0;
+        bearing = (hash >>> 0) % 360;
+      }
+      const rad = (Number(bearing) * Math.PI) / 180;
       const rr = Math.min(1, person.distance_m / viewMax) * limit;
-      return { person, x: Math.cos(angle) * rr, y: Math.sin(angle) * rr };
+      return { person, x: Math.sin(rad) * rr, y: -Math.cos(rad) * rr };
     });
 
     // Minimum separation shrinks with zoom in layer units, i.e. stays a fixed
