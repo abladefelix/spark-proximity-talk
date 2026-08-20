@@ -758,57 +758,8 @@ function RadarPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
           />
 
-          {clusters.map((cluster) => {
-            const { members, left, top, key } = cluster;
-            if (members.length > 1) {
-              const nearest = members.reduce((a, b) => (a.distance_m <= b.distance_m ? a : b));
-              const pinged = members.some((m) => m.they_signaled && !m.match_id);
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    if (dragged.current) return;
-                    setClusterKey(key);
-                  }}
-                  style={{ left, top }}
-                  aria-label={`${members.length} people about ${formatDistance(nearest.distance_m)} away — tap to pick one`}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
-                >
-                  <span
-                    className="relative flex items-center justify-center"
-                    style={{ width: beaconSize, height: beaconSize }}
-                  >
-                    <span
-                      aria-hidden
-                      className="absolute inset-0 rounded-full bg-primary/25 blur-md"
-                    />
-                    {pinged && (
-                      <span
-                        aria-hidden
-                        className="beacon-ping absolute inset-0 rounded-full border border-primary/60"
-                      />
-                    )}
-                    <span
-                      aria-hidden
-                      className="absolute inset-0 -translate-x-[9%] -translate-y-[9%] rounded-full border border-border/70 bg-background/60"
-                    />
-                    <span
-                      className="relative z-10 flex items-center justify-center rounded-full bg-background font-semibold text-primary ring-2 ring-primary heartbeat-glow"
-                      style={{
-                        width: beaconSize * 0.72,
-                        height: beaconSize * 0.72,
-                        fontSize: Math.max(10, beaconSize * 0.3),
-                      }}
-                    >
-                      {members.length}
-                    </span>
-                  </span>
-                </button>
-              );
-            }
-            const person = members[0]!;
-            return (
+          {beacons.map(({ person, left, top }) => (
+
             <button
               key={person.id}
               type="button"
