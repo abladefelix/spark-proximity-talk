@@ -338,7 +338,7 @@ function AdminPage() {
       if (!rows?.length) return [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url, display_name")
+        .select("id, username, avatar_url, display_name, gender")
         .in(
           "id",
           rows.map((r) => r.user_id),
