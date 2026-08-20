@@ -240,6 +240,44 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     el.scrollTop = el.scrollHeight;
   }, [newestId]);
 
+  // Grouping/day-separator maths run once per transcript change, not per render.
+  const rows = useMemo<BubbleProps[]>(
+    () =>
+      messages.map((m, index) => {
+        const prev = messages[index - 1];
+        const next = messages[index + 1];
+        const newDay =
+          !prev ||
+          new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+        return {
+          m,
+          mine: m.sender_id === me,
+          newDay,
+          grouped:
+            !newDay &&
+            prev?.sender_id === m.sender_id &&
+            new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60000,
+          lastOfGroup:
+            !next ||
+            next.sender_id !== m.sender_id ||
+            new Date(next.created_at).getTime() - new Date(m.created_at).getTime() >= 5 * 60000,
+        };
+      }),
+    [messages, me],
+  );
+
+  const loadEarlier = useCallback(() => {
+    const el = scrollRef.current;
+    const before = el?.scrollHeight ?? 0;
+    setLimit((n) => n + PAGE);
+    // Hold the reading position once the older page renders above.
+    requestAnimationFrame(() => {
+      const node = scrollRef.current;
+      if (node) node.scrollTop += node.scrollHeight - before;
+    });
+  }, []);
+
+
   // Grow the composer with its content, capped so the transcript keeps room.
   useLayoutEffect(() => {
     const el = inputRef.current;
