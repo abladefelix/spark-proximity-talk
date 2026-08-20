@@ -39,7 +39,7 @@ export function PersonAvatar({ path, name, username, gender, className }: Props)
       {url ? (
         <img src={url} alt={name ?? username} className="h-full w-full object-cover" />
       ) : (
-        <GenderGlyph gender={gender ?? "other"} className="h-3/5 w-3/5" />
+        <GenderAvatarIcon gender={gender ?? "other"} className="h-3/4 w-3/4" />
       )}
     </div>
   );
