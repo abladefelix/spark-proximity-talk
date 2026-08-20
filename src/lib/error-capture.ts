@@ -49,11 +49,43 @@ function isErrorLike(value: unknown): value is Error {
   return value instanceof Error;
 }
 
+// A client that closes the socket mid-response (reload, navigation, native
+// WebView suspend) surfaces as node's `Error: aborted` from _http_server.
+// That is cancellation, not an app failure — never record or report it.
+export function isClientDisconnect(value: unknown): boolean {
+  let current: unknown = value;
+  for (let depth = 0; depth < CAUSE_DEPTH_LIMIT && current != null; depth++) {
+    if (!(current instanceof Error)) return false;
+    const message = current.message.toLowerCase();
+    if (
+      current.name === "AbortError" ||
+      message === "aborted" ||
+      message.includes("request aborted") ||
+      message.includes("aborted\n    at abortincoming") ||
+      message.includes("premature close") ||
+      message.includes("connection reset") ||
+      message.includes("epipe") ||
+      message.includes("econnreset")
+    ) {
+      return true;
+    }
+    if (typeof current.stack === "string" && current.stack.includes("abortIncoming")) return true;
+    current = current.cause;
+  }
+  return false;
+}
+
 // Wrap console.error so errors logged by any layer — including h3's internal
 // unhandled-error logging, which this file cannot hook directly — are both
 // recorded for consumeLastCapturedError and expanded before serialization.
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
+  // Downgrade client disconnects to a quiet debug line: logging them as errors
+  // is what surfaces "Error: aborted" as a runtime error / blank-screen report.
+  if (args.some((arg) => isErrorLike(arg) && isClientDisconnect(arg))) {
+    console.debug("client disconnected before the response finished");
+    return;
+  }
   const expanded = args.map((arg) => {
     if (!isErrorLike(arg)) return arg;
     record(arg);
@@ -63,10 +95,14 @@ console.error = (...args: unknown[]) => {
 };
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+  globalThis.addEventListener("error", (event) => {
+    const error = (event as ErrorEvent).error ?? event;
+    if (!isClientDisconnect(error)) record(error);
+  });
+  globalThis.addEventListener("unhandledrejection", (event) => {
+    const reason = (event as PromiseRejectionEvent).reason;
+    if (!isClientDisconnect(reason)) record(reason);
+  });
 }
 
 export function consumeLastCapturedError(): unknown {
