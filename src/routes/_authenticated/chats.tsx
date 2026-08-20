@@ -75,6 +75,7 @@ function ChatsPage() {
             username: "someone",
             display_name: null,
             avatar_url: null,
+            gender: null,
           },
           preview: last?.content ?? null,
           at: last?.created_at ?? m.created_at,
