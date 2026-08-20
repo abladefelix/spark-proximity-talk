@@ -218,7 +218,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
         async (payload) => {
           // Append the single new row instead of refetching the whole thread.
           const row = payload.new as Message;
-          const [withMedia] = await signImages([row]);
+          const signedRows = await signImages([row]);
+          const withMedia = signedRows[0] ?? row;
           queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
             ["messages", matchId, limit],
             (prev) =>
