@@ -52,7 +52,7 @@ function ChatsPage() {
       const otherIds = matches.map((m) => (m.user_a === me ? m.user_b : m.user_a));
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url")
+        .select("id, username, display_name, avatar_url, gender")
         .in("id", otherIds);
 
       const { data: msgs } = await supabase
