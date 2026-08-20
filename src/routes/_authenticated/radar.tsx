@@ -13,6 +13,7 @@ import {
   Flag,
   MapPin,
   Compass,
+  Ruler,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,11 @@ import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
+import {
+  useDistanceUnit,
+  formatDistance,
+  formatAccuracy,
+} from "@/hooks/useDistanceUnit";
 
 
 
@@ -620,6 +626,7 @@ function RadarPage() {
     request: requestCompass,
     calibrating,
   } = useCompassHeading(true);
+  const { unit, toggleUnit } = useDistanceUnit();
   const compassActive = headingUp && heading != null;
   const compassCalibrating = headingUp && calibrating;
   const rot = compassActive ? -(heading as number) : 0;
@@ -948,7 +955,7 @@ function RadarPage() {
                 opacity: person.is_online ? 1 : 0.5,
                 zIndex: priority ? 3 : 2,
               }}
-              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
+              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
             >
               <span
@@ -1032,7 +1039,7 @@ function RadarPage() {
                 })()}
               </span>
               <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
-                {formatDistance(person.distance_m)}
+                {formatDistance(person.distance_m, unit)}
               </span>
             </button>
             );
@@ -1089,6 +1096,16 @@ function RadarPage() {
               : "North up"}
       </button>
 
+      {/* Distance unit toggle: metres/kilometres or feet/miles. */}
+      <button
+        type="button"
+        onClick={toggleUnit}
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+      >
+        <Ruler className="size-3.5 text-primary" />
+        {unit === "imperial" ? "Feet / miles" : "Metres / km"}
+      </button>
+
       {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
       {compassCalibrating && (
         <div className="flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
@@ -1134,7 +1151,7 @@ function RadarPage() {
                 <DialogDescription asChild>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-primary">
-                      {formatDistance(selected.distance_m)} away
+                      {formatDistance(selected.distance_m, unit)} away
                       {selected.bearing_deg != null &&
                       Number.isFinite(Number(selected.bearing_deg))
                         ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
@@ -1144,7 +1161,7 @@ function RadarPage() {
                       @{selected.username}
                       {selected.is_online ? " · active now" : ""}
                       {accuracyM != null || selected.accuracy_m != null
-                        ? ` · GPS ±${Math.round(Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0))} m`
+                        ? ` · GPS ±${formatAccuracy(Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0), unit)}`
                         : ""}
                     </p>
                   </div>
