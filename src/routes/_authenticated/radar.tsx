@@ -1017,7 +1017,9 @@ function RadarPage() {
                   );
                 })()}
               </span>
-
+              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
+                {formatDistance(person.distance_m)}
+              </span>
             </button>
             );
           })}
