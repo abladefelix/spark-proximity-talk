@@ -217,7 +217,12 @@ function RadarPage() {
         myIdRef.current = me;
       }
       if (!me) return;
-      lastPublished = { lat: coords.latitude, lng: coords.longitude, at: Date.now() };
+      lastPublished = {
+        lat: coords.latitude,
+        lng: coords.longitude,
+        at: Date.now(),
+        accuracy,
+      };
       const { error } = await supabase.from("locations").upsert(
         {
           user_id: me,
