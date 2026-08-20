@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
@@ -773,10 +774,15 @@ function RadarPage() {
                     "gender-female": "border-gender-female/60",
                     "gender-other": "border-gender-other/60",
                   }[token];
-                  const dotClass = {
-                    "gender-male": "bg-gender-male text-gender-male",
-                    "gender-female": "bg-gender-female text-gender-female",
-                    "gender-other": "bg-gender-other text-gender-other",
+                  const ringClass = {
+                    "gender-male": "ring-gender-male",
+                    "gender-female": "ring-gender-female",
+                    "gender-other": "ring-gender-other",
+                  }[token];
+                  const iconClass = {
+                    "gender-male": "text-gender-male",
+                    "gender-female": "text-gender-female",
+                    "gender-other": "text-gender-other",
                   }[token];
                   return (
                     <>
@@ -792,11 +798,16 @@ function RadarPage() {
                           className={`beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
                         />
                       )}
-                      {/* the dot */}
+                      {/* gendered avatar marker */}
                       <span
-                        className={`relative z-10 rounded-full ring-2 ring-background heartbeat-glow ${dotClass}`}
-                        style={{ width: beaconSize * 0.42, height: beaconSize * 0.42 }}
-                      />
+                        className={`relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`}
+                        style={{ width: beaconSize * 0.62, height: beaconSize * 0.62 }}
+                      >
+                        <GenderAvatarIcon
+                          gender={person.gender}
+                          className={`h-[76%] w-[76%] ${iconClass}`}
+                        />
+                      </span>
                     </>
                   );
                 })()}
