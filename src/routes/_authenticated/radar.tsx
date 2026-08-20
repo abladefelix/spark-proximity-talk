@@ -139,7 +139,12 @@ function RadarPage() {
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
-  const lastCoords = useRef<{ latitude: number; longitude: number } | null>(null);
+  const lastCoords = useRef<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  } | null>(null);
+  const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const myIdRef = useRef<string | null>(user.id);
 
   // Keep my location fresh while the radar is open.
