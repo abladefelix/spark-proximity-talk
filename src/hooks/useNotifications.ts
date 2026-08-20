@@ -69,10 +69,21 @@ export function useNotifications(myId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         async (payload) => {
-          const msg = payload.new as { sender_id: string; content: string; match_id: string };
+          const msg = payload.new as {
+            sender_id: string;
+            content: string;
+            match_id: string;
+            kind?: string | null;
+          };
           if (msg.sender_id === myId) return;
           if (window.location.pathname.includes(msg.match_id)) return;
-          push(await nameOf(msg.sender_id), msg.content.slice(0, 120));
+          const preview =
+            msg.kind === "image"
+              ? "📷 Photo"
+              : msg.kind === "pin"
+                ? "📍 Meet-up pin"
+                : msg.content.slice(0, 120);
+          push(await nameOf(msg.sender_id), preview);
           queryClient.invalidateQueries({ queryKey: ["matches"] });
         },
       )
