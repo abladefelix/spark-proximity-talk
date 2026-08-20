@@ -90,6 +90,7 @@ export const getUserDetails = createServerFn({ method: "POST" })
       displayName: p.display_name ?? null,
       bio: p.bio ?? null,
       gender: p.gender ?? null,
+      avatarUrl: p.avatar_url ?? null,
       verified: Boolean(p.verified),
       banned: Boolean(p.banned),
       bannedReason: p.banned_reason ?? null,
