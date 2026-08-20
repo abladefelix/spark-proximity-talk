@@ -91,7 +91,12 @@ type NearbyPerson = {
   bearing_deg?: number | null;
   /** Seconds since their location was last published. */
   updated_age_s?: number | null;
+  /** Pro members get a priority beacon. */
+  is_pro?: boolean | null;
+  /** Pro members' chosen beacon colour (null unless they're Pro). */
+  beacon_style?: string | null;
 };
+
 
 function formatDistance(m: number) {
   return m < 950 ? `${Math.max(1, Math.round(m))} m away` : `${(m / 1000).toFixed(1)} km away`;
