@@ -968,6 +968,7 @@ function AdminPage() {
                   path={p.avatar_url}
                   name={p.display_name}
                   username={p.username}
+                  gender={p.gender as import("@/components/PersonAvatar").Gender}
                   className="size-8"
                 />
                 <div className="min-w-0 flex-1">
