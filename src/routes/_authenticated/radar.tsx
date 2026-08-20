@@ -964,7 +964,7 @@ function RadarPage() {
       </section>
       </div>
 
-      {/* Compass toggle sits below the radar scope, not on top of it. */}
+      {/* Compass toggle: fixed just above the bottom toolbar so it is always reachable. */}
       <button
         type="button"
         onClick={() => {
@@ -977,7 +977,7 @@ function RadarPage() {
           }
           setHeadingUp((v) => !v);
         }}
-        className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur"
+        className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
         <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
         {needsPermission
@@ -986,6 +986,7 @@ function RadarPage() {
             ? `Facing ${compassPoint(heading as number)}`
             : "North up"}
       </button>
+
 
 
 
