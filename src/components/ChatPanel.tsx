@@ -145,6 +145,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       if (mine >= billing.free_messages_per_match) {
         toast.error(
           `Free chats are limited to ${billing.free_messages_per_match} messages. Upgrade to keep chatting.`,
+          { action: { label: "Go Pro", onClick: () => openPro() } },
         );
         return;
       }
