@@ -913,6 +913,7 @@ export type Database = {
         Returns: {
           accuracy_m: number
           avatar_url: string
+          beacon_style: string
           bearing_deg: number
           bio: string
           display_name: string
@@ -921,6 +922,7 @@ export type Database = {
           i_signaled: boolean
           id: string
           is_online: boolean
+          is_pro: boolean
           match_id: string
           they_signaled: boolean
           updated_age_s: number
