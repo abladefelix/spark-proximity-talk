@@ -909,6 +909,15 @@ export type Database = {
       }
       is_pro: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      my_profile_private: {
+        Args: never
+        Returns: {
+          banned: boolean
+          banned_at: string
+          banned_reason: string
+          date_of_birth: string
+        }[]
+      }
       nearby_people: {
         Args: { radius_m?: number }
         Returns: {
@@ -928,6 +937,22 @@ export type Database = {
       }
       purge_expired_signals: { Args: never; Returns: undefined }
       purge_old_chats: { Args: never; Returns: number }
+      staff_profiles: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          banned: boolean
+          banned_reason: string
+          bio: string
+          created_at: string
+          display_name: string
+          gender: string
+          id: string
+          last_seen: string
+          username: string
+          verified: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
