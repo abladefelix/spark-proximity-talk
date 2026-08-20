@@ -54,71 +54,84 @@ type BubbleProps = {
 
 /** Memoized so a new message never re-renders the whole transcript. */
 const Bubble = memo(function Bubble({ m, mine, newDay, grouped, lastOfGroup }: BubbleProps) {
-  const corner = `rounded-[18px] ${lastOfGroup ? (mine ? "rounded-br-[6px]" : "rounded-bl-[6px]") : ""}`;
-  const skin = mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground";
+  // WhatsApp-style geometry: small 8px radius, a pointed tail only on the
+  // first bubble of a run, and the timestamp tucked inside the bubble.
+  const tail = !grouped;
+  const corner = `rounded-[10px] ${tail ? (mine ? "rounded-tr-[3px]" : "rounded-tl-[3px]") : ""}`;
+  const skin = mine
+    ? "bg-primary text-primary-foreground"
+    : "bg-card text-foreground border border-border/50";
+
+  const stamp = (
+    <span
+      className={`ml-2 shrink-0 translate-y-[3px] text-[10px] leading-none ${
+        mine ? "text-primary-foreground/70" : "text-muted-foreground"
+      }`}
+    >
+      {timeLabel(m.created_at)}
+    </span>
+  );
 
   return (
     <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px]">
       {newDay && (
         <div className="my-3 flex justify-center">
-          <span className="rounded-full bg-secondary/70 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+          <span className="rounded-[7px] bg-card px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground shadow-sm">
             {dayLabel(m.created_at)}
           </span>
         </div>
       )}
 
       <div
-        className={`flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-10" : "justify-start pr-10"}`}
+        className={`relative flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
       >
-        <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
+        <div className={`relative flex max-w-[82%] flex-col ${mine ? "items-end" : "items-start"}`}>
           {m.kind === "image" ? (
-            m.mediaUrl ? (
-              <a
-                href={m.mediaUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={`block overflow-hidden ${corner} bg-secondary`}
-              >
-                <img
-                  src={m.mediaUrl}
-                  alt="Shared in chat"
-                  className="max-h-64 w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-            ) : (
-              <div
-                className={`flex h-32 w-48 items-center justify-center ${corner} bg-secondary text-[11px] text-muted-foreground`}
-              >
-                Picture unavailable
-              </div>
-            )
+            <div className={`relative overflow-hidden ${corner} ${skin} p-[3px] shadow-sm`}>
+              {m.mediaUrl ? (
+                <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[8px]">
+                  <img
+                    src={m.mediaUrl}
+                    alt="Shared in chat"
+                    className="max-h-72 w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </a>
+              ) : (
+                <div className="flex h-32 w-48 items-center justify-center rounded-[8px] bg-secondary text-[11px] text-muted-foreground">
+                  Picture unavailable
+                </div>
+              )}
+              <span className="absolute bottom-2 right-2 rounded-full bg-foreground/55 px-1.5 py-[2px] text-[10px] leading-none text-background">
+                {timeLabel(m.created_at)}
+              </span>
+            </div>
           ) : m.kind === "pin" && m.lat != null && m.lng != null ? (
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center gap-1.5 px-3 py-2 text-[14px] ${corner} ${skin}`}
+              className={`flex items-end px-2.5 py-[6px] shadow-sm ${corner} ${skin}`}
             >
-              <MapPin className="size-3.5" />
-              <span>Meet-up pin</span>
+              <span className="flex items-center gap-1.5 text-[14.5px]">
+                <MapPin className="size-3.5" />
+                Meet-up pin
+              </span>
+              {stamp}
             </a>
           ) : (
-            <div className={`px-3 py-[6px] ${corner} ${skin}`}>
-              <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.35]">{m.content}</p>
+            <div className={`flex items-end px-2.5 py-[5px] shadow-sm ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[14.5px] leading-[1.32]">{m.content}</p>
+              {stamp}
             </div>
-          )}
-          {lastOfGroup && (
-            <span className="mt-[2px] px-1 text-[10px] leading-none text-muted-foreground">
-              {timeLabel(m.created_at)}
-            </span>
           )}
         </div>
       </div>
     </div>
   );
 });
+
 
 export function ChatPanel({ matchId, className }: { matchId: string; leading?: React.ReactNode; className?: string }) {
   const queryClient = useQueryClient();
