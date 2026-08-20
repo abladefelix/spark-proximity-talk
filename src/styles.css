@@ -350,7 +350,7 @@
   background-image:
     linear-gradient(to right, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px);
-  background-size: 12.5% 12.5%;
+  background-size: 6.25% 6.25%;
 }
 
 @keyframes skanaround-sweep {
