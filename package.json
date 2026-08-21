@@ -9,7 +9,13 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "mobile:sync": "bun run build && npx cap sync",
+    "mobile:open:android": "npx cap open android",
+    "mobile:open:ios": "npx cap open ios",
+    "mobile:run:android": "npx cap run android",
+    "mobile:run:ios": "npx cap run ios",
+    "mobile:assets": "npx capacitor-assets generate"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
@@ -76,6 +82,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.0",
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.13.1",
