@@ -44,10 +44,14 @@ export function useCompassHeading(enabled: boolean) {
         apply(webkit);
         return;
       }
-      if (event.absolute && typeof event.alpha === "number") {
+      // Android Chrome/WebView often only fires the relative `deviceorientation`
+      // event with `absolute === false`; its alpha still tracks the magnetometer
+      // closely enough to steer the rose, so use it rather than showing nothing.
+      if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
         apply((360 - event.alpha) % 360);
       }
     };
+
 
     const anyEvent = window.DeviceOrientationEvent as
       | (typeof DeviceOrientationEvent & { requestPermission?: () => Promise<PermissionState> })
