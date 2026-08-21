@@ -106,7 +106,9 @@ export function useCompassHeading(enabled: boolean) {
         const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
           .webkitCompassHeading;
         if (typeof webkit === "number" && Number.isFinite(webkit)) apply(webkit);
-        else if (event.absolute && typeof event.alpha === "number") apply((360 - event.alpha) % 360);
+        else if (typeof event.alpha === "number" && Number.isFinite(event.alpha))
+          apply((360 - event.alpha) % 360);
+
       };
       window.addEventListener("deviceorientation", handler as EventListener);
       return true;
