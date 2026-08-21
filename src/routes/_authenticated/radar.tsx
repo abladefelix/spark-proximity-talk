@@ -635,7 +635,7 @@ function RadarPage() {
     needsPermission,
     request: requestCompass,
     calibrating,
-  } = useCompassHeading(true);
+  } = useCompassHeading(headingUp);
   const { unit } = useDistanceUnit();
   const compassActive = headingUp && heading != null;
   const compassCalibrating = headingUp && calibrating;
@@ -1083,8 +1083,16 @@ function RadarPage() {
         onClick={() => {
           if (needsPermission) {
             void requestCompass().then((ok) => {
-              if (ok) toggleHeadingUp();
+              if (ok) {
+                if (!headingUp) toggleHeadingUp();
+              }
               else toast.error("Compass access was declined");
+            });
+            return;
+          }
+          if (headingUp && heading == null) {
+            void requestCompass().then((ok) => {
+              if (!ok) toast.error("Compass is unavailable on this device");
             });
             return;
           }
