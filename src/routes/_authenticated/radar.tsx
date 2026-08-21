@@ -607,14 +607,18 @@ function RadarPage() {
   // Live compass. In heading-up mode the whole scope counter-rotates with the
   // phone, so the top of the radar is literally the way you are facing.
   // Defaults to enabled and is persisted across sessions.
-  const [headingUp, setHeadingUp] = useState(() => {
+  // Reading localStorage during render would desync SSR markup from the client
+  // and blow up hydration (the whole radar disappears), so restore after mount.
+  const [headingUp, setHeadingUp] = useState(true);
+  useEffect(() => {
     try {
       const saved = localStorage.getItem("skan-compass");
-      return saved === null ? true : saved === "true";
+      if (saved !== null) setHeadingUp(saved === "true");
     } catch {
-      return true;
+      /* storage unavailable */
     }
-  });
+  }, []);
+
   const toggleHeadingUp = () => {
     setHeadingUp((v) => {
       const next = !v;
