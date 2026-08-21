@@ -1092,18 +1092,21 @@ function RadarPage() {
         }}
         className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
-        {compassCalibrating ? (
+        {compassCalibrating || (headingUp && heading == null && !needsPermission) ? (
           <LoaderCircle className="size-3.5 animate-spin text-primary" />
         ) : (
           <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
         )}
         {needsPermission
           ? "Enable compass"
-          : compassCalibrating
-            ? "Calibrating…"
-            : compassActive
-              ? `Facing ${compassPoint(heading as number)}`
+          : compassActive
+            ? compassCalibrating
+              ? "Calibrating…"
+              : `Facing ${compassPoint(heading as number)}`
+            : headingUp
+              ? "Finding north…"
               : "North up"}
+
       </button>
 
       {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
