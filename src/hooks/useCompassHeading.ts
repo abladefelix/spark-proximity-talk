@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { CapgoCompass } from "@capgo/capacitor-compass";
 
 /**
  * Live device compass heading in degrees (0 = true/magnetic north, clockwise).
@@ -14,6 +16,7 @@ export function useCompassHeading(enabled: boolean) {
   const [settled, setSettled] = useState(false);
   const smoothed = useRef<number | null>(null);
   const samples = useRef(0);
+  const nativeRestart = useRef<(() => Promise<boolean>) | null>(null);
 
   const apply = useCallback((next: number) => {
     const prev = smoothed.current;
@@ -36,6 +39,64 @@ export function useCompassHeading(enabled: boolean) {
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
+
+    if (Capacitor.isNativePlatform()) {
+      let disposed = false;
+      let headingHandle: { remove: () => Promise<void> } | null = null;
+      let accuracyHandle: { remove: () => Promise<void> } | null = null;
+
+      const startNative = async () => {
+        try {
+          let permission = await CapgoCompass.checkPermissions();
+          if (permission.compass !== "granted") {
+            setNeedsPermission(true);
+            return false;
+          }
+          setNeedsPermission(false);
+          samples.current = 0;
+          setSettled(false);
+          setListening(true);
+          headingHandle = await CapgoCompass.addListener("headingChange", ({ value }) => {
+            if (!disposed && Number.isFinite(value)) apply((value + 360) % 360);
+          });
+          accuracyHandle = await CapgoCompass.addListener("accuracyChange", ({ accuracy }) => {
+            if (!disposed && accuracy > 0) setSettled(true);
+          });
+          await CapgoCompass.startListening({ minInterval: 80, minHeadingChange: 1 });
+          const initial = await CapgoCompass.getCurrentHeading();
+          if (!disposed && Number.isFinite(initial.value)) apply((initial.value + 360) % 360);
+          return true;
+        } catch {
+          setListening(false);
+          return false;
+        }
+      };
+
+      nativeRestart.current = async () => {
+        try {
+          const permission = await CapgoCompass.requestPermissions();
+          if (permission.compass !== "granted") return false;
+          await CapgoCompass.stopListening().catch(() => undefined);
+          await headingHandle?.remove();
+          await accuracyHandle?.remove();
+          headingHandle = null;
+          accuracyHandle = null;
+          return startNative();
+        } catch {
+          return false;
+        }
+      };
+      void startNative();
+
+      return () => {
+        disposed = true;
+        nativeRestart.current = null;
+        void headingHandle?.remove();
+        void accuracyHandle?.remove();
+        void CapgoCompass.stopListening().catch(() => undefined);
+        setListening(false);
+      };
+    }
 
     const handler = (event: DeviceOrientationEvent) => {
       const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
@@ -91,6 +152,9 @@ export function useCompassHeading(enabled: boolean) {
   }, [listening, settled]);
 
   const request = useCallback(async () => {
+    if (Capacitor.isNativePlatform()) {
+      return nativeRestart.current?.() ?? false;
+    }
     const anyEvent = window.DeviceOrientationEvent as
       | (typeof DeviceOrientationEvent & { requestPermission?: () => Promise<PermissionState> })
       | undefined;
