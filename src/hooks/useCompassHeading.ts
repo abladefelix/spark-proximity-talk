@@ -47,10 +47,18 @@ export function useCompassHeading(enabled: boolean) {
 
       const startNative = async () => {
         try {
-          let permission = await CapgoCompass.checkPermissions();
-          if (permission.compass !== "granted") {
-            setNeedsPermission(true);
-            return false;
+          // Android exposes the magnetometer without a runtime permission, and
+          // some plugin versions report "prompt"/"denied" there anyway. Only
+          // gate on the permission state for iOS, which really does need it.
+          if (Capacitor.getPlatform() === "ios") {
+            const permission = await CapgoCompass.checkPermissions().catch(() => null);
+            if (permission && permission.compass !== "granted") {
+              const asked = await CapgoCompass.requestPermissions().catch(() => null);
+              if (!asked || asked.compass !== "granted") {
+                setNeedsPermission(true);
+                return false;
+              }
+            }
           }
           setNeedsPermission(false);
           samples.current = 0;
@@ -74,8 +82,10 @@ export function useCompassHeading(enabled: boolean) {
 
       nativeRestart.current = async () => {
         try {
-          const permission = await CapgoCompass.requestPermissions();
-          if (permission.compass !== "granted") return false;
+          if (Capacitor.getPlatform() === "ios") {
+            const permission = await CapgoCompass.requestPermissions().catch(() => null);
+            if (permission && permission.compass !== "granted") return false;
+          }
           await CapgoCompass.stopListening().catch(() => undefined);
           await headingHandle?.remove();
           await accuracyHandle?.remove();
