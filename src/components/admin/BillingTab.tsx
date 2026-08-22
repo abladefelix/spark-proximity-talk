@@ -214,7 +214,7 @@ export function BillingTab() {
           ["Paid transactions", stats?.paid_total ?? 0],
           [
             "Revenue",
-            formatAmount(Number(stats?.revenue_minor ?? 0), d.currency ?? "GHS"),
+            formatAmount(Number(stats?.revenue_minor ?? 0), d.currency ?? "USD"),
           ],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-lg border border-border px-3 py-2">
