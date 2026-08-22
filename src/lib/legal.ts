@@ -46,7 +46,12 @@ You can delete your account at any time from Profile → Delete account. Deletio
 ## 9. Disclaimer and liability
 SKANAROUND is provided "as is", without warranties of any kind. To the fullest extent permitted by law we are not liable for indirect or consequential loss arising from your use of the app.
 
-## 10. Apple and Google
+## 10. Pro membership and auto-renewing subscriptions
+Pro is an optional paid membership sold only as an in-app purchase through the Apple App Store or Google Play. The price and billing period are shown in the app before you confirm, and payment is charged to your App Store or Google Play account at confirmation.
+
+Subscriptions renew automatically for the same period unless you cancel at least 24 hours before the current period ends. Your account is charged for renewal within 24 hours before the period ends. You can manage or cancel your subscription in your App Store or Google Play account settings; deleting the app does not cancel it. Refunds are handled by Apple or Google under their own policies. Unused time in a current period is not refunded when you cancel.
+
+## 11. Apple and Google
 These terms are between you and us, not with Apple or Google. Apple and Google are not responsible for the app or for support, and they are third-party beneficiaries with the right to enforce these terms against you.
 
 ## 11. Changes
