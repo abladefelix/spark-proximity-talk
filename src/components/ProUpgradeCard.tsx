@@ -228,7 +228,14 @@ export function ProUpgradeCard() {
           <p className="text-[11px] leading-relaxed text-muted-foreground">
             Payment is charged to your {storeName()} account. Subscriptions renew
             automatically unless cancelled at least 24 hours before the period ends.
-            Manage or cancel in your {storeName()} account settings.
+            Manage or cancel in your {storeName()} account settings.{" "}
+            <Link to="/terms" className="underline">
+              Terms
+            </Link>{" "}
+            ·{" "}
+            <Link to="/privacy" className="underline">
+              Privacy Policy
+            </Link>
           </p>
         </div>
       )}
