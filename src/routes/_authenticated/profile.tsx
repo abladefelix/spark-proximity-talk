@@ -408,9 +408,20 @@ function ProfilePage() {
           </Link>
         )}
 
+        <Link
+          to="/guide"
+          className="flex items-center justify-between rounded-2xl border border-border p-4 text-sm font-semibold"
+        >
+          <span className="flex items-center gap-2">
+            <BookOpen className="size-4 text-primary" /> User guide
+          </span>
+          <span className="text-muted-foreground">›</span>
+        </Link>
+
         <div className="rounded-2xl border border-border p-4">
           <p className="text-sm font-semibold">Legal & support</p>
           <div className="mt-3 flex flex-col gap-2 text-sm">
+
             <Link to="/terms" className="text-muted-foreground underline-offset-4 hover:underline">
               Terms of Service
             </Link>
