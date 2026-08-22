@@ -402,7 +402,7 @@ function AdminPage() {
       if (!rows?.length) return [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url")
+        .select("id, username, display_name, avatar_url, gender")
         .in(
           "id",
           rows.map((r) => r.user_id),
@@ -1089,17 +1089,14 @@ function AdminPage() {
                     height={40}
                     className="size-10 rounded-lg object-cover"
                   />
-                ) : v.person?.avatar_url ? (
-                  <img
-                    src={v.person.avatar_url}
-                    alt={`Profile photo of @${v.person?.username ?? "user"}`}
-                    loading="lazy"
-                    width={40}
-                    height={40}
-                    className="size-10 rounded-lg object-cover"
-                  />
                 ) : (
-                  <div className="size-10 rounded-lg bg-muted" />
+                  <PersonAvatar
+                    path={v.person?.avatar_url ?? null}
+                    name={v.person?.display_name ?? null}
+                    username={v.person?.username ?? "?"}
+                    gender={(v.person?.gender as "male" | "female" | "other" | null) ?? null}
+                    className="size-10 rounded-lg"
+                  />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">

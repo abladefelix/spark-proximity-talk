@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { User } from "lucide-react";
 import { getAvatarUrl } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
@@ -26,27 +28,35 @@ export function PersonAvatar({ path, name, username, gender, className }: Props)
     staleTime: 1000 * 60 * 30,
   });
 
+  // A stored photo can 404 or its signed link can expire — never leave a broken image.
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [url]);
+
+  const showImage = Boolean(url) && !broken;
   const tint = (gender && genderTint[gender]) || "bg-secondary text-secondary-foreground";
-  const fallback = url ? null : (
-    <GenderAvatarIcon gender={gender} className="h-3/4 w-3/4" />
-  );
 
   return (
     <div
       className={cn(
         "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold",
-        url ? "bg-secondary text-secondary-foreground" : tint,
+        showImage ? "bg-secondary text-secondary-foreground" : tint,
         className,
       )}
     >
-      {url ? (
-        <img src={url} alt={name ?? username} className="h-full w-full object-cover" />
-      ) : fallback ? (
-        fallback
+      {showImage ? (
+        <img
+          src={url!}
+          alt={name ?? username}
+          onError={() => setBroken(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : gender === "male" || gender === "female" ? (
+        <GenderAvatarIcon gender={gender} className="h-3/5 w-3/5" />
       ) : (
-        <span className="text-[0.55em] leading-none">{(name ?? username ?? "?").charAt(0).toUpperCase()}</span>
+        <User className="h-3/5 w-3/5 opacity-70" aria-hidden="true" />
       )}
     </div>
   );
 }
+
 

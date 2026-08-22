@@ -33,6 +33,8 @@ export function ActiveChats() {
       const { data: matches } = await supabase
         .from("matches")
         .select("id, user_a, user_b, created_at")
+        // Staff accounts can read every match, so scope this to my own conversations.
+        .or(`user_a.eq.${me},user_b.eq.${me}`)
         .order("created_at", { ascending: false });
       if (!matches?.length) return [];
 
