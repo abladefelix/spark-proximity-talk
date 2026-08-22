@@ -182,3 +182,39 @@ git push origin main
 ---
 
 See [MOBILE.md](./MOBILE.md) for detailed Capacitor config, release builds, and store checklists.
+
+---
+
+## I. Pro memberships (App Store & Google Play billing)
+
+Apple (guideline 3.1.1) and Google (Payments policy) require digital
+subscriptions to be sold through their own billing. SKANAROUND uses
+RevenueCat on top of Apple In-App Purchase and Google Play Billing — there is
+no external checkout anywhere in the app.
+
+1. **App Store Connect** → your app → Subscriptions: create a group and two
+   auto-renewable products, e.g. `skanaround_pro_monthly` and
+   `skanaround_pro_yearly`. Set prices, add a localised display name,
+   description and a review screenshot. Paid apps agreement and banking must
+   be complete or the products stay "Missing Metadata".
+2. **Google Play Console** → Monetise → Subscriptions: create the same two
+   product ids with a base plan each, then activate them.
+3. **RevenueCat**: create a project, add the iOS and Android apps, upload the
+   App Store In-App Purchase key and the Play service-account JSON, import the
+   products, create an entitlement named `pro`, and attach both products to a
+   default offering with `$rc_monthly` / `$rc_annual` packages.
+4. **Admin → Billing** in SKANAROUND: paste the iOS public SDK key, the Android
+   public SDK key, the RevenueCat secret API key, the entitlement name (`pro`),
+   both product ids, and a long random webhook authorization value. Turn
+   "Memberships active" on.
+5. **RevenueCat → Integrations → Webhooks**: URL
+   `https://<your-app-domain>/api/public/revenuecat/webhook`, Authorization
+   header = the same value you saved in Admin.
+6. Rebuild the native apps (`bun run build && npx cap sync`) and test with a
+   Sandbox tester (iOS) and a licence tester on an internal testing track
+   (Android).
+
+Review checklist that is already handled in the app: a visible "Restore
+purchases" button, price, period and auto-renew disclosure on the purchase
+screen, links to the Terms/EULA and Privacy Policy, subscription management
+that deep-links to the store, and account deletion in Profile.
