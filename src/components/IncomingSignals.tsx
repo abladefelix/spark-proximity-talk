@@ -8,6 +8,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { Button } from "@/components/ui/button";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { Crown } from "lucide-react";
 
@@ -30,7 +31,8 @@ export function IncomingSignals() {
   const isPro = useIsPro();
   const { open: openPro } = useProUpgradeSheet();
   // Pro perk: free members see that someone signalled them, but not who.
-  const hideIdentity = Boolean(billing?.enabled && billing.pro_see_who_signaled && !isPro);
+  const { has } = useFeatureAccess();
+  const hideIdentity = !has(FEATURE.seeWhoSignaled);
 
 
   const { data: incoming = [] } = useQuery({

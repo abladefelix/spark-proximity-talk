@@ -7,11 +7,11 @@ import { Crown, Loader2, Check, RefreshCw, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useProFeatures, useProPackages } from "@/hooks/useProFeatures";
 import {
   useBillingInfo,
   useMySubscription,
   MY_SUB_KEY,
-  type BillingInfo,
 } from "@/hooks/useBilling";
 import { refreshEntitlement } from "@/lib/store-billing.functions";
 import {
@@ -25,15 +25,13 @@ import {
   type StorePackage,
 } from "@/lib/revenuecat";
 
-function proFeatures(b: BillingInfo) {
-  const items: string[] = ["Verification review by our team after payment"];
-  if (b.pro_unlimited_signals) items.push("Unlimited signals every day");
-  if (b.pro_extended_radius) items.push("Scan the full radar range");
-  if (b.pro_unlimited_messages) items.push("Unlimited messages in every chat");
-  if (b.pro_see_who_signaled) items.push("See everyone who signalled you");
-  if (b.pro_priority_beacon) items.push("Priority beacon on nearby radars");
-  if (b.pro_custom_beacon) items.push("Custom beacon look");
-  return items;
+function featureList(
+  catalog: { key: string; label: string; pro_only: boolean }[],
+  keys: string[] | null,
+) {
+  const paid = catalog.filter((f) => f.pro_only);
+  const chosen = keys ? paid.filter((f) => keys.includes(f.key)) : paid;
+  return ["Verification review by our team after payment", ...chosen.map((f) => f.label)];
 }
 
 /**
@@ -44,6 +42,8 @@ function proFeatures(b: BillingInfo) {
 export function ProUpgradeCard() {
   const { data: billing } = useBillingInfo();
   const { data: sub } = useMySubscription();
+  const { data: catalog = [] } = useProFeatures();
+  const { data: packageCatalog = [] } = useProPackages();
   const queryClient = useQueryClient();
   const sync = useServerFn(refreshEntitlement);
 
@@ -97,7 +97,8 @@ export function ProUpgradeCard() {
   if (!billing?.enabled) return null;
 
   const isPro = Boolean(sub?.isPro);
-  const features = proFeatures(billing);
+  const primary = packageCatalog[0] ?? null;
+  const features = featureList(catalog, primary ? primary.features : null);
   const entitlement = billing.entitlement_id || "pro";
 
   async function buy(pkg: StorePackage) {

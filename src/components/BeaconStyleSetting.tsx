@@ -3,6 +3,7 @@ import { Sparkles, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { BEACON_STYLES } from "@/lib/beacon-styles";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,8 @@ export function BeaconStyleSetting() {
   const [style, setStyle] = useState<string>("default");
   const [saving, setSaving] = useState(false);
 
-  const locked = Boolean(billing?.enabled && billing.pro_custom_beacon && !isPro);
+  const { has } = useFeatureAccess();
+  const locked = !has(FEATURE.customBeacon);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,8 +53,6 @@ export function BeaconStyleSetting() {
     }
     setSaving(false);
   }
-
-  if (billing?.enabled === true && billing.pro_custom_beacon === false) return null;
 
   return (
     <div className="rounded-2xl border border-border p-4">
