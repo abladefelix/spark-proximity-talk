@@ -88,7 +88,16 @@ export async function startCheckout(opts: {
       email: opts.email,
       amount,
       currency: info.currency,
-      callback_url: opts.callbackUrl,
+      callback_url: (() => {
+        const base = siteBaseUrl(settings);
+        if (!base) return opts.callbackUrl;
+        try {
+          const path = new URL(opts.callbackUrl).pathname || "/upgrade";
+          return `${base}${path}`;
+        } catch {
+          return `${base}/upgrade`;
+        }
+      })(),
       metadata: { user_id: opts.userId, plan: opts.plan },
     }),
   });
