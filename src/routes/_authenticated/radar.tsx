@@ -13,6 +13,7 @@ import {
   Flag,
   MapPin,
   Compass,
+  HelpCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -798,8 +799,16 @@ function RadarPage() {
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">
+          <Link
+            to="/guide"
+            aria-label="User guide"
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <HelpCircle className="size-5" />
+          </Link>
           <NotificationBell />
           <ThemeToggle />
+
 
           <Switch
             checked={visible}
