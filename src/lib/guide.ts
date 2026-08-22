@@ -58,6 +58,40 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "tour",
+    shot: "radar",
+    shotCaption: "The radar screen: logo and quick actions on top, the scope in the middle, the tab bar at the bottom.",
+    title: "Getting around the app",
+    icon: "help",
+    summary: "Every screen, button and tab explained.",
+    items: [
+      {
+        term: "Radar tab",
+        body: "Your home screen. The scope fills the screen, incoming signals stack at the top, and the compass and range controls sit just below the scope.",
+      },
+      {
+        term: "Chats tab",
+        body: "All your matched conversations, newest on top. Tap the stack to unfold it and pick a chat.",
+      },
+      {
+        term: "You tab",
+        body: "Your profile: photo, name, bio, gender, scan range, visibility, sound, app lock, chat background, theme and account settings.",
+      },
+      {
+        term: "Go Pro tab",
+        body: "The upgrade screen. It lists exactly which features are Pro on your plan, with prices from the App Store or Google Play.",
+      },
+      {
+        term: "Top bar",
+        body: "The question mark opens this guide, the bell shows notifications and announcements, the sun/moon switches theme, and the switch on the right turns your visibility on the radar on or off.",
+      },
+      {
+        term: "Incoming signal cards",
+        body: "When someone signals you, a card appears above the scope with their name and photo. Accept opens a chat for both of you; the X dismisses it quietly.",
+      },
+    ],
+  },
+  {
     id: "radar",
     shot: "radar",
     shotCaption: "Rings mark distance bands, the sweep shows the live scan, N/E/S/W keep you oriented.",
@@ -316,6 +350,42 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "account",
+    title: "Account and security",
+    icon: "safety",
+    summary: "Signing in, locking the app and leaving.",
+    items: [
+      {
+        term: "Signing up",
+        body: "You need a username, email, password, gender and date of birth. Gender is required because it sets your beacon colour and avatar. After sign-up you are taken to the sign-in screen to log in.",
+      },
+      {
+        term: "Signing in",
+        body: "Sign in with your username or email plus your password. Sessions stay signed in on the device until you sign out.",
+      },
+      {
+        term: "Forgot password",
+        body: "Use Forgot password on the sign-in screen. A reset link is emailed to you; open it on the same phone and choose a new password.",
+      },
+      {
+        term: "App lock",
+        body: "With biometrics on, Face ID, Touch ID or your fingerprint is required each time the app returns to the foreground.",
+      },
+      {
+        term: "Blocked accounts",
+        body: "Anyone you block disappears from your radar and you from theirs, permanently, until you unblock them.",
+      },
+      {
+        term: "Bans and reactivation",
+        body: "If moderators ban your account you can still sign in and send a reactivation request. You will be told once it has been reviewed.",
+      },
+      {
+        term: "Deleting your account",
+        body: "Delete from your profile page. Profile, photos, chats and signals are erased and cannot be restored.",
+      },
+    ],
+  },
+  {
     id: "safety",
     title: "Safety and etiquette",
     icon: "safety",
@@ -362,9 +432,37 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "A banner appears when the connection drops. The app reconnects and refreshes on its own once you are back online.",
       },
       {
+        term: "Battery draining fast",
+        body: "The radar uses GPS continuously while open. Close the app when you are not scanning, or narrow your scan range.",
+      },
+      {
+        term: "Photos not sending",
+        body: "Check the connection banner and allow photo access for the app in your phone settings.",
+      },
+      {
         term: "Still stuck",
         body: "Contact support from the Legal & support box on your profile page.",
       },
+    ],
+  },
+  {
+    id: "glossary",
+    title: "Glossary",
+    icon: "help",
+    summary: "Every term used in the app, in one place.",
+    items: [
+      { term: "Scope", body: "The circular radar display with you at the centre." },
+      { term: "Beacon", body: "One person on the scope, drawn as their photo or gender avatar with a coloured halo." },
+      { term: "Signal", body: "A one-tap 'I'd like to chat'. It shares only your name and photo." },
+      { term: "Match", body: "Two people who have signalled each other. A chat opens automatically." },
+      { term: "Bearing", body: "The compass direction of a person from you, shown as NE 35° style text on their card." },
+      { term: "Heading-up", body: "Compass mode where the scope rotates with your phone, so the top of the screen is where you are facing." },
+      { term: "North-up", body: "Compass mode where north is always at the top of the scope." },
+      { term: "Scan range", body: "How far out the radar looks. Capped by the admin's maximum." },
+      { term: "Invisible mode", body: "Visibility off: you keep scanning but nobody sees your beacon. A Pro feature." },
+      { term: "Verified", body: "An account checked by a moderator. Shows a badge and a distinct beacon colour." },
+      { term: "Pro", body: "The paid membership, bought through the App Store or Google Play." },
+      { term: "Reactivation request", body: "An appeal sent to moderators after your account is banned." },
     ],
   },
 ];
