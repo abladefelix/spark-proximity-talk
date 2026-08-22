@@ -87,7 +87,10 @@ export function IncomingSignals() {
 
       // The match row is created by a trigger; give it a moment if needed.
       for (let attempt = 0; attempt < 5; attempt++) {
-        const { data: matches } = await supabase.from("matches").select("id, user_a, user_b");
+        const { data: matches } = await supabase
+          .from("matches")
+          .select("id, user_a, user_b")
+          .or(`user_a.eq.${me},user_b.eq.${me}`);
         const match = matches?.find(
           (m) =>
             (m.user_a === me && m.user_b === person.from_user) ||
