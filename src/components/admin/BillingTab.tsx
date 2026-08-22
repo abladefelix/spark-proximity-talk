@@ -214,7 +214,7 @@ export function BillingTab() {
           ["Paid transactions", stats?.paid_total ?? 0],
           [
             "Revenue",
-            formatAmount(Number(stats?.revenue_minor ?? 0), d.currency ?? "GHS"),
+            formatAmount(Number(stats?.revenue_minor ?? 0), d.currency ?? "USD"),
           ],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-lg border border-border px-3 py-2">
@@ -225,43 +225,76 @@ export function BillingTab() {
       </div>
 
       <Section
-        title="Paystack"
-        hint="Paste the keys from your Paystack dashboard. Nothing is charged until payments are switched on."
+        title="App Store & Google Play billing"
+        hint="Memberships are sold through Apple and Google only, as their stores require. Paste the keys from your RevenueCat project."
       >
         <Toggle
-          label="Payments active"
+          label="Memberships active"
           hint="Turns the upgrade card on for members."
           checked={Boolean(d.enabled)}
           onChange={(v) => set("enabled", v)}
         />
-        <Field label="Public key">
+        <Field label="iOS public SDK key">
           <Input
-            value={d.paystack_public_key ?? ""}
-            placeholder="pk_live_..."
-            onChange={(e) => set("paystack_public_key", e.target.value)}
+            value={d.rc_ios_api_key ?? ""}
+            placeholder="appl_..."
+            onChange={(e) => set("rc_ios_api_key", e.target.value)}
           />
         </Field>
-        <Field label="Secret key">
+        <Field label="Android public SDK key">
+          <Input
+            value={d.rc_android_api_key ?? ""}
+            placeholder="goog_..."
+            onChange={(e) => set("rc_android_api_key", e.target.value)}
+          />
+        </Field>
+        <Field label="Secret API key (server only)">
           <Input
             type="password"
-            value={d.paystack_secret_key ?? ""}
-            placeholder="sk_live_..."
-            onChange={(e) => set("paystack_secret_key", e.target.value)}
+            value={d.rc_secret_api_key ?? ""}
+            placeholder="sk_..."
+            onChange={(e) => set("rc_secret_api_key", e.target.value)}
           />
         </Field>
-        <Field label="Currency code">
+        <Field label="Entitlement name">
           <Input
-            value={d.currency ?? ""}
-            placeholder="GHS, NGN, ZAR, USD, KES"
-            onChange={(e) => set("currency", e.target.value.toUpperCase())}
+            value={d.rc_entitlement_id ?? ""}
+            placeholder="pro"
+            onChange={(e) => set("rc_entitlement_id", e.target.value)}
+          />
+        </Field>
+        <Field label="Monthly product id">
+          <Input
+            value={d.rc_monthly_product_id ?? ""}
+            placeholder="skanaround_pro_monthly"
+            onChange={(e) => set("rc_monthly_product_id", e.target.value)}
+          />
+        </Field>
+        <Field label="Yearly product id">
+          <Input
+            value={d.rc_yearly_product_id ?? ""}
+            placeholder="skanaround_pro_yearly"
+            onChange={(e) => set("rc_yearly_product_id", e.target.value)}
+          />
+        </Field>
+        <Field label="Webhook authorization value">
+          <Input
+            type="password"
+            value={d.rc_webhook_secret ?? ""}
+            placeholder="a long random value"
+            onChange={(e) => set("rc_webhook_secret", e.target.value)}
           />
         </Field>
         <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
-          Webhook URL for Paystack: <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/paystack/webhook</code>
+          Webhook URL: <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook</code>
+          {" "}— set the same authorization value in RevenueCat.
         </p>
       </Section>
 
-      <Section title="Plan & pricing" hint="Amounts are in the smallest unit (e.g. pesewas / kobo / cents).">
+      <Section
+        title="Plan wording & reference prices"
+        hint="Members are always charged the price you set in App Store Connect and Google Play. These amounts are only used for admin revenue reporting."
+      >
         <Field label="Plan name">
           <Input value={d.pro_label ?? ""} onChange={(e) => set("pro_label", e.target.value)} />
         </Field>
@@ -272,13 +305,21 @@ export function BillingTab() {
             onChange={(e) => set("pro_pitch", e.target.value)}
           />
         </Field>
-        <Field label={`Monthly price (${formatAmount(Number(d.monthly_amount ?? 0), d.currency ?? "GHS")})`}>
+        <Field label="Reporting currency code">
+          <Input
+            value={d.currency ?? ""}
+            placeholder="USD"
+            onChange={(e) => set("currency", e.target.value.toUpperCase())}
+          />
+        </Field>
+        <Field label={`Monthly price (${formatAmount(Number(d.monthly_amount ?? 0), d.currency ?? "USD")})`}>
           {num("monthly_amount", 0, 100000000)}
         </Field>
-        <Field label={`Yearly price (${formatAmount(Number(d.yearly_amount ?? 0), d.currency ?? "GHS")})`}>
+        <Field label={`Yearly price (${formatAmount(Number(d.yearly_amount ?? 0), d.currency ?? "USD")})`}>
           {num("yearly_amount", 0, 100000000)}
         </Field>
       </Section>
+
 
       <Section title="Free tier limits" hint="What members get without paying. Set 0 for no limit.">
         <Field label="Signals per day">{num("free_daily_signals", 0, 1000)}</Field>

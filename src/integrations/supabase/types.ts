@@ -230,9 +230,6 @@ export type Database = {
           free_messages_per_match: number
           id: string
           monthly_amount: number
-          monthly_plan_code: string | null
-          paystack_public_key: string | null
-          paystack_secret_key: string | null
           pro_custom_beacon: boolean
           pro_extended_radius: boolean
           pro_label: string
@@ -242,9 +239,15 @@ export type Database = {
           pro_unlimited_messages: boolean
           pro_unlimited_signals: boolean
           provider: string
+          rc_android_api_key: string | null
+          rc_entitlement_id: string
+          rc_ios_api_key: string | null
+          rc_monthly_product_id: string | null
+          rc_secret_api_key: string | null
+          rc_webhook_secret: string | null
+          rc_yearly_product_id: string | null
           updated_at: string
           yearly_amount: number
-          yearly_plan_code: string | null
         }
         Insert: {
           currency?: string
@@ -254,9 +257,6 @@ export type Database = {
           free_messages_per_match?: number
           id?: string
           monthly_amount?: number
-          monthly_plan_code?: string | null
-          paystack_public_key?: string | null
-          paystack_secret_key?: string | null
           pro_custom_beacon?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
@@ -266,9 +266,15 @@ export type Database = {
           pro_unlimited_messages?: boolean
           pro_unlimited_signals?: boolean
           provider?: string
+          rc_android_api_key?: string | null
+          rc_entitlement_id?: string
+          rc_ios_api_key?: string | null
+          rc_monthly_product_id?: string | null
+          rc_secret_api_key?: string | null
+          rc_webhook_secret?: string | null
+          rc_yearly_product_id?: string | null
           updated_at?: string
           yearly_amount?: number
-          yearly_plan_code?: string | null
         }
         Update: {
           currency?: string
@@ -278,9 +284,6 @@ export type Database = {
           free_messages_per_match?: number
           id?: string
           monthly_amount?: number
-          monthly_plan_code?: string | null
-          paystack_public_key?: string | null
-          paystack_secret_key?: string | null
           pro_custom_beacon?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
@@ -290,9 +293,15 @@ export type Database = {
           pro_unlimited_messages?: boolean
           pro_unlimited_signals?: boolean
           provider?: string
+          rc_android_api_key?: string | null
+          rc_entitlement_id?: string
+          rc_ios_api_key?: string | null
+          rc_monthly_product_id?: string | null
+          rc_secret_api_key?: string | null
+          rc_webhook_secret?: string | null
+          rc_yearly_product_id?: string | null
           updated_at?: string
           yearly_amount?: number
-          yearly_plan_code?: string | null
         }
         Relationships: []
       }
@@ -885,12 +894,16 @@ export type Database = {
       billing_public_info: {
         Args: never
         Returns: {
+          android_api_key: string
           currency: string
           enabled: boolean
+          entitlement_id: string
           free_daily_signals: number
           free_max_radius_m: number
           free_messages_per_match: number
+          ios_api_key: string
           monthly_amount: number
+          monthly_product_id: string
           pro_custom_beacon: boolean
           pro_extended_radius: boolean
           pro_label: string
@@ -900,8 +913,8 @@ export type Database = {
           pro_unlimited_messages: boolean
           pro_unlimited_signals: boolean
           provider: string
-          public_key: string
           yearly_amount: number
+          yearly_product_id: string
         }[]
       }
       claim_first_admin: { Args: never; Returns: boolean }

@@ -1,18 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Crown, Loader2, Check } from "lucide-react";
+import { Crown, Loader2, Check, RefreshCw, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useBillingInfo,
   useMySubscription,
-  formatAmount,
   MY_SUB_KEY,
   type BillingInfo,
 } from "@/hooks/useBilling";
-import { startCheckout, verifyCheckout } from "@/lib/paystack.functions";
+import { refreshEntitlement } from "@/lib/store-billing.functions";
+import {
+  initStore,
+  isNativeStore,
+  listPackages,
+  purchase,
+  restore,
+  storeName,
+  isUserCancelled,
+  type StorePackage,
+} from "@/lib/revenuecat";
 
 function proFeatures(b: BillingInfo) {
   const items: string[] = ["Verification review by our team after payment"];
@@ -25,92 +36,97 @@ function proFeatures(b: BillingInfo) {
   return items;
 }
 
-/** Membership card shown in the profile: current plan or upgrade options. */
+/**
+ * Membership card. Subscriptions are sold only through Apple In-App Purchase
+ * and Google Play Billing — never an external payment page — so the app meets
+ * App Store guideline 3.1.1 and Google Play's Payments policy.
+ */
 export function ProUpgradeCard() {
   const { data: billing } = useBillingInfo();
   const { data: sub } = useMySubscription();
   const queryClient = useQueryClient();
-  const start = useServerFn(startCheckout);
-  const verify = useServerFn(verifyCheckout);
-  const [busy, setBusy] = useState<string | null>(null);
-  const cancelled = useRef(false);
+  const sync = useServerFn(refreshEntitlement);
 
-  // Coming back from Paystack: confirm the reference in the URL.
+  const [packages, setPackages] = useState<StorePackage[]>([]);
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [managementUrl, setManagementUrl] = useState<string | null>(null);
+
+  const native = isNativeStore();
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get("reference") ?? params.get("trxref");
-    if (!reference) return;
+    if (!native || !billing?.enabled) return;
+    let cancelled = false;
     (async () => {
       try {
-        const res = await verify({ data: { reference } });
-        if (res.status === "success") {
-          toast.success("You're Pro now. Enjoy!");
-          await queryClient.invalidateQueries({ queryKey: MY_SUB_KEY });
-        } else {
-          toast.message("Payment not confirmed yet.");
-        }
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not confirm the payment.");
-      } finally {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("reference");
-        url.searchParams.delete("trxref");
-        window.history.replaceState({}, "", url.toString());
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth.user?.id;
+        if (!uid) return;
+        const ok = await initStore({
+          iosApiKey: billing.ios_api_key,
+          androidApiKey: billing.android_api_key,
+          userId: uid,
+        });
+        if (!ok || cancelled) return;
+        const list = await listPackages();
+        if (cancelled) return;
+        setPackages(list);
+        setReady(true);
+      } catch {
+        if (!cancelled) setReady(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [native, billing?.enabled, billing?.ios_api_key, billing?.android_api_key]);
+
+  const afterStoreChange = useCallback(
+    async (managed: string | null) => {
+      setManagementUrl(managed);
+      try {
+        await sync({});
+      } catch {
+        // Webhook will catch up if the direct sync fails.
+      }
+      await queryClient.invalidateQueries({ queryKey: MY_SUB_KEY });
+    },
+    [queryClient, sync],
+  );
 
   if (!billing?.enabled) return null;
 
   const isPro = Boolean(sub?.isPro);
   const features = proFeatures(billing);
+  const entitlement = billing.entitlement_id || "pro";
 
-  async function buy(plan: "monthly" | "yearly") {
-    setBusy(plan);
-    cancelled.current = false;
+  async function buy(pkg: StorePackage) {
+    setBusy(pkg.identifier);
     try {
-      const res = await start({
-        data: { plan, callbackUrl: `${window.location.origin}/profile` },
-      });
-      if (cancelled.current) return;
-
-      if (res.accessCode) {
-        const { openPaystackPopup } = await import("@/lib/paystack-popup");
-        try {
-          const outcome = await openPaystackPopup(res.accessCode);
-          if (outcome === "cancelled") {
-            toast.message("Payment cancelled");
-            setBusy(null);
-            return;
-          }
-          const verified = await verify({ data: { reference: res.reference } });
-          if (verified.status === "success") {
-            toast.success("You're Pro now. Enjoy!");
-            await queryClient.invalidateQueries({ queryKey: MY_SUB_KEY });
-          } else {
-            toast.message("Payment received — confirming shortly.");
-          }
-          setBusy(null);
-          return;
-        } catch {
-          // Popup unavailable (blocked script / offline) — fall back to redirect.
-        }
-      }
-
-      window.location.href = res.authorizationUrl;
+      const ent = await purchase(pkg, entitlement);
+      await afterStoreChange(ent.managementUrl);
+      toast.success("You're Pro now. Enjoy!");
     } catch (e) {
-      if (cancelled.current) return;
-      toast.error(e instanceof Error ? e.message : "Could not start the payment.");
+      if (isUserCancelled(e)) toast.message("Purchase cancelled");
+      else toast.error(e instanceof Error ? e.message : "The purchase didn't go through.");
+    } finally {
       setBusy(null);
     }
   }
 
-  function cancelPayment() {
-    cancelled.current = true;
-    setBusy(null);
-    toast.message("Payment cancelled");
+  async function restorePurchases() {
+    setBusy("restore");
+    try {
+      const ent = await restore(entitlement);
+      await afterStoreChange(ent.managementUrl);
+      toast[ent.isActive ? "success" : "message"](
+        ent.isActive ? "Your membership is back." : "No previous purchase found.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not restore purchases.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
@@ -120,67 +136,109 @@ export function ProUpgradeCard() {
         {billing.pro_label}
       </p>
 
-      {isPro ? (
-        <>
-          <p className="mt-1 text-xs text-muted-foreground">
-            You're on {sub?.plan === "yearly" ? "the yearly plan" : "Pro"}
-            {sub?.expiresAt
-              ? ` — renews ${new Date(sub.expiresAt).toLocaleDateString()}`
-              : ""}
-            .
+      <p className="mt-1 text-xs text-muted-foreground">
+        {isPro
+          ? `You're on ${sub?.plan === "yearly" ? "the yearly plan" : "Pro"}${
+              sub?.expiresAt
+                ? ` — renews ${new Date(sub.expiresAt).toLocaleDateString()}`
+                : ""
+            }.`
+          : billing.pro_pitch}
+      </p>
+
+      <ul className="mt-3 space-y-1.5">
+        {features.map((f) => (
+          <li key={f} className="flex items-center gap-2 text-xs">
+            <Check className="size-3.5 shrink-0 text-primary" /> {f}
+          </li>
+        ))}
+      </ul>
+
+      {!native ? (
+        <p className="mt-4 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+          Membership is managed in the SKANAROUND mobile app.
+        </p>
+      ) : isPro ? (
+        <div className="mt-4 space-y-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() =>
+              window.open(
+                managementUrl ??
+                  (storeName() === "App Store"
+                    ? "https://apps.apple.com/account/subscriptions"
+                    : "https://play.google.com/store/account/subscriptions"),
+                "_blank",
+              )
+            }
+          >
+            <ExternalLink className="mr-2 size-4" />
+            Manage subscription in {storeName()}
+          </Button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            Cancel or change your plan any time in your {storeName()} account.
           </p>
-          <ul className="mt-3 space-y-1.5">
-            {features.map((f) => (
-              <li key={f} className="flex items-center gap-2 text-xs">
-                <Check className="size-3.5 shrink-0 text-primary" /> {f}
-              </li>
-            ))}
-          </ul>
-        </>
+        </div>
       ) : (
-        <>
-          <p className="mt-1 text-xs text-muted-foreground">{billing.pro_pitch}</p>
-          <ul className="mt-3 space-y-1.5">
-            {features.map((f) => (
-              <li key={f} className="flex items-center gap-2 text-xs">
-                <Check className="size-3.5 shrink-0 text-primary" /> {f}
-              </li>
-            ))}
-          </ul>
-          {billing.monthly_amount <= 0 && billing.yearly_amount <= 0 ? (
-            <p className="mt-4 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
-              Pricing isn't set up yet. Please check back soon.
+        <div className="mt-4 space-y-2">
+          {!ready ? (
+            <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+              Loading plans from {storeName()}…
             </p>
-          ) : null}
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            {billing.monthly_amount > 0 ? (
+          ) : packages.length === 0 ? (
+            <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+              No plans are available right now. Please check back soon.
+            </p>
+          ) : (
+            packages.map((pkg, i) => (
               <Button
-                className="flex-1"
+                key={pkg.identifier}
+                variant={i === 0 ? "default" : "outline"}
+                className="w-full"
                 disabled={busy !== null}
-                onClick={() => buy("monthly")}
+                onClick={() => buy(pkg)}
               >
-                {busy === "monthly" ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                {formatAmount(billing.monthly_amount, billing.currency)} / month
+                {busy === pkg.identifier ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : null}
+                {pkg.priceString}
+                {pkg.period === "yearly"
+                  ? " / year"
+                  : pkg.period === "monthly"
+                    ? " / month"
+                    : ""}
               </Button>
-            ) : null}
-            {billing.yearly_amount > 0 ? (
-              <Button
-                variant="outline"
-                className="flex-1"
-                disabled={busy !== null}
-                onClick={() => buy("yearly")}
-              >
-                {busy === "yearly" ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                {formatAmount(billing.yearly_amount, billing.currency)} / year
-              </Button>
-            ) : null}
-          </div>
-          {busy ? (
-            <Button variant="ghost" className="mt-2 w-full" onClick={cancelPayment}>
-              Cancel payment
-            </Button>
-          ) : null}
-        </>
+            ))
+          )}
+
+          <Button
+            variant="ghost"
+            className="w-full"
+            disabled={busy !== null}
+            onClick={restorePurchases}
+          >
+            {busy === "restore" ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 size-4" />
+            )}
+            Restore purchases
+          </Button>
+
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Payment is charged to your {storeName()} account. Subscriptions renew
+            automatically unless cancelled at least 24 hours before the period ends.
+            Manage or cancel in your {storeName()} account settings.{" "}
+            <Link to="/terms" className="underline">
+              Terms
+            </Link>{" "}
+            ·{" "}
+            <Link to="/privacy" className="underline">
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
       )}
     </div>
   );

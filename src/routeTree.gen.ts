@@ -20,7 +20,7 @@ import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
-import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack.webhook'
+import { Route as ApiPublicRevenuecatWebhookRouteImport } from './routes/api/public/revenuecat.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -77,10 +77,10 @@ const AuthenticatedChatMatchIdRoute =
     path: '/chat/$matchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicPaystackWebhookRoute =
-  ApiPublicPaystackWebhookRouteImport.update({
-    id: '/api/public/paystack/webhook',
-    path: '/api/public/paystack/webhook',
+const ApiPublicRevenuecatWebhookRoute =
+  ApiPublicRevenuecatWebhookRouteImport.update({
+    id: '/api/public/revenuecat/webhook',
+    path: '/api/public/revenuecat/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -95,7 +95,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,7 +108,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,7 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,7 +138,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
-    | '/api/public/paystack/webhook'
+    | '/api/public/revenuecat/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,7 +151,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
-    | '/api/public/paystack/webhook'
+    | '/api/public/revenuecat/webhook'
   id:
     | '__root__'
     | '/'
@@ -165,7 +165,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/radar'
     | '/_authenticated/chat/$matchId'
-    | '/api/public/paystack/webhook'
+    | '/api/public/revenuecat/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,7 +176,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
-  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
+  ApiPublicRevenuecatWebhookRoute: typeof ApiPublicRevenuecatWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,11 +258,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatMatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/paystack/webhook': {
-      id: '/api/public/paystack/webhook'
-      path: '/api/public/paystack/webhook'
-      fullPath: '/api/public/paystack/webhook'
-      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
+    '/api/public/revenuecat/webhook': {
+      id: '/api/public/revenuecat/webhook'
+      path: '/api/public/revenuecat/webhook'
+      fullPath: '/api/public/revenuecat/webhook'
+      preLoaderRoute: typeof ApiPublicRevenuecatWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -293,7 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
-  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
+  ApiPublicRevenuecatWebhookRoute: ApiPublicRevenuecatWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 export type BillingInfo = {
   enabled: boolean;
   provider: string;
-  public_key: string | null;
+  ios_api_key: string | null;
+  android_api_key: string | null;
+  entitlement_id: string;
+  monthly_product_id: string | null;
+  yearly_product_id: string | null;
   currency: string;
   monthly_amount: number;
   yearly_amount: number;
@@ -26,9 +30,13 @@ export const MY_SUB_KEY = ["my-subscription"] as const;
 
 export const BILLING_DEFAULTS: BillingInfo = {
   enabled: false,
-  provider: "paystack",
-  public_key: null,
-  currency: "GHS",
+  provider: "revenuecat",
+  ios_api_key: null,
+  android_api_key: null,
+  entitlement_id: "pro",
+  monthly_product_id: null,
+  yearly_product_id: null,
+  currency: "USD",
   monthly_amount: 0,
   yearly_amount: 0,
   pro_label: "SKANAROUND Pro",
@@ -43,6 +51,8 @@ export const BILLING_DEFAULTS: BillingInfo = {
   pro_priority_beacon: true,
   pro_custom_beacon: true,
 };
+
+
 
 /** Public, safe billing configuration (never includes the secret key). */
 export function useBillingInfo() {
@@ -102,7 +112,7 @@ export function formatAmount(minor: number, currency: string) {
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: currency || "GHS",
+      currency: currency || "USD",
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
