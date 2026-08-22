@@ -290,7 +290,7 @@ export function BillingTab() {
           <div className="flex gap-2">
             <Input
               value={d.rc_webhook_url ?? ""}
-              placeholder={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`}
+              placeholder={`${siteBase}/api/public/revenuecat/webhook`}
               onChange={(e) => set("rc_webhook_url", e.target.value)}
             />
             <Button
@@ -300,7 +300,7 @@ export function BillingTab() {
               onClick={() => {
                 const url =
                   (d.rc_webhook_url as string) ||
-                  `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`;
+                  `${siteBase}/api/public/revenuecat/webhook`;
                 void navigator.clipboard?.writeText(url);
                 toast.success("Webhook URL copied");
               }}
