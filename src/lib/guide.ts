@@ -432,9 +432,37 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "A banner appears when the connection drops. The app reconnects and refreshes on its own once you are back online.",
       },
       {
+        term: "Battery draining fast",
+        body: "The radar uses GPS continuously while open. Close the app when you are not scanning, or narrow your scan range.",
+      },
+      {
+        term: "Photos not sending",
+        body: "Check the connection banner and allow photo access for the app in your phone settings.",
+      },
+      {
         term: "Still stuck",
         body: "Contact support from the Legal & support box on your profile page.",
       },
+    ],
+  },
+  {
+    id: "glossary",
+    title: "Glossary",
+    icon: "help",
+    summary: "Every term used in the app, in one place.",
+    items: [
+      { term: "Scope", body: "The circular radar display with you at the centre." },
+      { term: "Beacon", body: "One person on the scope, drawn as their photo or gender avatar with a coloured halo." },
+      { term: "Signal", body: "A one-tap 'I'd like to chat'. It shares only your name and photo." },
+      { term: "Match", body: "Two people who have signalled each other. A chat opens automatically." },
+      { term: "Bearing", body: "The compass direction of a person from you, shown as NE 35° style text on their card." },
+      { term: "Heading-up", body: "Compass mode where the scope rotates with your phone, so the top of the screen is where you are facing." },
+      { term: "North-up", body: "Compass mode where north is always at the top of the scope." },
+      { term: "Scan range", body: "How far out the radar looks. Capped by the admin's maximum." },
+      { term: "Invisible mode", body: "Visibility off: you keep scanning but nobody sees your beacon. A Pro feature." },
+      { term: "Verified", body: "An account checked by a moderator. Shows a badge and a distinct beacon colour." },
+      { term: "Pro", body: "The paid membership, bought through the App Store or Google Play." },
+      { term: "Reactivation request", body: "An appeal sent to moderators after your account is banned." },
     ],
   },
 ];
