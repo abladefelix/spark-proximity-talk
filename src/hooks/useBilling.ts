@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 export type BillingInfo = {
   enabled: boolean;
   provider: string;
-  public_key: string | null;
+  ios_api_key: string | null;
+  android_api_key: string | null;
+  entitlement_id: string;
+  monthly_product_id: string | null;
+  yearly_product_id: string | null;
   currency: string;
   monthly_amount: number;
   yearly_amount: number;
@@ -19,6 +23,33 @@ export type BillingInfo = {
   pro_see_who_signaled: boolean;
   pro_priority_beacon: boolean;
   pro_custom_beacon: boolean;
+};
+
+export const BILLING_INFO_KEY = ["billing-info"] as const;
+export const MY_SUB_KEY = ["my-subscription"] as const;
+
+export const BILLING_DEFAULTS: BillingInfo = {
+  enabled: false,
+  provider: "revenuecat",
+  ios_api_key: null,
+  android_api_key: null,
+  entitlement_id: "pro",
+  monthly_product_id: null,
+  yearly_product_id: null,
+  currency: "USD",
+  monthly_amount: 0,
+  yearly_amount: 0,
+  pro_label: "SKANAROUND Pro",
+  pro_pitch: "Unlock unlimited signals, longer range and more.",
+  free_daily_signals: 5,
+  free_max_radius_m: 500,
+  free_messages_per_match: 0,
+  pro_unlimited_signals: true,
+  pro_extended_radius: true,
+  pro_unlimited_messages: true,
+  pro_see_who_signaled: true,
+  pro_priority_beacon: true,
+  pro_custom_beacon: true,
 };
 
 export const BILLING_INFO_KEY = ["billing-info"] as const;
