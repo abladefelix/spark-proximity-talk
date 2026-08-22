@@ -230,6 +230,8 @@ export type Database = {
           free_messages_per_match: number
           id: string
           monthly_amount: number
+          paystack_public_key: string | null
+          paystack_secret_key: string | null
           pro_custom_beacon: boolean
           pro_extended_radius: boolean
           pro_label: string
@@ -248,6 +250,10 @@ export type Database = {
           rc_webhook_url: string | null
           rc_yearly_product_id: string | null
           updated_at: string
+          web_checkout_enabled: boolean
+          web_currency: string
+          web_monthly_amount: number
+          web_yearly_amount: number
           yearly_amount: number
         }
         Insert: {
@@ -258,6 +264,8 @@ export type Database = {
           free_messages_per_match?: number
           id?: string
           monthly_amount?: number
+          paystack_public_key?: string | null
+          paystack_secret_key?: string | null
           pro_custom_beacon?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
@@ -276,6 +284,10 @@ export type Database = {
           rc_webhook_url?: string | null
           rc_yearly_product_id?: string | null
           updated_at?: string
+          web_checkout_enabled?: boolean
+          web_currency?: string
+          web_monthly_amount?: number
+          web_yearly_amount?: number
           yearly_amount?: number
         }
         Update: {
@@ -286,6 +298,8 @@ export type Database = {
           free_messages_per_match?: number
           id?: string
           monthly_amount?: number
+          paystack_public_key?: string | null
+          paystack_secret_key?: string | null
           pro_custom_beacon?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
@@ -304,6 +318,10 @@ export type Database = {
           rc_webhook_url?: string | null
           rc_yearly_product_id?: string | null
           updated_at?: string
+          web_checkout_enabled?: boolean
+          web_currency?: string
+          web_monthly_amount?: number
+          web_yearly_amount?: number
           yearly_amount?: number
         }
         Relationships: []
