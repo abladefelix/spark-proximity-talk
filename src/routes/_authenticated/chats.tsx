@@ -45,6 +45,8 @@ function ChatsPage() {
       const { data: matches, error } = await supabase
         .from("matches")
         .select("id, user_a, user_b, created_at")
+        // Staff accounts can read every match, so scope this list to my own conversations.
+        .or(`user_a.eq.${me},user_b.eq.${me}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (!matches?.length) return [];
