@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { BILLING_INFO_KEY, formatAmount } from "@/hooks/useBilling";
+import { ProPlansSection } from "@/components/admin/ProPlansSection";
 
 type Billing = Record<string, any>;
 
@@ -327,39 +328,6 @@ export function BillingTab() {
         <Field label="Messages per chat">{num("free_messages_per_match", 0, 10000)}</Field>
       </Section>
 
-      <Section title="Pro features" hint="Switch off anything you don't want included in the paid plan.">
-        <Toggle
-          label="Unlimited signals"
-          checked={Boolean(d.pro_unlimited_signals)}
-          onChange={(v) => set("pro_unlimited_signals", v)}
-        />
-        <Toggle
-          label="Full scan range"
-          checked={Boolean(d.pro_extended_radius)}
-          onChange={(v) => set("pro_extended_radius", v)}
-        />
-        <Toggle
-          label="Unlimited messages"
-          checked={Boolean(d.pro_unlimited_messages)}
-          onChange={(v) => set("pro_unlimited_messages", v)}
-        />
-        <Toggle
-          label="See everyone who signalled"
-          checked={Boolean(d.pro_see_who_signaled)}
-          onChange={(v) => set("pro_see_who_signaled", v)}
-        />
-        <Toggle
-          label="Priority beacon"
-          checked={Boolean(d.pro_priority_beacon)}
-          onChange={(v) => set("pro_priority_beacon", v)}
-        />
-        <Toggle
-          label="Custom beacon look"
-          checked={Boolean(d.pro_custom_beacon)}
-          onChange={(v) => set("pro_custom_beacon", v)}
-        />
-      </Section>
-
       <Button className="w-full" disabled={save.isPending} onClick={() => save.mutate()}>
         {save.isPending ? (
           <Loader2 className="mr-2 size-4 animate-spin" />
@@ -368,6 +336,8 @@ export function BillingTab() {
         )}
         Save billing settings
       </Button>
+
+      <ProPlansSection />
 
       <Section title="Grant membership" hint="Give someone Pro without a payment, or take it back.">
         <div className="relative">
