@@ -58,6 +58,40 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "tour",
+    shot: "radar",
+    shotCaption: "The radar screen: logo and quick actions on top, the scope in the middle, the tab bar at the bottom.",
+    title: "Getting around the app",
+    icon: "help",
+    summary: "Every screen, button and tab explained.",
+    items: [
+      {
+        term: "Radar tab",
+        body: "Your home screen. The scope fills the screen, incoming signals stack at the top, and the compass and range controls sit just below the scope.",
+      },
+      {
+        term: "Chats tab",
+        body: "All your matched conversations, newest on top. Tap the stack to unfold it and pick a chat.",
+      },
+      {
+        term: "You tab",
+        body: "Your profile: photo, name, bio, gender, scan range, visibility, sound, app lock, chat background, theme and account settings.",
+      },
+      {
+        term: "Go Pro tab",
+        body: "The upgrade screen. It lists exactly which features are Pro on your plan, with prices from the App Store or Google Play.",
+      },
+      {
+        term: "Top bar",
+        body: "The question mark opens this guide, the bell shows notifications and announcements, the sun/moon switches theme, and the switch on the right turns your visibility on the radar on or off.",
+      },
+      {
+        term: "Incoming signal cards",
+        body: "When someone signals you, a card appears above the scope with their name and photo. Accept opens a chat for both of you; the X dismisses it quietly.",
+      },
+    ],
+  },
+  {
     id: "radar",
     shot: "radar",
     shotCaption: "Rings mark distance bands, the sweep shows the live scan, N/E/S/W keep you oriented.",
