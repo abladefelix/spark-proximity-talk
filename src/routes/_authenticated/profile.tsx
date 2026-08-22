@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BadgeCheck, Bell, Camera, Ban, ShieldCheck, Trash2 } from "lucide-react";
+import { BadgeCheck, Bell, BookOpen, Camera, Ban, ShieldCheck, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertDialog,
