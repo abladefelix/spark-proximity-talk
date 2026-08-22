@@ -41,7 +41,7 @@ function applyLook(look: BootLook) {
   const root = document.documentElement;
 
   // Theme: an explicit user choice always wins over the admin default.
-  const adminTheme = look.default_theme === "light" ? "light" : "dark";
+  const adminTheme = look.default_theme === "dark" ? "dark" : "light";
   cache("skanaround-default-theme", adminTheme);
   let userTheme: string | null = null;
   try {
