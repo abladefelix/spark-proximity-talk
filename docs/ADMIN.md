@@ -62,17 +62,25 @@ SMTP host, port, TLS, username, password, from name/address, reply-to and a test
 send. Used for password resets, admin mail and Pro payment receipts.
 
 ### Billing
-- Enable/disable payments (when disabled the Go Pro tab is hidden app-wide).
-- Paystack public and secret keys, currency.
-- Monthly and yearly amounts (in minor units). With no amount set, no pay button
-  is shown.
-- Pro label and pitch copy.
+- **Website address**: the public domain used to build payment redirects and
+  webhook URLs. Change it here after moving to a new domain, then re-copy the
+  webhook URLs into Paystack and RevenueCat. Blank = current address.
+- **App Store & Google Play (RevenueCat)**: iOS/Android public SDK keys, secret
+  key, entitlement name, product ids, webhook authorization value and editable
+  webhook URL. This is how the mobile apps sell Pro.
+- **Website checkout (Paystack)**: on/off, public and secret keys, currency,
+  monthly/yearly amounts (minor units — `5000` = GH₵50.00) and a read-only
+  webhook URL to copy into Paystack. Powers the web-only `/upgrade` page.
+- Pro label and pitch copy, reference prices for reporting.
 - Free-tier caps: daily signals, max radius, messages per match.
-- Pro switches: unlimited signals, extended radius, unlimited messages, see who
-  signalled, priority beacon, custom beacon.
-- Revenue summary via `admin_billing_stats`.
+- Pro packages and per-feature `pro_only` switches.
+- Members search: grant or revoke a membership by hand.
+- Recent payments list and revenue summary via `admin_billing_stats`.
 
-Payments are Paystack only. There are no ads anywhere in the product.
+A successful website payment unlocks Pro **automatically** — there is no
+approval queue. See [WEB_BILLING.md](./WEB_BILLING.md). Inside the apps Pro is
+sold only through Apple/Google; never link `/upgrade` from app screens. There
+are no ads anywhere in the product.
 
 ### Backups
 S3 or Google Drive credentials plus on-demand snapshots of app data.
