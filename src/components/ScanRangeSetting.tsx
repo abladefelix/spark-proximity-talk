@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { useMaxRadius, DEFAULT_MAX_RADIUS } from "@/hooks/useMaxRadius";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 
 const MIN_RADIUS = 100;
 
@@ -16,10 +17,11 @@ export function ScanRangeSetting() {
   const settings = useSettings();
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
+  const { has } = useFeatureAccess();
   const adminCap = maxRadius ?? DEFAULT_MAX_RADIUS;
   // Free members are held to the free-tier range when payments are live.
   const freeCap =
-    billing?.enabled && billing.pro_extended_radius && !isPro
+    billing?.enabled && !has(FEATURE.extendedRadius)
       ? Math.min(adminCap, billing.free_max_radius_m || adminCap)
       : adminCap;
   const cap = freeCap;

@@ -311,8 +311,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     // Free-tier message cap (admin controlled, skipped for Pro members).
     if (
       billing?.enabled &&
-      billing.pro_unlimited_messages &&
-      !isPro &&
+      !hasUnlimitedMessages &&
       billing.free_messages_per_match > 0
     ) {
       const mine = messages.filter((m: any) => m.sender_id === me).length;

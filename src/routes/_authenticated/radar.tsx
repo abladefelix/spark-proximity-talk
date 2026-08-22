@@ -45,6 +45,7 @@ import { Brand, BrandMark } from "@/components/Brand";
 import { DEFAULT_MAX_RADIUS, MIN_RADIUS, useMaxRadius } from "@/hooks/useMaxRadius";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman } from "@/lib/geo-filter";
@@ -127,11 +128,12 @@ function RadarPage() {
   const settings = useSettings();
   const { data: billing } = useBillingInfo();
   const isPro = useIsPro();
-  const proPriorityOn = Boolean(billing?.pro_priority_beacon);
+  const { has, isPaidFeature } = useFeatureAccess();
+  const proPriorityOn = isPaidFeature(FEATURE.priorityBeacon);
   const adminCap = maxRadius ?? DEFAULT_MAX_RADIUS;
   // Free members are capped at the free-tier range while payments are live.
   const cap =
-    billing?.enabled && billing.pro_extended_radius && !isPro
+    billing?.enabled && !has(FEATURE.extendedRadius)
       ? Math.min(adminCap, billing.free_max_radius_m || adminCap)
       : adminCap;
   const [radiusPref, setRadiusPref] = useState(settings.default_radius_m);
@@ -802,7 +804,7 @@ function RadarPage() {
           <Switch
             checked={visible}
             onCheckedChange={(next) => {
-              if (!next && !isPro) {
+              if (!next && !has(FEATURE.invisibleMode)) {
                 toast.error("Going invisible is a Pro feature", {
                   description: "Upgrade to hide your beacon while you scan.",
                   action: { label: "Go Pro", onClick: () => openPro() },
