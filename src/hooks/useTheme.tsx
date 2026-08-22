@@ -5,13 +5,13 @@ export type Theme = "light" | "dark";
 const STORAGE_KEY = "skanaround-theme";
 
 const ThemeContext = createContext<{ theme: Theme; setTheme: (t: Theme) => void; toggle: () => void }>({
-  theme: "dark",
+  theme: "light",
   setTheme: () => {},
   toggle: () => {},
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
     const read = () => {
@@ -20,9 +20,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // hook agree — otherwise the app flashes the old theme on every launch.
       const adminDefault = localStorage.getItem("skanaround-default-theme") as Theme | null;
       return (
-        stored ??
-        adminDefault ??
-        (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+        // Light is the product default; system preference does not override it.
+        stored ?? adminDefault ?? "light"
       );
     };
     setThemeState(read());
