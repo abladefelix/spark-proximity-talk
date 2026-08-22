@@ -54,7 +54,7 @@ Subscriptions renew automatically for the same period unless you cancel at least
 ## 11. Apple and Google
 These terms are between you and us, not with Apple or Google. Apple and Google are not responsible for the app or for support, and they are third-party beneficiaries with the right to enforce these terms against you.
 
-## 11. Changes
+## 12. Changes
 We may update these terms. Continued use after an update means you accept the new version.
 `;
 
