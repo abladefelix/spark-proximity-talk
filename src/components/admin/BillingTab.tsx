@@ -187,6 +187,10 @@ export function BillingTab() {
   });
 
   const d = draft as any;
+  const siteBase = (
+    (d.web_site_url as string | undefined)?.trim() ||
+    (typeof window !== "undefined" ? window.location.origin : "")
+  ).replace(/\/+$/, "");
   const set = (key: string, value: unknown) => setDraft((cur) => ({ ...cur, [key]: value }));
   const num = (key: string, min: number, max: number) => (
     <Input
