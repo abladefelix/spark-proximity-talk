@@ -24,6 +24,11 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { GUIDE_SECTIONS, type GuideSection } from "@/lib/guide";
+import radarShot from "@/assets/guide/radar_people.png.asset.json";
+import beaconShot from "@/assets/guide/profile_dialog.png.asset.json";
+import chatShot from "@/assets/guide/chat.png.asset.json";
+import chatsShot from "@/assets/guide/chats.png.asset.json";
+import profileShot from "@/assets/guide/profile.png.asset.json";
 import { useSettings } from "@/hooks/useAppSettings";
 
 const ICONS: Record<GuideSection["icon"], typeof Radar> = {
@@ -38,6 +43,14 @@ const ICONS: Record<GuideSection["icon"], typeof Radar> = {
   safety: ShieldCheck,
   bell: Bell,
   help: HelpCircle,
+};
+
+const SHOTS: Record<NonNullable<GuideSection["shot"]>, { src: string; alt: string }> = {
+  radar: { src: radarShot.url, alt: "The radar screen with nearby people shown as beacons" },
+  beacon: { src: beaconShot.url, alt: "A beacon tapped open, showing the person's profile card" },
+  chat: { src: chatShot.url, alt: "A one-to-one match chat with messages and the input bar" },
+  chats: { src: chatsShot.url, alt: "The list of your active match chats" },
+  profile: { src: profileShot.url, alt: "Your own profile screen with photo, name and bio" },
 };
 
 export const Route = createFileRoute("/guide")({
@@ -157,6 +170,21 @@ function GuidePage() {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
+                  {section.shot ? (
+                    <figure className="mb-5 pl-11">
+                      <img
+                        src={SHOTS[section.shot].src}
+                        alt={SHOTS[section.shot].alt}
+                        loading="lazy"
+                        className="w-full max-w-[260px] rounded-2xl border border-border shadow-sm"
+                      />
+                      {section.shotCaption ? (
+                        <figcaption className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                          {section.shotCaption}
+                        </figcaption>
+                      ) : null}
+                    </figure>
+                  ) : null}
                   <dl className="space-y-4 pl-11">
                     {section.items.map((item) => (
                       <div key={item.term}>
