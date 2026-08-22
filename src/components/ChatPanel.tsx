@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowUp, ChevronLeft, ImagePlus, LoaderCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
+import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/hooks/useAppSettings";
 import { useChatSheet } from "@/components/ChatSheet";
@@ -138,6 +139,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   const { closeChat } = useChatSheet();
   const sendPush = useServerFn(sendPushNotification);
   const { data: billing } = useBillingInfo();
+  const hasUnlimitedMessages = useFeatureAccess().has(FEATURE.unlimitedMessages);
   const isPro = useIsPro();
   const { open: openPro } = useProUpgradeSheet();
   const settings = useSettings();
