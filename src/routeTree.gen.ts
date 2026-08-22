@@ -17,6 +17,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
@@ -63,6 +64,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpgradeRoute = UpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/chats'
     | '/profile'
     | '/radar'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/chats'
     | '/profile'
     | '/radar'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/_authenticated/chats'
     | '/_authenticated/profile'
     | '/_authenticated/radar'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  UpgradeRoute: typeof UpgradeRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
   ApiPublicRevenuecatWebhookRoute: typeof ApiPublicRevenuecatWebhookRoute
 }
@@ -262,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upgrade': {
+      id: '/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof UpgradeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/chats': {
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  UpgradeRoute: UpgradeRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
   ApiPublicRevenuecatWebhookRoute: ApiPublicRevenuecatWebhookRoute,
 }
