@@ -138,6 +138,10 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "Each person is a beacon showing their profile photo. If they have no photo you see a male or female avatar based on the gender on their profile.",
       },
       {
+        term: "Male and female avatar symbols",
+        body: "A beacon with a male avatar (the stylised male figure) means the person registered as male. A beacon with a female avatar (the stylised female figure) means the person registered as female. These symbols only appear when the person has not uploaded a profile photo, so you can still tell gender at a glance.",
+      },
+      {
         term: "The pointer",
         body: "The small arrow under a beacon points at the exact spot the person is standing.",
       },
