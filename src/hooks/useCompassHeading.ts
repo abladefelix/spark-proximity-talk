@@ -170,8 +170,12 @@ export function useCompassHeading(enabled: boolean) {
 
   const request = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
-      return nativeRestart.current?.() ?? false;
+      // No live session yet (compass turned off): let the caller switch it on,
+      // the effect will start the sensor. Only report failure on a real restart.
+      if (!nativeRestart.current) return true;
+      return nativeRestart.current();
     }
+
     const anyEvent = window.DeviceOrientationEvent as
       | (typeof DeviceOrientationEvent & { requestPermission?: () => Promise<PermissionState> })
       | undefined;
