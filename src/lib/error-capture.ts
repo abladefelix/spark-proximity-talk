@@ -99,6 +99,27 @@ console.error = (...args: unknown[]) => {
 // uncaughtException — outside any middleware. Swallow it there too, otherwise
 // it is reported as a runtime error with a blank screen.
 const nodeProcess = (globalThis as { process?: NodeJS.Process }).process;
+
+// Other listeners (dev server, error reporters) also subscribe to
+// uncaughtException, so filtering inside our own handler is not enough — the
+// abort still reaches them and is reported as a runtime error. Intercept the
+// emit itself so a client disconnect never fans out to any listener.
+if (nodeProcess && typeof nodeProcess.emit === "function") {
+  const originalEmit = nodeProcess.emit.bind(nodeProcess) as (
+    event: string,
+    ...args: unknown[]
+  ) => boolean;
+  (nodeProcess as unknown as { emit: unknown }).emit = (event: string, ...args: unknown[]) => {
+    if (
+      (event === "uncaughtException" || event === "unhandledRejection") &&
+      isClientDisconnect(args[0])
+    ) {
+      return true; // treat as handled
+    }
+    return originalEmit(event, ...args);
+  };
+}
+
 if (nodeProcess && typeof nodeProcess.on === "function") {
   nodeProcess.on("uncaughtException", (error: unknown) => {
     if (isClientDisconnect(error)) {
