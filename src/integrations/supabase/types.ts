@@ -561,6 +561,84 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_features: {
+        Row: {
+          description: string
+          key: string
+          label: string
+          pro_only: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          key: string
+          label: string
+          pro_only?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          key?: string
+          label?: string
+          pro_only?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pro_packages: {
+        Row: {
+          active: boolean
+          created_at: string
+          currency: string
+          description: string
+          entitlement_id: string
+          features: string[]
+          id: string
+          monthly_amount: number
+          monthly_product_id: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+          yearly_amount: number
+          yearly_product_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string
+          entitlement_id?: string
+          features?: string[]
+          id?: string
+          monthly_amount?: number
+          monthly_product_id?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+          yearly_amount?: number
+          yearly_product_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string
+          entitlement_id?: string
+          features?: string[]
+          id?: string
+          monthly_amount?: number
+          monthly_product_id?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          yearly_amount?: number
+          yearly_product_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
