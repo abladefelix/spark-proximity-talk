@@ -17,10 +17,12 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
+import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack.webhook'
 import { Route as ApiPublicRevenuecatWebhookRouteImport } from './routes/api/public/revenuecat.webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -62,6 +64,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpgradeRoute = UpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
@@ -83,6 +90,12 @@ const AuthenticatedChatMatchIdRoute =
     path: '/chat/$matchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaystackWebhookRoute =
+  ApiPublicPaystackWebhookRouteImport.update({
+    id: '/api/public/paystack/webhook',
+    path: '/api/public/paystack/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicRevenuecatWebhookRoute =
   ApiPublicRevenuecatWebhookRouteImport.update({
     id: '/api/public/revenuecat/webhook',
@@ -98,10 +111,12 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -112,10 +127,12 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRoutesById {
@@ -128,10 +145,12 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/upgrade': typeof UpgradeRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
 export interface FileRouteTypes {
@@ -144,10 +163,12 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/chats'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
+    | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -158,10 +179,12 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/chats'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
+    | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   id:
     | '__root__'
@@ -173,10 +196,12 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/upgrade'
     | '/_authenticated/chats'
     | '/_authenticated/profile'
     | '/_authenticated/radar'
     | '/_authenticated/chat/$matchId'
+    | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -189,6 +214,8 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  UpgradeRoute: typeof UpgradeRoute
+  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
   ApiPublicRevenuecatWebhookRoute: typeof ApiPublicRevenuecatWebhookRoute
 }
 
@@ -250,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/upgrade': {
+      id: '/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof UpgradeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/chats': {
       id: '/_authenticated/chats'
       path: '/chats'
@@ -277,6 +311,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat/$matchId'
       preLoaderRoute: typeof AuthenticatedChatMatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/paystack/webhook': {
+      id: '/api/public/paystack/webhook'
+      path: '/api/public/paystack/webhook'
+      fullPath: '/api/public/paystack/webhook'
+      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/revenuecat/webhook': {
       id: '/api/public/revenuecat/webhook'
@@ -314,6 +355,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  UpgradeRoute: UpgradeRoute,
+  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
   ApiPublicRevenuecatWebhookRoute: ApiPublicRevenuecatWebhookRoute,
 }
 export const routeTree = rootRouteImport
