@@ -318,6 +318,73 @@ export function BillingTab() {
       </Section>
 
       <Section
+        title="Website checkout (Paystack)"
+        hint="For members who cannot pay Apple or Google — mobile money and local cards on the website only. The mobile apps must never link to or mention this page, so keep it off your in-app screens."
+      >
+        <Toggle
+          label="Website checkout active"
+          hint="Opens /upgrade on this website."
+          checked={Boolean(d.web_checkout_enabled)}
+          onChange={(v) => set("web_checkout_enabled", v)}
+        />
+        <Field label="Paystack public key">
+          <Input
+            value={d.paystack_public_key ?? ""}
+            placeholder="pk_live_..."
+            onChange={(e) => set("paystack_public_key", e.target.value)}
+          />
+        </Field>
+        <Field label="Paystack secret key (server only)">
+          <Input
+            type="password"
+            value={d.paystack_secret_key ?? ""}
+            placeholder="sk_live_..."
+            onChange={(e) => set("paystack_secret_key", e.target.value)}
+          />
+        </Field>
+        <Field label="Currency code">
+          <Input
+            value={d.web_currency ?? ""}
+            placeholder="GHS"
+            onChange={(e) => set("web_currency", e.target.value.toUpperCase())}
+          />
+        </Field>
+        <Field
+          label={`Monthly price (${formatAmount(Number(d.web_monthly_amount ?? 0), d.web_currency ?? "GHS")})`}
+        >
+          {num("web_monthly_amount", 0, 100000000)}
+        </Field>
+        <Field
+          label={`Yearly price (${formatAmount(Number(d.web_yearly_amount ?? 0), d.web_currency ?? "GHS")})`}
+        >
+          {num("web_yearly_amount", 0, 100000000)}
+        </Field>
+        <div className="flex gap-2">
+          <Input
+            readOnly
+            value={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/paystack/webhook`}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void navigator.clipboard?.writeText(
+                `${window.location.origin}/api/public/paystack/webhook`,
+              );
+              toast.success("Webhook URL copied");
+            }}
+          >
+            Copy
+          </Button>
+        </div>
+        <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
+          Paste that URL into Paystack → Settings → API Keys & Webhooks. Prices are in the
+          smallest unit, so 5000 means GH₵50.00.
+        </p>
+      </Section>
+
+      <Section
         title="Plan wording & reference prices"
         hint="Members are always charged the price you set in App Store Connect and Google Play. These amounts are only used for admin revenue reporting."
       >
