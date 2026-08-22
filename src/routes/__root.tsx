@@ -178,7 +178,7 @@ function RootShell({ children }: { children: ReactNode }) {
               "var h=ls.getItem('skanaround-accent-hue');if(h){var p=t==='dark'?'oklch(0.74 0.135 '+h+')':'oklch(0.65 0.16 '+h+')';var f=t==='dark'?'oklch(0.17 0.02 '+h+')':'oklch(0.99 0.005 '+h+')';d.style.setProperty('--primary',p);d.style.setProperty('--primary-foreground',f);d.style.setProperty('--sidebar-primary',p);d.style.setProperty('--sidebar-primary-foreground',f);d.style.setProperty('--ring',p);}"+
               "var fam=ls.getItem('skanaround-font');if(fam){d.style.setProperty('--font-sans-active','\"'+fam+'\", ui-sans-serif, system-ui, sans-serif');}"+
               "var gm=ls.getItem('skanaround-gender-colors');if(gm){var g=gm.split(',');d.style.setProperty('--gender-male',g[0]);d.style.setProperty('--gender-female',g[1]);d.style.setProperty('--gender-other',g[2]);}"+
-              "}catch(e){document.documentElement.classList.add('dark');}",
+              "}catch(e){}",
           }}
         />
         <div id="app-scroll">{children}</div>
