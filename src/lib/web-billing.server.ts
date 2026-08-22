@@ -38,6 +38,15 @@ export function webCheckoutInfo(settings: any): WebCheckoutInfo {
   };
 }
 
+/**
+ * The public website address, set in Admin → Billing. When the domain changes
+ * the admin edits it there and every payment redirect follows automatically.
+ */
+export function siteBaseUrl(settings: any, fallback?: string) {
+  const raw = (settings?.web_site_url as string | null)?.trim() || fallback?.trim() || "";
+  return raw.replace(/\/+$/, "");
+}
+
 function amountFor(plan: WebPlan, settings: any) {
   const info = webCheckoutInfo(settings);
   return plan === "yearly" ? info.yearly : info.monthly;
