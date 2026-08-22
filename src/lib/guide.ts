@@ -16,6 +16,9 @@ export type GuideSection = {
     | "bell"
     | "help";
   summary: string;
+  /** Screenshot captured from the live app, illustrating the section. */
+  shot?: "radar" | "beacon" | "chat" | "chats" | "profile";
+  shotCaption?: string;
   items: GuideItem[];
 };
 
@@ -26,6 +29,8 @@ export type GuideSection = {
 export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "start",
+    shot: "radar",
+    shotCaption: "The radar home screen — you sit in the centre, everyone else is placed by real distance and direction.",
     title: "Getting started",
     icon: "help",
     summary: "What the app does and the three steps to your first chat.",
@@ -54,6 +59,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "radar",
+    shot: "radar",
+    shotCaption: "Rings mark distance bands, the sweep shows the live scan, N/E/S/W keep you oriented.",
     title: "The radar",
     icon: "radar",
     summary: "How the circles, sweep and positions work.",
@@ -86,6 +93,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "beacons",
+    shot: "beacon",
+    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick, exact distance and bearing.",
     title: "Beacons and what colours mean",
     icon: "beacon",
     summary: "Reading a person at a glance.",
@@ -146,6 +155,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "signals",
+    shot: "beacon",
+    shotCaption: "The Signal button sends your interest. A chat only opens once they signal back.",
     title: "Signals and matching",
     icon: "signal",
     summary: "How interest is expressed and answered.",
@@ -174,6 +185,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "chats",
+    shot: "chat",
+    shotCaption: "A match chat — your messages on the right, theirs on the left, photos via the icon in the input bar.",
     title: "Chats",
     icon: "chat",
     summary: "Talking after you match.",
@@ -206,6 +219,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "profile",
+    shot: "profile",
+    shotCaption: "Your profile controls your photo, display name, bio, gender avatar and Pro status.",
     title: "Your profile and privacy",
     icon: "profile",
     summary: "What others see and what you control.",
