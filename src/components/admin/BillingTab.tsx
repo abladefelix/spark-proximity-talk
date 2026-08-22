@@ -359,28 +359,28 @@ export function BillingTab() {
         >
           {num("web_yearly_amount", 0, 100000000)}
         </Field>
-        <div className="flex gap-2">
-          <Input
-            readOnly
-            value={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/paystack/webhook`}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void navigator.clipboard?.writeText(
-                `${window.location.origin}/api/public/paystack/webhook`,
-              );
-              toast.success("Webhook URL copied");
-            }}
-          >
-            Copy
-          </Button>
-        </div>
+        <Field label="Paystack webhook URL">
+          <div className="flex gap-2">
+            <Input readOnly value={`${siteBase}/api/public/paystack/webhook`} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void navigator.clipboard?.writeText(
+                  `${siteBase}/api/public/paystack/webhook`,
+                );
+                toast.success("Webhook URL copied");
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </Field>
         <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
           Paste that URL into Paystack → Settings → API Keys & Webhooks. Prices are in the
-          smallest unit, so 5000 means GH₵50.00.
+          smallest unit, so 5000 means GH₵50.00. A successful payment unlocks Pro
+          instantly — no admin approval needed.
         </p>
       </Section>
 
