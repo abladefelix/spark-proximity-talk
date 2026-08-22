@@ -52,28 +52,7 @@ export const BILLING_DEFAULTS: BillingInfo = {
   pro_custom_beacon: true,
 };
 
-export const BILLING_INFO_KEY = ["billing-info"] as const;
-export const MY_SUB_KEY = ["my-subscription"] as const;
 
-export const BILLING_DEFAULTS: BillingInfo = {
-  enabled: false,
-  provider: "paystack",
-  public_key: null,
-  currency: "GHS",
-  monthly_amount: 0,
-  yearly_amount: 0,
-  pro_label: "SKANAROUND Pro",
-  pro_pitch: "Unlock unlimited signals, longer range and more.",
-  free_daily_signals: 5,
-  free_max_radius_m: 500,
-  free_messages_per_match: 0,
-  pro_unlimited_signals: true,
-  pro_extended_radius: true,
-  pro_unlimited_messages: true,
-  pro_see_who_signaled: true,
-  pro_priority_beacon: true,
-  pro_custom_beacon: true,
-};
 
 /** Public, safe billing configuration (never includes the secret key). */
 export function useBillingInfo() {
