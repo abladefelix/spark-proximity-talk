@@ -338,7 +338,43 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         term: "What triggers one",
         body: "New signals, new matches, new messages, and announcements sent by the team.",
+  },
+  {
+    id: "account",
+    title: "Account and security",
+    icon: "safety",
+    summary: "Signing in, locking the app and leaving.",
+    items: [
+      {
+        term: "Signing up",
+        body: "You need a username, email, password, gender and date of birth. Gender is required because it sets your beacon colour and avatar. After sign-up you are taken to the sign-in screen to log in.",
       },
+      {
+        term: "Signing in",
+        body: "Sign in with your username or email plus your password. Sessions stay signed in on the device until you sign out.",
+      },
+      {
+        term: "Forgot password",
+        body: "Use Forgot password on the sign-in screen. A reset link is emailed to you; open it on the same phone and choose a new password.",
+      },
+      {
+        term: "App lock",
+        body: "With biometrics on, Face ID, Touch ID or your fingerprint is required each time the app returns to the foreground.",
+      },
+      {
+        term: "Blocked accounts",
+        body: "Anyone you block disappears from your radar and you from theirs, permanently, until you unblock them.",
+      },
+      {
+        term: "Bans and reactivation",
+        body: "If moderators ban your account you can still sign in and send a reactivation request. You will be told once it has been reviewed.",
+      },
+      {
+        term: "Deleting your account",
+        body: "Delete from your profile page. Profile, photos, chats and signals are erased and cannot be restored.",
+      },
+    ],
+  },
       {
         term: "The bell",
         body: "The bell on the radar screen holds announcements and anything you have not read yet.",
