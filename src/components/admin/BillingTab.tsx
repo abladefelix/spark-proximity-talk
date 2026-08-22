@@ -286,10 +286,35 @@ export function BillingTab() {
             onChange={(e) => set("rc_webhook_secret", e.target.value)}
           />
         </Field>
+        <Field label="Webhook URL">
+          <div className="flex gap-2">
+            <Input
+              value={d.rc_webhook_url ?? ""}
+              placeholder={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`}
+              onChange={(e) => set("rc_webhook_url", e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const url =
+                  (d.rc_webhook_url as string) ||
+                  `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`;
+                void navigator.clipboard?.writeText(url);
+                toast.success("Webhook URL copied");
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </Field>
         <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
-          Webhook URL: <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook</code>
-          {" "}— set the same authorization value in RevenueCat.
+          Paste this URL into RevenueCat → Integrations → Webhooks and set the same
+          authorization value. Leave it blank to use the default{" "}
+          <code>/api/public/revenuecat/webhook</code> on this site.
         </p>
+
       </Section>
 
       <Section
