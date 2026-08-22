@@ -70,6 +70,8 @@ function applyLook(look: BootLook) {
   }
 
   if (look.font_family) cache("skanaround-font", look.font_family);
+
+  window.dispatchEvent(new CustomEvent("skanaround-theme-boot", { detail: theme }));
 }
 
 let started: Promise<void> | null = null;
