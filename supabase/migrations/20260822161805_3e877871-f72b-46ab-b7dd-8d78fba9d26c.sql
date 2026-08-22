@@ -1,0 +1,1 @@
+GRANT SELECT (beacon_style) ON public.profiles TO authenticated;
