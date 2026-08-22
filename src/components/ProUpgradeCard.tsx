@@ -12,7 +12,6 @@ import {
   useBillingInfo,
   useMySubscription,
   MY_SUB_KEY,
-  type BillingInfo,
 } from "@/hooks/useBilling";
 import { refreshEntitlement } from "@/lib/store-billing.functions";
 import {
