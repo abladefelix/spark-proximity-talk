@@ -129,7 +129,7 @@ function UpgradePage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-5 py-10">
       <header className="flex flex-col items-center gap-3 text-center">
-        <Brand size="lg" />
+        <Brand size={40} />
         <h1 className="text-xl font-semibold">Go Pro</h1>
         <p className="text-sm text-muted-foreground">
           Pay with mobile money or a local card. Your membership unlocks the moment the
