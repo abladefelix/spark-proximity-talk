@@ -5,6 +5,7 @@
 | [USER_GUIDE.md](./USER_GUIDE.md) | Using the app: sign up, profile, radar, signals, chat, Pro |
 | [ADMIN.md](./ADMIN.md) | Admin console: every tab, setting and moderation action |
 | [SETUP.md](./SETUP.md) | Local setup, migrations, first admin, mail/billing config |
+| [WEB_BILLING.md](./WEB_BILLING.md) | Website-only Paystack checkout, auto Pro grant, domain changes |
 | [DATABASE.md](./DATABASE.md) | Migration rules, tables, functions, storage buckets |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Stack, routes, data flow, security model |
 | [LAUNCH.md](./LAUNCH.md) | Line-by-line iOS + Android run commands |
