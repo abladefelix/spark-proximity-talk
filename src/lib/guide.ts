@@ -138,6 +138,10 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "Each person is a beacon showing their profile photo. If they have no photo you see a male or female avatar based on the gender on their profile.",
       },
       {
+        term: "Male and female avatar symbols",
+        body: "A beacon with a male avatar (the stylised male figure) means the person registered as male. A beacon with a female avatar (the stylised female figure) means the person registered as female. These symbols only appear when the person has not uploaded a profile photo, so you can still tell gender at a glance.",
+      },
+      {
         term: "The pointer",
         body: "The small arrow under a beacon points at the exact spot the person is standing.",
       },
@@ -406,6 +410,54 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         term: "Bans",
         body: "Accounts that break the rules are banned. If you believe it was a mistake, submit a reactivation request and a moderator will review it.",
+      },
+    ],
+  },
+  {
+    id: "smooth",
+    title: "Tips for a smooth experience",
+    icon: "help",
+    summary: "Small habits that make the app faster, safer and easier to use.",
+    items: [
+      {
+        term: "Keep location on while scanning",
+        body: "The radar needs your live position to place you and others accurately. Switching location off mid-scan will empty the scope.",
+      },
+      {
+        term: "Stay visible if you want to be discovered",
+        body: "The visibility toggle is at the top of the radar. Hidden users can still scan, but nobody sees their beacon.",
+      },
+      {
+        term: "Allow all permissions at first launch",
+        body: "Location, notifications, photos and motion/orientation all have a purpose. You can change them later in your phone settings.",
+      },
+      {
+        term: "Keep the app in the foreground",
+        body: "Your position is published while the app is open. Background scanning is limited to save battery.",
+      },
+      {
+        term: "Use the compass outdoors when possible",
+        body: "Compass and GPS work best outside, away from metal, magnets and thick walls. Indoors, expect slightly less precision.",
+      },
+      {
+        term: "Zoom in when it gets crowded",
+        body: "Pinch to zoom when several beacons overlap. Zooming spreads them apart so you can tap the right person.",
+      },
+      {
+        term: "Upload a clear profile photo",
+        body: "A good photo helps others recognise you and replaces the gender avatar on the radar.",
+      },
+      {
+        term: "Check your scan range",
+        body: "If the radar feels empty, widen your range in your profile. The admin sets the maximum allowed.",
+      },
+      {
+        term: "Read the beacon card before signalling",
+        body: "Distance, bearing and the avatar symbol give you context before you decide to send a signal.",
+      },
+      {
+        term: "Keep the app updated",
+        body: "Updates bring fixes for location, compass and chat performance. Enable automatic updates so you do not miss them.",
       },
     ],
   },
