@@ -245,6 +245,7 @@ export type Database = {
           rc_monthly_product_id: string | null
           rc_secret_api_key: string | null
           rc_webhook_secret: string | null
+          rc_webhook_url: string | null
           rc_yearly_product_id: string | null
           updated_at: string
           yearly_amount: number
@@ -272,6 +273,7 @@ export type Database = {
           rc_monthly_product_id?: string | null
           rc_secret_api_key?: string | null
           rc_webhook_secret?: string | null
+          rc_webhook_url?: string | null
           rc_yearly_product_id?: string | null
           updated_at?: string
           yearly_amount?: number
@@ -299,6 +301,7 @@ export type Database = {
           rc_monthly_product_id?: string | null
           rc_secret_api_key?: string | null
           rc_webhook_secret?: string | null
+          rc_webhook_url?: string | null
           rc_yearly_product_id?: string | null
           updated_at?: string
           yearly_amount?: number

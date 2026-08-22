@@ -1,0 +1,1 @@
+ALTER TABLE public.billing_settings ADD COLUMN IF NOT EXISTS rc_webhook_url text;
