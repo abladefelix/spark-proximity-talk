@@ -71,8 +71,14 @@ export function useCompassHeading(enabled: boolean) {
             if (!disposed && accuracy > 0) setSettled(true);
           });
           await CapgoCompass.startListening({ minInterval: 80, minHeadingChange: 1 });
-          const initial = await CapgoCompass.getCurrentHeading();
-          if (!disposed && Number.isFinite(initial.value)) apply((initial.value + 360) % 360);
+          // A one-off read is a nice-to-have: some devices reject it until the
+          // first sensor tick arrives, which must not fail the whole start.
+          try {
+            const initial = await CapgoCompass.getCurrentHeading();
+            if (!disposed && Number.isFinite(initial.value)) apply((initial.value + 360) % 360);
+          } catch {
+            /* readings will still arrive through the listener */
+          }
           return true;
         } catch {
           setListening(false);
@@ -87,8 +93,8 @@ export function useCompassHeading(enabled: boolean) {
             if (permission && permission.compass !== "granted") return false;
           }
           await CapgoCompass.stopListening().catch(() => undefined);
-          await headingHandle?.remove();
-          await accuracyHandle?.remove();
+          await headingHandle?.remove().catch(() => undefined);
+          await accuracyHandle?.remove().catch(() => undefined);
           headingHandle = null;
           accuracyHandle = null;
           return startNative();
@@ -96,6 +102,7 @@ export function useCompassHeading(enabled: boolean) {
           return false;
         }
       };
+
       void startNative();
 
       return () => {
