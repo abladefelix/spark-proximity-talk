@@ -226,6 +226,24 @@ export function BillingTab() {
       </div>
 
       <Section
+        title="Website address"
+        hint="Used to build payment redirects and webhook URLs. Change it here when you move the site to a new domain — nothing else needs updating."
+      >
+        <Field label="Public website address">
+          <Input
+            value={d.web_site_url ?? ""}
+            placeholder="https://skanaround.com"
+            onChange={(e) => set("web_site_url", e.target.value.trim())}
+          />
+        </Field>
+        <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
+          Leave blank to use whatever address this page is open on
+          {typeof window !== "undefined" ? ` (${window.location.origin})` : ""}. After
+          changing it, re-copy the webhook URLs below into Paystack and RevenueCat.
+        </p>
+      </Section>
+
+      <Section
         title="App Store & Google Play billing"
         hint="Memberships are sold through Apple and Google only, as their stores require. Paste the keys from your RevenueCat project."
       >
