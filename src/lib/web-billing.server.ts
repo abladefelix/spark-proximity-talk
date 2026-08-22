@@ -38,6 +38,15 @@ export function webCheckoutInfo(settings: any): WebCheckoutInfo {
   };
 }
 
+/**
+ * The public website address, set in Admin → Billing. When the domain changes
+ * the admin edits it there and every payment redirect follows automatically.
+ */
+export function siteBaseUrl(settings: any, fallback?: string) {
+  const raw = (settings?.web_site_url as string | null)?.trim() || fallback?.trim() || "";
+  return raw.replace(/\/+$/, "");
+}
+
 function amountFor(plan: WebPlan, settings: any) {
   const info = webCheckoutInfo(settings);
   return plan === "yearly" ? info.yearly : info.monthly;
@@ -79,7 +88,16 @@ export async function startCheckout(opts: {
       email: opts.email,
       amount,
       currency: info.currency,
-      callback_url: opts.callbackUrl,
+      callback_url: (() => {
+        const base = siteBaseUrl(settings);
+        if (!base) return opts.callbackUrl;
+        try {
+          const path = new URL(opts.callbackUrl).pathname || "/upgrade";
+          return `${base}${path}`;
+        } catch {
+          return `${base}/upgrade`;
+        }
+      })(),
       metadata: { user_id: opts.userId, plan: opts.plan },
     }),
   });

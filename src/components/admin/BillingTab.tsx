@@ -187,6 +187,10 @@ export function BillingTab() {
   });
 
   const d = draft as any;
+  const siteBase = (
+    (d.web_site_url as string | undefined)?.trim() ||
+    (typeof window !== "undefined" ? window.location.origin : "")
+  ).replace(/\/+$/, "");
   const set = (key: string, value: unknown) => setDraft((cur) => ({ ...cur, [key]: value }));
   const num = (key: string, min: number, max: number) => (
     <Input
@@ -224,6 +228,24 @@ export function BillingTab() {
           </div>
         ))}
       </div>
+
+      <Section
+        title="Website address"
+        hint="Used to build payment redirects and webhook URLs. Change it here when you move the site to a new domain — nothing else needs updating."
+      >
+        <Field label="Public website address">
+          <Input
+            value={d.web_site_url ?? ""}
+            placeholder="https://skanaround.com"
+            onChange={(e) => set("web_site_url", e.target.value.trim())}
+          />
+        </Field>
+        <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
+          Leave blank to use whatever address this page is open on
+          {typeof window !== "undefined" ? ` (${window.location.origin})` : ""}. After
+          changing it, re-copy the webhook URLs below into Paystack and RevenueCat.
+        </p>
+      </Section>
 
       <Section
         title="App Store & Google Play billing"
@@ -290,7 +312,7 @@ export function BillingTab() {
           <div className="flex gap-2">
             <Input
               value={d.rc_webhook_url ?? ""}
-              placeholder={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`}
+              placeholder={`${siteBase}/api/public/revenuecat/webhook`}
               onChange={(e) => set("rc_webhook_url", e.target.value)}
             />
             <Button
@@ -300,7 +322,7 @@ export function BillingTab() {
               onClick={() => {
                 const url =
                   (d.rc_webhook_url as string) ||
-                  `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/revenuecat/webhook`;
+                  `${siteBase}/api/public/revenuecat/webhook`;
                 void navigator.clipboard?.writeText(url);
                 toast.success("Webhook URL copied");
               }}
@@ -359,28 +381,28 @@ export function BillingTab() {
         >
           {num("web_yearly_amount", 0, 100000000)}
         </Field>
-        <div className="flex gap-2">
-          <Input
-            readOnly
-            value={`${typeof window !== "undefined" ? window.location.origin : ""}/api/public/paystack/webhook`}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void navigator.clipboard?.writeText(
-                `${window.location.origin}/api/public/paystack/webhook`,
-              );
-              toast.success("Webhook URL copied");
-            }}
-          >
-            Copy
-          </Button>
-        </div>
+        <Field label="Paystack webhook URL">
+          <div className="flex gap-2">
+            <Input readOnly value={`${siteBase}/api/public/paystack/webhook`} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void navigator.clipboard?.writeText(
+                  `${siteBase}/api/public/paystack/webhook`,
+                );
+                toast.success("Webhook URL copied");
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </Field>
         <p className="rounded-lg bg-muted/50 p-2 text-[11px] text-muted-foreground">
           Paste that URL into Paystack → Settings → API Keys & Webhooks. Prices are in the
-          smallest unit, so 5000 means GH₵50.00.
+          smallest unit, so 5000 means GH₵50.00. A successful payment unlocks Pro
+          instantly — no admin approval needed.
         </p>
       </Section>
 

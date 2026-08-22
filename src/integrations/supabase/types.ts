@@ -253,6 +253,7 @@ export type Database = {
           web_checkout_enabled: boolean
           web_currency: string
           web_monthly_amount: number
+          web_site_url: string | null
           web_yearly_amount: number
           yearly_amount: number
         }
@@ -287,6 +288,7 @@ export type Database = {
           web_checkout_enabled?: boolean
           web_currency?: string
           web_monthly_amount?: number
+          web_site_url?: string | null
           web_yearly_amount?: number
           yearly_amount?: number
         }
@@ -321,6 +323,7 @@ export type Database = {
           web_checkout_enabled?: boolean
           web_currency?: string
           web_monthly_amount?: number
+          web_site_url?: string | null
           web_yearly_amount?: number
           yearly_amount?: number
         }
