@@ -108,3 +108,150 @@ export const getUserDetails = createServerFn({ method: "POST" })
         : null,
     };
   });
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  const { data } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .limit(1);
+  if (!data?.length) throw new Error("Admins only");
+}
+
+export type AdminUserPatch = {
+  userId: string;
+  username?: string;
+  displayName?: string | null;
+  bio?: string | null;
+  gender?: string | null;
+  avatarUrl?: string | null;
+  verified?: boolean;
+  banned?: boolean;
+  bannedReason?: string | null;
+  dateOfBirth?: string | null;
+  email?: string;
+  phone?: string | null;
+  password?: string;
+  emailConfirmed?: boolean;
+  role?: "admin" | "moderator" | "user";
+};
+
+/** Admin-only: update any part of a member's profile or auth identity. */
+export const adminUpdateUser = createServerFn({ method: "POST" })
+  .inputValidator((input: AdminUserPatch) => {
+    if (!input?.userId) throw new Error("userId required");
+    if (input.username !== undefined && !/^[a-z0-9_]{3,20}$/i.test(input.username)) {
+      throw new Error("Username must be 3-20 letters, numbers or underscores");
+    }
+    if (input.password !== undefined && input.password.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+    if (input.email !== undefined && !/^\S+@\S+\.\S+$/.test(input.email)) {
+      throw new Error("Enter a valid email");
+    }
+    return input;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+
+    // Auth identity changes
+    const authPatch: Record<string, unknown> = {};
+    if (data.email !== undefined) authPatch["email"] = data.email;
+    if (data.phone !== undefined) authPatch["phone"] = data.phone || undefined;
+    if (data.password !== undefined) authPatch["password"] = data.password;
+    if (data.emailConfirmed) authPatch["email_confirm"] = true;
+    if (Object.keys(authPatch).length) {
+      const { error } = await admin.auth.admin.updateUserById(data.userId, authPatch);
+      if (error) throw new Error(error.message);
+    }
+
+    // Profile changes
+    const patch: Record<string, unknown> = {};
+    if (data.username !== undefined) {
+      const clean = data.username.toLowerCase().replace(/\s+/g, "_");
+      const { data: taken } = await admin
+        .from("profiles")
+        .select("id")
+        .ilike("username", clean)
+        .neq("id", data.userId)
+        .maybeSingle();
+      if (taken) throw new Error("That username is taken");
+      patch["username"] = clean;
+    }
+    if (data.displayName !== undefined) patch["display_name"] = data.displayName || null;
+    if (data.bio !== undefined) patch["bio"] = data.bio || null;
+    if (data.gender !== undefined) patch["gender"] = data.gender || null;
+    if (data.avatarUrl !== undefined) patch["avatar_url"] = data.avatarUrl || null;
+    if (data.verified !== undefined) patch["verified"] = data.verified;
+    if (data.dateOfBirth !== undefined) patch["date_of_birth"] = data.dateOfBirth || null;
+    if (Object.keys(patch).length) {
+      const { error } = await admin.from("profiles").update(patch).eq("id", data.userId);
+      if (error) throw new Error(error.message);
+    }
+
+    if (data.banned !== undefined) {
+      const { error } = await context.supabase.rpc("admin_set_ban", {
+        _user_id: data.userId,
+        _banned: data.banned,
+        _reason: data.bannedReason ?? null,
+      });
+      if (error) throw new Error(error.message);
+    }
+
+    if (data.role !== undefined) {
+      if (data.userId === context.userId && data.role !== "admin") {
+        throw new Error("You cannot remove your own admin role");
+      }
+      await admin.from("user_roles").delete().eq("user_id", data.userId);
+      const { error } = await admin
+        .from("user_roles")
+        .insert({ user_id: data.userId, role: data.role });
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
+
+/** Admin-only: permanently delete a member's account. */
+export const adminDeleteUser = createServerFn({ method: "POST" })
+  .inputValidator((input: { userId: string }) => {
+    if (!input?.userId) throw new Error("userId required");
+    return input;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    if (data.userId === context.userId) throw new Error("You cannot delete your own account here");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { error } = await admin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Admin-only: send a password-reset email to the member. */
+export const adminSendPasswordReset = createServerFn({ method: "POST" })
+  .inputValidator((input: { userId: string; redirectTo?: string }) => {
+    if (!input?.userId) throw new Error("userId required");
+    return input;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: authRes } = await admin.auth.admin.getUserById(data.userId);
+    const email = authRes?.user?.email;
+    if (!email) throw new Error("This account has no email address");
+    const { data: link, error } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: data.redirectTo ? { redirectTo: data.redirectTo } : undefined,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, email, link: (link?.properties?.action_link as string) ?? null };
+  });
