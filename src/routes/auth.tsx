@@ -162,16 +162,26 @@ function AuthPage() {
         return;
       } else {
         const id = identifier.trim();
-        if (id.includes("@")) {
-          const { error } = await supabase.auth.signInWithPassword({ email: id, password });
-          if (error) throw error;
-        } else {
-          const tokens = await signInWithIdentifier({ data: { identifier: id, password } });
-          const { error } = await supabase.auth.setSession(tokens);
-          if (error) throw error;
+        const res = await signInSingleDevice({
+          data: {
+            identifier: id,
+            password,
+            deviceId: getDeviceId(),
+            deviceLabel: getDeviceLabel(),
+          },
+        });
+        if (res.status === "other_device") {
+          setOtherDevice({ label: res.device_label, lastSeen: res.last_seen });
+          return;
         }
+        const { error } = await supabase.auth.setSession({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
+        if (error) throw error;
       }
       navigate({ to: "/radar" });
+
 
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
