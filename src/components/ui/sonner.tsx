@@ -6,6 +6,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      // Keep banners clear of the status bar (clock, battery, notch).
+      offset="calc(var(--safe-top, 0px) + 0.5rem)"
+      mobileOffset="calc(var(--safe-top, 0px) + 0.5rem)"
       toastOptions={{
         classNames: {
           toast:
