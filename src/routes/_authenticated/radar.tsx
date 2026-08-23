@@ -914,12 +914,17 @@ function RadarPage() {
         className="relative aspect-square size-[min(100%,24rem)] shrink-0 overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
-          className="absolute inset-0 origin-center will-change-transform"
+          className="absolute inset-0 origin-center"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rot}deg)`,
-            transition: gesture.current ? "none" : "transform 200ms linear",
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotate(${rot}deg)`,
+            // will-change only while pinching/panning: keeping it on during
+            // compass rotation makes the browser reuse a cached bitmap, which
+            // is what made the grid and labels look blurry while walking.
+            willChange: gesture.current ? "transform" : "auto",
+            transition: gesture.current ? "none" : "transform 260ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
+
           <div className="radar-grid absolute inset-0" />
           {/* Compass rose: beacons sit at their true bearing. In heading-up mode
               the rose turns with the phone so N always points at real north. */}
