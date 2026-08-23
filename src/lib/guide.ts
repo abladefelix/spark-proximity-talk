@@ -32,7 +32,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "start",
     shot: "radar",
-    shotCaption: "The radar home screen — you sit in the centre, everyone else is placed by real distance and direction.",
+    shotCaption: "The radar home screen — you sit in the centre and everyone nearby is placed by how close they are and which way they lie.",
     title: "Getting started",
     icon: "help",
     summary: "What the app does and the three steps to your first chat.",
@@ -96,7 +96,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "radar",
     shot: "radar",
-    shotCaption: "Rings mark distance bands, the sweep shows the live scan, N/E/S/W keep you oriented.",
+    shotCaption: "Rings show how near or far someone is, the sweep shows the live scan, N/E/S/W keep you oriented.",
     title: "The radar",
     icon: "radar",
     summary: "How the circles, sweep and positions work.",
@@ -147,7 +147,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "beacons",
     shot: "beacon",
-    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick and bearing.",
+    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick and the direction they lie in.",
     title: "Beacons and what colours mean",
     icon: "beacon",
     summary: "Reading a person at a glance.",
