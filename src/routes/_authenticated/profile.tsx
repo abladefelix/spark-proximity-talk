@@ -311,7 +311,7 @@ function ProfilePage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="gender">I identify as</Label>
-          <Select value={gender} onValueChange={setGender}>
+          <Select value={gender} onValueChange={setGender} disabled={genderLocked}>
             <SelectTrigger id="gender">
               <SelectValue placeholder="Prefer not to say" />
             </SelectTrigger>
@@ -323,7 +323,9 @@ function ProfilePage() {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Shown as your beacon icon on the radar when you have no photo.
+            {genderLocked
+              ? "Gender is set once and can't be changed. Contact support if it's wrong."
+              : "Shown as your beacon icon on the radar when you have no photo. This can't be changed after you save it."}
           </p>
         </div>
         <Button variant="heat" size="lg" className="w-full" disabled={saving} onClick={save}>
