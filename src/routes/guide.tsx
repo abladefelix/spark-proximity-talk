@@ -14,10 +14,12 @@ import {
   ShieldCheck,
   Signal,
   UserRound,
+  X,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { GUIDE_SECTIONS, type GuideSection } from "@/lib/guide";
+import { cn } from "@/lib/utils";
 import { GuideLegend } from "@/components/guide/GuideLegend";
 import radarShot from "@/assets/guide/radar_people.png.asset.json";
 import beaconShot from "@/assets/guide/profile_dialog.png.asset.json";
