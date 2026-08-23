@@ -197,10 +197,19 @@ function ProfilePage() {
 
   async function signOut() {
     await queryClient.cancelQueries();
+    // Release this device's claim first — the token is still valid here.
+    try {
+      const { releaseMyDevice } = await import("@/lib/device-session.functions");
+      const { getDeviceId } = await import("@/lib/device-id");
+      await releaseMyDevice({ data: { deviceId: getDeviceId() } });
+    } catch {
+      /* best effort */
+    }
     queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
 
   return (
     <main className="px-5 pb-12 pt-8">
