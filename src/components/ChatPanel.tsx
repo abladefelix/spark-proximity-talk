@@ -458,6 +458,14 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             Messages here stay between you two. You matched by being nearby — meet in public places.
           </div>
 
+          {/* Members should always know how long this conversation will live. */}
+          <div className="mx-auto mb-3 max-w-[85%] text-center text-[11px] leading-snug text-muted-foreground">
+            This chat vanishes {retentionDays} {retentionDays === 1 ? "day" : "days"} after each message
+            {retention && !retention.isPro && retention.proDays > retention.freeDays
+              ? ` — Pro keeps chats for ${retention.proDays} days.`
+              : "."}
+          </div>
+
           <div className="mb-4 flex flex-col items-center rounded-[14px] bg-card px-6 py-5 text-center shadow-sm">
             <PersonAvatar
               path={other?.avatar_url}

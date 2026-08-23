@@ -237,6 +237,13 @@ export function ActiveChats() {
                 <Trash2 className="size-3.5" />
                 Clear all chats
               </button>
+              {/* Set expectations: these links do not stick around forever. */}
+              <p className="px-2 pb-1 pt-0.5 text-center text-[10px] leading-snug text-muted-foreground">
+                Chats vanish after {days} {days === 1 ? "day" : "days"}
+                {retention && !retention.isPro && retention.proDays > retention.freeDays
+                  ? ` — Pro keeps them ${retention.proDays} days.`
+                  : "."}
+              </p>
             </div>
           )}
         </div>
