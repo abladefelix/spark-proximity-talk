@@ -49,11 +49,7 @@ import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
-import {
-  useDistanceUnit,
-  formatDistance,
-  formatAccuracy,
-} from "@/hooks/useDistanceUnit";
+
 
 
 
@@ -221,7 +217,7 @@ function RadarPage() {
         const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
         if (precise || stillHopeful) {
           setGeoError(
-            "Getting a precise GPS fix… distances stay hidden until your location is exact.",
+            "Getting a precise GPS fix… hold on a moment.",
           );
           return;
         }
@@ -658,7 +654,6 @@ function RadarPage() {
     request: requestCompass,
     calibrating,
   } = useCompassHeading(headingUp);
-  const { unit } = useDistanceUnit();
   const compassActive = headingUp && heading != null;
   const compassCalibrating = headingUp && calibrating;
   const rot = compassActive ? -(heading as number) : 0;
@@ -995,7 +990,7 @@ function RadarPage() {
                 transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
               }}
 
-              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
+              aria-label={`${person.display_name ?? person.username}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
               // Only tween position/fade. Tweening `all` restarted a 500ms
               // animation on every compass tick, which smeared the beacons.
@@ -1081,9 +1076,6 @@ function RadarPage() {
                     </>
                   );
                 })()}
-              </span>
-              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
-                {formatDistance(person.distance_m, unit)}
               </span>
             </button>
             );
@@ -1195,22 +1187,16 @@ function RadarPage() {
                 </DialogTitle>
                 <DialogDescription asChild>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-primary">
-                      {Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0) >=
-                      selected.distance_m
-                        ? `Within ${formatDistance(Math.max(selected.distance_m, Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0)), unit)}`
-                        : `${formatDistance(selected.distance_m, unit)} away`}
-                      {selected.bearing_deg != null &&
-                      Number.isFinite(Number(selected.bearing_deg))
-                        ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
-                        : ""}
-                    </p>
+                    {selected.bearing_deg != null &&
+                      Number.isFinite(Number(selected.bearing_deg)) && (
+                        <p className="text-sm font-semibold text-primary">
+                          {compassPoint(Number(selected.bearing_deg))}{" "}
+                          {Math.round(Number(selected.bearing_deg))}°
+                        </p>
+                      )}
                     <p className="text-xs text-muted-foreground">
                       @{selected.username}
                       {selected.is_online ? " · active now" : ""}
-                      {accuracyM != null || selected.accuracy_m != null
-                        ? ` · GPS ±${formatAccuracy(Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0), unit)}`
-                        : ""}
                     </p>
                   </div>
                 </DialogDescription>
