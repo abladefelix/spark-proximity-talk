@@ -17,6 +17,7 @@ export function useCompassHeading(enabled: boolean) {
   const smoothed = useRef<number | null>(null);
   const samples = useRef(0);
   const nativeRestart = useRef<(() => Promise<boolean>) | null>(null);
+  const requestIosOrientation = useRef<(() => Promise<boolean>) | null>(null);
 
   const apply = useCallback((next: number) => {
     const prev = smoothed.current;
@@ -55,6 +56,10 @@ export function useCompassHeading(enabled: boolean) {
     };
 
     if (Capacitor.isNativePlatform()) {
+      const platform = Capacitor.getPlatform();
+      const orientationEvent = window.DeviceOrientationEvent as
+        | (typeof DeviceOrientationEvent & { requestPermission?: () => Promise<PermissionState> })
+        | undefined;
       let disposed = false;
       let headingHandle: { remove: () => Promise<void> } | null = null;
       let accuracyHandle: { remove: () => Promise<void> } | null = null;
@@ -66,6 +71,26 @@ export function useCompassHeading(enabled: boolean) {
         window.addEventListener("deviceorientationabsolute", domHandler as EventListener);
         window.addEventListener("deviceorientation", domHandler as EventListener);
       };
+
+      // WKWebView requires this API to be called directly from a tap. The
+      // native compass uses Core Location, but the WebKit sensor is the most
+      // reliable fallback on iPhone when true-heading updates stall.
+      if (platform === "ios" && typeof orientationEvent?.requestPermission === "function") {
+        setNeedsPermission(true);
+        requestIosOrientation.current = async () => {
+          try {
+            const state = await orientationEvent.requestPermission?.();
+            if (state !== "granted") return false;
+            setNeedsPermission(false);
+            samples.current = 0;
+            setSettled(false);
+            attachFallback();
+            return true;
+          } catch {
+            return false;
+          }
+        };
+      }
       // If the plugin hasn't produced a heading shortly after start, stop
       // showing "Finding north…" forever and use the WebView sensors instead.
       const fallbackTimer = window.setTimeout(() => {
@@ -78,7 +103,7 @@ export function useCompassHeading(enabled: boolean) {
           // Android exposes the magnetometer without a runtime permission, and
           // some plugin versions report "prompt"/"denied" there anyway. Only
           // gate on the permission state for iOS, which really does need it.
-          if (Capacitor.getPlatform() === "ios") {
+          if (platform === "ios") {
             const permission = await CapgoCompass.checkPermissions().catch(() => null);
             if (permission && permission.compass !== "granted") {
               const asked = await CapgoCompass.requestPermissions().catch(() => null);
@@ -88,7 +113,9 @@ export function useCompassHeading(enabled: boolean) {
               }
             }
           }
-          setNeedsPermission(false);
+          if (platform !== "ios" || typeof orientationEvent?.requestPermission !== "function") {
+            setNeedsPermission(false);
+          }
           samples.current = 0;
           setSettled(false);
           setListening(true);
@@ -116,7 +143,7 @@ export function useCompassHeading(enabled: boolean) {
 
       nativeRestart.current = async () => {
         try {
-          if (Capacitor.getPlatform() === "ios") {
+          if (platform === "ios") {
             const permission = await CapgoCompass.requestPermissions().catch(() => null);
             if (permission && permission.compass !== "granted") return false;
           }
@@ -137,6 +164,7 @@ export function useCompassHeading(enabled: boolean) {
         disposed = true;
         window.clearTimeout(fallbackTimer);
         nativeRestart.current = null;
+        requestIosOrientation.current = null;
         window.removeEventListener("deviceorientationabsolute", domHandler as EventListener);
         window.removeEventListener("deviceorientation", domHandler as EventListener);
         void headingHandle?.remove();
@@ -189,10 +217,13 @@ export function useCompassHeading(enabled: boolean) {
 
   const request = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
+      const iosOrientation = requestIosOrientation.current;
+      const orientationGranted = iosOrientation ? await iosOrientation() : false;
       // No live session yet (compass turned off): let the caller switch it on,
       // the effect will start the sensor. Only report failure on a real restart.
       if (!nativeRestart.current) return true;
-      return nativeRestart.current();
+      const nativeStarted = await nativeRestart.current();
+      return orientationGranted || nativeStarted;
     }
 
     const anyEvent = window.DeviceOrientationEvent as
