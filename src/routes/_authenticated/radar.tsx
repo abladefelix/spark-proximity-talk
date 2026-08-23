@@ -180,22 +180,18 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
-    const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-      const R = 6371000;
-      const dLat = ((bLat - aLat) * Math.PI) / 180;
-      const dLng = ((bLng - aLng) * Math.PI) / 180;
-      const la = (aLat * Math.PI) / 180;
-      const lb = (bLat * Math.PI) / 180;
-      const h =
-        Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
-      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-    };
     const filter = new GeoKalman();
     const push = async (
-      raw: { latitude: number; longitude: number; accuracy?: number | null },
+      raw: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number | null;
+        speed?: number | null;
+      },
       force = false,
       preSmoothed = false,
     ) => {
+
       if (cancelled) return;
       if (!Number.isFinite(raw.latitude) || !Number.isFinite(raw.longitude)) return;
 
