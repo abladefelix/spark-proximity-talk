@@ -14,10 +14,12 @@ import {
   ShieldCheck,
   Signal,
   UserRound,
+  X,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { GUIDE_SECTIONS, type GuideSection } from "@/lib/guide";
+import { cn } from "@/lib/utils";
 import { GuideLegend } from "@/components/guide/GuideLegend";
 import radarShot from "@/assets/guide/radar_people.png.asset.json";
 import beaconShot from "@/assets/guide/profile_dialog.png.asset.json";
@@ -74,6 +76,7 @@ function GuidePage() {
   const appName = settings.app_name?.trim() || "SKANAROUND";
   const supportEmail = settings.support_email?.trim();
   const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Opened both in-app and from a browser, so scroll like a normal page.
   useEffect(() => {
@@ -82,30 +85,86 @@ function GuidePage() {
   }, []);
 
   const sections = useMemo(() => {
+    let base = GUIDE_SECTIONS;
+    if (selectedId) base = base.filter((section) => section.id === selectedId);
     const q = query.trim().toLowerCase();
-    if (!q) return GUIDE_SECTIONS;
-    return GUIDE_SECTIONS.map((section) => {
-      const titleHit =
-        section.title.toLowerCase().includes(q) || section.summary.toLowerCase().includes(q);
-      const items = section.items.filter(
-        (item) => item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
-      );
-      if (titleHit) return section;
-      return items.length ? { ...section, items } : null;
-    }).filter((s): s is GuideSection => s !== null);
-  }, [query]);
+    if (!q) return base;
+    return base
+      .map((section) => {
+        const titleHit =
+          section.title.toLowerCase().includes(q) || section.summary.toLowerCase().includes(q);
+        const items = section.items.filter(
+          (item) => item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
+        );
+        if (titleHit) return section;
+        return items.length ? { ...section, items } : null;
+      })
+      .filter((s): s is GuideSection => s !== null);
+  }, [query, selectedId]);
 
   return (
     <div className="pb-24">
       <div className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-5 py-3">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
           <Link
             to="/"
             className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="size-4" /> Back
+            <ArrowLeft className="size-4" />
+            <span className="hidden sm:inline">Back</span>
           </Link>
-          <span className="truncate text-sm font-semibold">{appName} guide</span>
+          <span className="hidden truncate text-sm font-semibold sm:inline">{appName} guide</span>
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search or filter…"
+              className="h-9 truncate pl-9 pr-8"
+              aria-label="Search the user guide"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-6xl px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedId(null)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                selectedId === null
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              )}
+            >
+              All
+            </button>
+            {GUIDE_SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSelectedId(selectedId === s.id ? null : s.id)}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  selectedId === s.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                )}
+              >
+                {s.title}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -121,17 +180,6 @@ function GuidePage() {
             appear on your radar.
           </p>
         </header>
-
-        <div className="relative mt-6 max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search the guide…"
-            className="truncate pl-9"
-            aria-label="Search the user guide"
-          />
-        </div>
 
 
       {sections.length === 0 ? (
