@@ -59,6 +59,11 @@ import {
 
 
 
+/** Fixes worse than this are network/wifi guesses, not usable GPS. */
+const COARSE_FIX_LIMIT_M = 65;
+/** How long we wait for a precise fix before falling back to a coarse one. */
+const COARSE_GRACE_MS = 45000;
+
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
     meta: [
@@ -180,6 +185,7 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
+    const startedAt = Date.now();
     const filter = new GeoKalman();
     const push = async (
       raw: {
@@ -203,6 +209,24 @@ function RadarPage() {
       if (!smoothed) return;
       const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
       const accuracy = smoothed.accuracy;
+
+      // Wifi / IP fixes (laptops, phones with GPS still warming up) can be
+      // hundreds of metres off and make someone sitting next to you look far
+      // away. Keep them local: never publish them while a precise fix is in
+      // reach, and only fall back to one if nothing better arrives at all.
+      if (accuracy > COARSE_FIX_LIMIT_M) {
+        lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy };
+        setAccuracyM(accuracy);
+        const precise = lastPublished && lastPublished.accuracy <= COARSE_FIX_LIMIT_M;
+        const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
+        if (precise || stillHopeful) {
+          setGeoError(
+            "Getting a precise GPS fix… distances stay hidden until your location is exact.",
+          );
+          return;
+        }
+      }
+
 
       // Native and WebView providers can report at the same time. Serialize
       // writes and retain only the newest fix so an older async write cannot
@@ -1172,7 +1196,10 @@ function RadarPage() {
                 <DialogDescription asChild>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-primary">
-                      {formatDistance(selected.distance_m, unit)} away
+                      {Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0) >=
+                      selected.distance_m
+                        ? `Within ${formatDistance(Math.max(selected.distance_m, Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0)), unit)}`
+                        : `${formatDistance(selected.distance_m, unit)} away`}
                       {selected.bearing_deg != null &&
                       Number.isFinite(Number(selected.bearing_deg))
                         ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
