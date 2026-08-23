@@ -356,6 +356,30 @@ export type Database = {
         }
         Relationships: []
       }
+      device_sessions: {
+        Row: {
+          created_at: string
+          device_id: string
+          device_label: string
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          device_label?: string
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          device_label?: string
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_settings: {
         Row: {
           enabled: boolean
