@@ -43,9 +43,23 @@ const JUMP_SIGMAS = 4;
 export function preciseDistance(
   a: { latitude: number; longitude: number },
   b: { latitude: number; longitude: number },
-) {
+): number {
+  const r = geod.Inverse(a.latitude, a.longitude, b.latitude, b.longitude, Geodesic.DISTANCE);
+  const s = r.s12;
+  if (typeof s !== "number" || !Number.isFinite(s)) return 0;
   // 0.01 m resolution keeps close-quarters readings meaningful.
-  return getPreciseDistance(a, b, 0.01);
+  return Math.round(s * 100) / 100;
+}
+
+/** True initial bearing in degrees (0 = north, clockwise) from a to b. */
+export function preciseBearing(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const r = geod.Inverse(a.latitude, a.longitude, b.latitude, b.longitude, Geodesic.AZIMUTH);
+  const az = r.azi1;
+  if (typeof az !== "number" || !Number.isFinite(az)) return 0;
+  return (az + 360) % 360;
 }
 
 export class GeoKalman {
