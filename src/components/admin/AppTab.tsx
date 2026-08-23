@@ -217,7 +217,7 @@ export function AppTab() {
         <Field label="Signals per person per day (0 = unlimited)">
           {num("daily_signal_limit", 0, 1000)}
         </Field>
-        <Field label="Chats kept for (days)">{num("chat_ttl_days", 1, 365)}</Field>
+        <Field label="Chats kept for (days, free members)">{num("chat_ttl_days", 1, 365)}</Field>
       </Section>
 
       <Section title="Look & feel" hint="Beacon colours, font and the default theme.">
