@@ -250,6 +250,7 @@ function GuidePage() {
           ) : null}
           .
         </p>
+        </div>
       </div>
     </div>
   );
