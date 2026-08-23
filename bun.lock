@@ -52,6 +52,7 @@
         "cmdk": "^1.1.1",
         "date-fns": "^4.1.0",
         "embla-carousel-react": "^8.6.0",
+        "geographiclib-geodesic": "^2.2.0",
         "geolib": "^3.3.14",
         "input-otp": "^1.4.2",
         "jspdf": "^4.2.1",
@@ -881,6 +882,8 @@
     "fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
     "gensync": ["gensync@1.0.0-beta.2", "", {}, "sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg=="],
+
+    "geographiclib-geodesic": ["geographiclib-geodesic@2.2.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/geographiclib-geodesic/-/geographiclib-geodesic-2.2.0.tgz", {}, "sha512-cIedo9VTYb0DFufodgibDmVfsWe9EASqb/kUByl09xc6PZYvLvlc89BHCThtGTPf2OII/zWJGxsR3Uz6O7QOVw=="],
 
     "geolib": ["geolib@3.3.14", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/geolib/-/geolib-3.3.14.tgz", {}, "sha512-uQ1772h3OjhWvL/HhSRZTMjBKIKoc4wFksLDqzqOkuG/2TgBbTwFamU0Disx3sNFk/BOweHyhKoVaYDuLIpsxQ=="],
 
