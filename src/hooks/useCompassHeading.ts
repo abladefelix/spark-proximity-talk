@@ -40,10 +40,38 @@ export function useCompassHeading(enabled: boolean) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
+    // Shared DOM fallback: works in the browser and inside the native WebView
+    // when the plugin never delivers a reading.
+    const domHandler = (event: DeviceOrientationEvent) => {
+      const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
+        .webkitCompassHeading;
+      if (typeof webkit === "number" && Number.isFinite(webkit)) {
+        apply(webkit);
+        return;
+      }
+      if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
+        apply((360 - event.alpha) % 360);
+      }
+    };
+
     if (Capacitor.isNativePlatform()) {
       let disposed = false;
       let headingHandle: { remove: () => Promise<void> } | null = null;
       let accuracyHandle: { remove: () => Promise<void> } | null = null;
+      let fallbackAttached = false;
+      const attachFallback = () => {
+        if (fallbackAttached || disposed) return;
+        fallbackAttached = true;
+        setListening(true);
+        window.addEventListener("deviceorientationabsolute", domHandler as EventListener);
+        window.addEventListener("deviceorientation", domHandler as EventListener);
+      };
+      // If the plugin hasn't produced a heading shortly after start, stop
+      // showing "Finding north…" forever and use the WebView sensors instead.
+      const fallbackTimer = window.setTimeout(() => {
+        if (smoothed.current == null) attachFallback();
+      }, 3000);
+
 
       const startNative = async () => {
         try {
@@ -107,7 +135,10 @@ export function useCompassHeading(enabled: boolean) {
 
       return () => {
         disposed = true;
+        window.clearTimeout(fallbackTimer);
         nativeRestart.current = null;
+        window.removeEventListener("deviceorientationabsolute", domHandler as EventListener);
+        window.removeEventListener("deviceorientation", domHandler as EventListener);
         void headingHandle?.remove();
         void accuracyHandle?.remove();
         void CapgoCompass.stopListening().catch(() => undefined);
@@ -115,20 +146,8 @@ export function useCompassHeading(enabled: boolean) {
       };
     }
 
-    const handler = (event: DeviceOrientationEvent) => {
-      const webkit = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
-        .webkitCompassHeading;
-      if (typeof webkit === "number" && Number.isFinite(webkit)) {
-        apply(webkit);
-        return;
-      }
-      // Android Chrome/WebView often only fires the relative `deviceorientation`
-      // event with `absolute === false`; its alpha still tracks the magnetometer
-      // closely enough to steer the rose, so use it rather than showing nothing.
-      if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
-        apply((360 - event.alpha) % 360);
-      }
-    };
+    const handler = domHandler;
+
 
 
     const anyEvent = window.DeviceOrientationEvent as
