@@ -153,6 +153,9 @@ function ProfilePage() {
     else if (result === "denied") toast.error("Notifications blocked in your browser settings");
   }
 
+  // Once a gender has been stored it can never be edited again.
+  const genderLocked = Boolean(profile?.gender);
+
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
