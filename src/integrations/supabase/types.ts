@@ -232,7 +232,9 @@ export type Database = {
           monthly_amount: number
           paystack_public_key: string | null
           paystack_secret_key: string | null
+          pro_chat_ttl_days: number
           pro_custom_beacon: boolean
+          pro_extended_chat_history: boolean
           pro_extended_radius: boolean
           pro_label: string
           pro_pitch: string
@@ -267,7 +269,9 @@ export type Database = {
           monthly_amount?: number
           paystack_public_key?: string | null
           paystack_secret_key?: string | null
+          pro_chat_ttl_days?: number
           pro_custom_beacon?: boolean
+          pro_extended_chat_history?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
           pro_pitch?: string
@@ -302,7 +306,9 @@ export type Database = {
           monthly_amount?: number
           paystack_public_key?: string | null
           paystack_secret_key?: string | null
+          pro_chat_ttl_days?: number
           pro_custom_beacon?: boolean
+          pro_extended_chat_history?: boolean
           pro_extended_radius?: boolean
           pro_label?: string
           pro_pitch?: string
@@ -1017,6 +1023,15 @@ export type Database = {
           provider: string
           yearly_amount: number
           yearly_product_id: string
+        }[]
+      }
+      chat_retention: {
+        Args: never
+        Returns: {
+          effective_days: number
+          free_days: number
+          is_pro: boolean
+          pro_days: number
         }[]
       }
       claim_first_admin: { Args: never; Returns: boolean }
