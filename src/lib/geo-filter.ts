@@ -1,12 +1,23 @@
 /**
- * Kalman smoothing for GPS fixes.
+ * Adaptive smoothing for GPS fixes.
  *
  * Phone GPS reports jitter of several metres even while standing still, which
- * makes radar distances jump around. This is the standard 1-D constant-position
- * Kalman filter used by mapping apps: each new fix is blended with the current
- * estimate weighted by the reported horizontal accuracy, and the estimate's own
- * uncertainty grows with time so real movement is still tracked promptly.
+ * makes radar distances jump around. This is a 1-D constant-position Kalman
+ * filter: each new fix is blended with the current estimate weighted by the
+ * reported horizontal accuracy, and the estimate's own uncertainty grows with
+ * time so real movement is still tracked promptly.
+ *
+ * Two things keep it honest while walking, where a plain filter lags behind:
+ *  - process noise follows the device's reported speed, so the estimate opens
+ *    up as fast as the user actually moves;
+ *  - a fix that lands far outside the current uncertainty (a genuine jump, or
+ *    the first good fix after a drive) resets the estimate instead of being
+ *    dragged towards slowly.
+ *
+ * Distances between points use geolib's Vincenty solution on the WGS84
+ * ellipsoid, matching the ellipsoidal distance the server reports.
  */
+import { getPreciseDistance } from "geolib";
 
 export type Fix = {
   latitude: number;
@@ -17,10 +28,21 @@ export type Fix = {
   at: number;
 };
 
-/** Metres of drift assumed per second while walking; tunes responsiveness. */
-const PROCESS_NOISE_MPS = 1.4;
+/** Metres of drift assumed per second when the device reports no speed. */
+const IDLE_PROCESS_NOISE_MPS = 1.4;
 /** Fixes worse than this are ignored once a decent estimate exists. */
 const MAX_USABLE_ACCURACY_M = 120;
+/** A fix this many sigmas away is real movement, not noise: re-anchor on it. */
+const JUMP_SIGMAS = 4;
+
+/** Exact WGS84 ellipsoidal distance in metres between two coordinates. */
+export function preciseDistance(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+) {
+  // 0.01 m resolution keeps close-quarters readings meaningful.
+  return getPreciseDistance(a, b, 0.01);
+}
 
 export class GeoKalman {
   private lat = 0;
@@ -33,6 +55,8 @@ export class GeoKalman {
     latitude: number;
     longitude: number;
     accuracy?: number | null;
+    /** Ground speed in m/s, when the platform reports it. */
+    speed?: number | null;
     at?: number;
   }): Fix | null {
     const now = raw.at ?? Date.now();
@@ -48,18 +72,36 @@ export class GeoKalman {
       return null;
     }
 
-    if (this.variance < 0) {
+    const anchor = () => {
       this.lat = raw.latitude;
       this.lng = raw.longitude;
       this.variance = accuracy * accuracy;
       this.at = now;
       return { latitude: this.lat, longitude: this.lng, accuracy, at: now };
-    }
+    };
 
-    // Predict: uncertainty grows with elapsed time.
+    if (this.variance < 0) return anchor();
+
+    const gap = preciseDistance(
+      { latitude: this.lat, longitude: this.lng },
+      { latitude: raw.latitude, longitude: raw.longitude },
+    );
+
+    // Predict: uncertainty grows with elapsed time, faster while moving.
     const dt = Math.max(0, (now - this.at) / 1000);
-    this.variance += dt * PROCESS_NOISE_MPS * PROCESS_NOISE_MPS;
+    const speed =
+      typeof raw.speed === "number" && Number.isFinite(raw.speed) && raw.speed > 0
+        ? raw.speed
+        : dt > 0
+          ? gap / dt
+          : 0;
+    const drift = Math.max(IDLE_PROCESS_NOISE_MPS, speed * 1.5);
+    this.variance += dt * drift * drift;
     this.at = now;
+
+    // A fix well outside the combined uncertainty is real displacement, so
+    // follow it immediately rather than easing towards it over many updates.
+    if (gap > JUMP_SIGMAS * Math.sqrt(this.variance + accuracy * accuracy)) return anchor();
 
     // Update: blend by Kalman gain.
     const gain = this.variance / (this.variance + accuracy * accuracy);
@@ -84,3 +126,4 @@ export class GeoKalman {
     this.variance = -1;
   }
 }
+
