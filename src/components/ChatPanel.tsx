@@ -208,10 +208,17 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     placeholderData: (prev) => prev,
     staleTime: 30_000,
     queryFn: async () => {
+      // Messages older than the retention window are treated as gone, even
+      // before the nightly purge removes them from the database.
+      const cutoff =
+        retentionDays > 0
+          ? new Date(Date.now() - retentionDays * 86400000).toISOString()
+          : new Date(0).toISOString();
       const { data, error } = await supabase
         .from("messages")
         .select("id, sender_id, content, created_at, kind, lat, lng")
         .eq("match_id", matchId)
+        .gte("created_at", cutoff)
         .order("created_at", { ascending: false })
         .limit(limit + 1);
       if (error) throw error;
