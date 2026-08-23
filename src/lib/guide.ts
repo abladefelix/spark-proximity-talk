@@ -19,6 +19,8 @@ export type GuideSection = {
   /** Screenshot captured from the live app, illustrating the section. */
   shot?: "radar" | "beacon" | "chat" | "chats" | "profile";
   shotCaption?: string;
+  /** Renders the live symbol legend (real components) above the items. */
+  legend?: boolean;
   items: GuideItem[];
 };
 
@@ -126,9 +128,26 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "elements",
+    title: "Every symbol explained",
+    icon: "beacon",
+    summary: "A live legend of the avatars, badges, colours and buttons you will see.",
+    legend: true,
+    items: [
+      {
+        term: "Why the symbols matter",
+        body: "The radar is deliberately quiet — almost everything is communicated with a shape or a colour instead of text. The legend above is drawn with the real app components, so what you see here is exactly what you see on the scope.",
+      },
+      {
+        term: "Reading a beacon in one glance",
+        body: "Ring colour tells you the status (normal, verified or a Pro colour), the pulse tells you they are active right now, and the picture inside tells you who they are — a photo if they uploaded one, otherwise the male or female symbol.",
+      },
+    ],
+  },
+  {
     id: "beacons",
     shot: "beacon",
-    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick, exact distance and bearing.",
+    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick and bearing.",
     title: "Beacons and what colours mean",
     icon: "beacon",
     summary: "Reading a person at a glance.",
@@ -138,8 +157,16 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "Each person is a beacon showing their profile photo. If they have no photo you see a male or female avatar based on the gender on their profile.",
       },
       {
-        term: "Male and female avatar symbols",
-        body: "A beacon with a male avatar (the stylised male figure) means the person registered as male. A beacon with a female avatar (the stylised female figure) means the person registered as female. These symbols only appear when the person has not uploaded a profile photo, so you can still tell gender at a glance.",
+        term: "Male avatar — the Mars symbol",
+        body: "A circle with an arrow pointing to the top-right (♂). It means the person registered as male and has not uploaded a photo. It is tinted blue on their card.",
+      },
+      {
+        term: "Female avatar — the Venus symbol",
+        body: "A circle with a small cross underneath (♀). It means the person registered as female and has not uploaded a photo. It is tinted pink on their card.",
+      },
+      {
+        term: "Neutral avatar",
+        body: "A plain person outline means no photo and a gender other than male or female. Only the glow ring marks the beacon.",
       },
       {
         term: "The pointer",
@@ -147,11 +174,11 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         term: "Colours",
-        body: "The halo colour follows gender (set by the admin), so you can tell men and women apart at a glance. Verified members get their own distinct colour ring.",
+        body: "The halo colour follows gender (set by the admin), so you can tell men and women apart at a glance. Verified members get their own distinct colour ring, and Pro members can choose a custom one.",
       },
       {
-        term: "Distance label",
-        body: "The distance sits right under the name in the profile card and under the beacon. Very short distances are shown in feet for precision, longer ones in metres or kilometres.",
+        term: "How far away are they?",
+        body: "The radar shows relative position, not a number: the closer a beacon sits to the centre, the closer the person is, and the direction is their real bearing from you. Zoom in to judge very short gaps.",
       },
       {
         term: "Online glow",
