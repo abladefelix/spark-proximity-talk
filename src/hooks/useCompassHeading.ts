@@ -221,7 +221,7 @@ export function useCompassHeading(enabled: boolean) {
       const orientationGranted = iosOrientation ? await iosOrientation() : false;
       // No live session yet (compass turned off): let the caller switch it on,
       // the effect will start the sensor. Only report failure on a real restart.
-      if (!nativeRestart.current) return orientationGranted || true;
+      if (!nativeRestart.current) return true;
       const nativeStarted = await nativeRestart.current();
       return orientationGranted || nativeStarted;
     }
