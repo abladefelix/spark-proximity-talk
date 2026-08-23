@@ -14,10 +14,14 @@
  *    the first good fix after a drive) resets the estimate instead of being
  *    dragged towards slowly.
  *
- * Distances between points use geolib's Vincenty solution on the WGS84
- * ellipsoid, matching the ellipsoidal distance the server reports.
+ * Distances between points use GeographicLib (Karney's exact geodesic
+ * algorithm) on the WGS84 ellipsoid — accurate to nanometres and always
+ * convergent, unlike Vincenty — matching the ellipsoidal distance the server
+ * reports via PostGIS.
  */
-import { getPreciseDistance } from "geolib";
+import { Geodesic } from "geographiclib-geodesic";
+
+const geod = Geodesic.WGS84;
 
 export type Fix = {
   latitude: number;
@@ -39,9 +43,23 @@ const JUMP_SIGMAS = 4;
 export function preciseDistance(
   a: { latitude: number; longitude: number },
   b: { latitude: number; longitude: number },
-) {
+): number {
+  const r = geod.Inverse(a.latitude, a.longitude, b.latitude, b.longitude, Geodesic.DISTANCE);
+  const s = r.s12;
+  if (typeof s !== "number" || !Number.isFinite(s)) return 0;
   // 0.01 m resolution keeps close-quarters readings meaningful.
-  return getPreciseDistance(a, b, 0.01);
+  return Math.round(s * 100) / 100;
+}
+
+/** True initial bearing in degrees (0 = north, clockwise) from a to b. */
+export function preciseBearing(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const r = geod.Inverse(a.latitude, a.longitude, b.latitude, b.longitude, Geodesic.AZIMUTH);
+  const az = r.azi1;
+  if (typeof az !== "number" || !Number.isFinite(az)) return 0;
+  return (az + 360) % 360;
 }
 
 export class GeoKalman {
