@@ -970,7 +970,9 @@ function RadarPage() {
                 zIndex: priority ? 3 : 2,
               }}
               aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
+              className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
+              // Only tween position/fade. Tweening `all` restarted a 500ms
+              // animation on every compass tick, which smeared the beacons.
             >
               <span
                 className="relative flex items-center justify-center"
@@ -978,8 +980,10 @@ function RadarPage() {
                   width: beaconSize,
                   height: beaconSize,
                   transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
+                  transition: "transform 260ms cubic-bezier(0.22,1,0.36,1)",
                 }}
               >
+
                 {(() => {
                   const token = genderToken(person.gender);
                   const glowClass = {
