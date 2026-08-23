@@ -104,7 +104,10 @@ function GuidePage() {
 
   return (
     <div className="pb-24">
-      <div className="sticky top-0 z-30 border-b border-border bg-background/85 pt-[var(--safe-top)] backdrop-blur">
+      <div
+        className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur"
+        style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 2.75rem)" }}
+      >
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
           <Link
             to="/"
@@ -136,7 +139,7 @@ function GuidePage() {
           </div>
         </div>
         <div className="mx-auto w-full max-w-6xl px-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             <button
               type="button"
               onClick={() => setSelectedId(null)}
