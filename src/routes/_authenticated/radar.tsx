@@ -59,6 +59,11 @@ import {
 
 
 
+/** Fixes worse than this are network/wifi guesses, not usable GPS. */
+const COARSE_FIX_LIMIT_M = 65;
+/** How long we wait for a precise fix before falling back to a coarse one. */
+const COARSE_GRACE_MS = 45000;
+
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
     meta: [
