@@ -8,7 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
 import { useSettings } from "@/hooks/useAppSettings";
-import { signInWithIdentifier } from "@/lib/username-auth.functions";
+import {
+  signInSingleDevice,
+  revokeOtherDeviceAndSignIn,
+  requestPasswordResetFor,
+} from "@/lib/device-session.functions";
+import { getDeviceId, getDeviceLabel } from "@/lib/device-id";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
