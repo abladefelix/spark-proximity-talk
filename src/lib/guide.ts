@@ -274,7 +274,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         term: "Chats do not last forever",
-        body: "Old conversations are cleared automatically after the retention period the admin sets.",
+        body: "Every conversation shows how many days it will stay — at the top of the chat and under the unfolded chat stack. Once a message passes that window it disappears, and Pro keeps chats for longer when that perk is switched on.",
       },
       {
         term: "Trouble in a chat",
