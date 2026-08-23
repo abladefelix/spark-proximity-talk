@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
-import { useChatTtlDays, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
+import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 
 type Row = {
   matchId: string;
@@ -22,7 +22,7 @@ export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
   const [expanded, setExpanded] = useState(false);
-  const { data: ttlDays } = useChatTtlDays();
+  const { data: retention } = useChatRetention();
 
   const { data: allRows = [] } = useQuery({
     queryKey: ["active-chats"],
@@ -89,7 +89,7 @@ export function ActiveChats() {
     };
   }, [queryClient]);
 
-  const days = ttlDays ?? DEFAULT_CHAT_TTL_DAYS;
+  const days = retention?.effectiveDays ?? DEFAULT_CHAT_TTL_DAYS;
   const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
   const rows = allRows.filter((r) => r.lastAt >= cutoff);
 

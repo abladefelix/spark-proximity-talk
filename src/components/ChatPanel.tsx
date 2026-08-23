@@ -13,6 +13,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
+import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 
 type Message = {
   id: string;
@@ -178,6 +179,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   // long conversation never mounts thousands of nodes at once.
   const PAGE = 40;
   const [limit, setLimit] = useState(PAGE);
+  const { data: retention } = useChatRetention();
+  const retentionDays = retention?.effectiveDays ?? DEFAULT_CHAT_TTL_DAYS;
   // Signed URLs are expensive to mint, so reuse them across refetches.
   const signedCache = useRef(new Map<string, string>());
 
@@ -203,15 +206,22 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   }, []);
 
   const { data: page } = useQuery({
-    queryKey: ["messages", matchId, limit],
+    queryKey: ["messages", matchId, limit, retentionDays],
     // Keep the previous window on screen while a bigger page streams in.
     placeholderData: (prev) => prev,
     staleTime: 30_000,
     queryFn: async () => {
+      // Messages older than the retention window are treated as gone, even
+      // before the nightly purge removes them from the database.
+      const cutoff =
+        retentionDays > 0
+          ? new Date(Date.now() - retentionDays * 86400000).toISOString()
+          : new Date(0).toISOString();
       const { data, error } = await supabase
         .from("messages")
         .select("id, sender_id, content, created_at, kind, lat, lng")
         .eq("match_id", matchId)
+        .gte("created_at", cutoff)
         .order("created_at", { ascending: false })
         .limit(limit + 1);
       if (error) throw error;
@@ -237,7 +247,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           const signedRows = await signImages([row]);
           const withMedia = signedRows[0] ?? row;
           queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
-            ["messages", matchId, limit],
+            ["messages", matchId, limit, retentionDays],
             (prev) =>
               !prev || prev.messages.some((m) => m.id === row.id)
                 ? prev
@@ -340,7 +350,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     if (inserted) {
       const row = inserted as Message;
       queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
-        ["messages", matchId, limit],
+        ["messages", matchId, limit, retentionDays],
         (prev) =>
           !prev || prev.messages.some((m) => m.id === row.id)
             ? prev

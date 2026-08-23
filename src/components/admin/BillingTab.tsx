@@ -442,6 +442,18 @@ export function BillingTab() {
         <Field label="Messages per chat">{num("free_messages_per_match", 0, 10000)}</Field>
       </Section>
 
+      <Section
+        title="Longer chat history"
+        hint="Free members keep chats for the number of days set in the App tab. Pro members can keep them longer."
+      >
+        <Toggle
+          label="Pro keeps chats longer"
+          checked={Boolean(d.pro_extended_chat_history)}
+          onChange={(v) => set("pro_extended_chat_history", v)}
+        />
+        <Field label="Chats kept for Pro members (days)">{num("pro_chat_ttl_days", 1, 3650)}</Field>
+      </Section>
+
       <Button className="w-full" disabled={save.isPending} onClick={() => save.mutate()}>
         {save.isPending ? (
           <Loader2 className="mr-2 size-4 animate-spin" />
