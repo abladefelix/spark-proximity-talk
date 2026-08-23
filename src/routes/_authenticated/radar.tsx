@@ -968,7 +968,9 @@ function RadarPage() {
                 top,
                 opacity: person.is_online ? 1 : 0.5,
                 zIndex: priority ? 3 : 2,
+                transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
               }}
+
               aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
               // Only tween position/fade. Tweening `all` restarted a 500ms
