@@ -13,6 +13,7 @@ import { sendPushNotification } from "@/lib/push-notifications.functions";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
+import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 
 type Message = {
   id: string;
@@ -178,6 +179,8 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   // long conversation never mounts thousands of nodes at once.
   const PAGE = 40;
   const [limit, setLimit] = useState(PAGE);
+  const { data: retention } = useChatRetention();
+  const retentionDays = retention?.effectiveDays ?? DEFAULT_CHAT_TTL_DAYS;
   // Signed URLs are expensive to mint, so reuse them across refetches.
   const signedCache = useRef(new Map<string, string>());
 
