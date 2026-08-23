@@ -128,9 +128,26 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "elements",
+    title: "Every symbol explained",
+    icon: "beacon",
+    summary: "A live legend of the avatars, badges, colours and buttons you will see.",
+    legend: true,
+    items: [
+      {
+        term: "Why the symbols matter",
+        body: "The radar is deliberately quiet — almost everything is communicated with a shape or a colour instead of text. The legend above is drawn with the real app components, so what you see here is exactly what you see on the scope.",
+      },
+      {
+        term: "Reading a beacon in one glance",
+        body: "Ring colour tells you the status (normal, verified or a Pro colour), the pulse tells you they are active right now, and the picture inside tells you who they are — a photo if they uploaded one, otherwise the male or female symbol.",
+      },
+    ],
+  },
+  {
     id: "beacons",
     shot: "beacon",
-    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick, exact distance and bearing.",
+    shotCaption: "Tapping a beacon opens their card: photo or gender avatar, name, verified tick and bearing.",
     title: "Beacons and what colours mean",
     icon: "beacon",
     summary: "Reading a person at a glance.",
