@@ -204,6 +204,24 @@ function RadarPage() {
       const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
       const accuracy = smoothed.accuracy;
 
+      // Wifi / IP fixes (laptops, phones with GPS still warming up) can be
+      // hundreds of metres off and make someone sitting next to you look far
+      // away. Keep them local: never publish them while a precise fix is in
+      // reach, and only fall back to one if nothing better arrives at all.
+      if (accuracy > COARSE_FIX_LIMIT_M) {
+        lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy };
+        setAccuracyM(accuracy);
+        const precise = lastPublished && lastPublished.accuracy <= COARSE_FIX_LIMIT_M;
+        const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
+        if (precise || stillHopeful) {
+          setGeoError(
+            "Getting a precise GPS fix… distances stay hidden until your location is exact.",
+          );
+          return;
+        }
+      }
+
+
       // Native and WebView providers can report at the same time. Serialize
       // writes and retain only the newest fix so an older async write cannot
       // land after a newer one and make the beacon jump backwards.
