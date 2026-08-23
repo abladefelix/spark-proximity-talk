@@ -169,7 +169,8 @@ function ProfilePage() {
       .update({
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
-        gender: gender === "unset" ? null : gender,
+        // Gender is write-once: only send it while it has never been set.
+        ...(genderLocked ? {} : { gender: gender === "unset" ? null : gender }),
       })
       .eq("id", profile.id);
     setSaving(false);
