@@ -48,7 +48,7 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
-import { GeoKalman } from "@/lib/geo-filter";
+import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
 import {
   useDistanceUnit,
   formatDistance,
