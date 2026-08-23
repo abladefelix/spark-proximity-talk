@@ -234,15 +234,15 @@ function RadarPage() {
       // Track motion promptly. The threshold follows the reported horizontal
       // uncertainty so stationary GPS noise is not presented as real motion.
       if (!force && lastPublished) {
-        const moved = metresBetween(
-          lastPublished.lat,
-          lastPublished.lng,
-          coords.latitude,
-          coords.longitude,
+        const moved = preciseDistance(
+          { latitude: lastPublished.lat, longitude: lastPublished.lng },
+          coords,
         );
-        const movementFloor = Math.max(1, Math.min(3, accuracy * 0.2));
-        if (moved < movementFloor && Date.now() - lastPublished.at < 5000) return;
+        // Keep the floor sub-metre on a good fix so short walks register.
+        const movementFloor = Math.max(0.5, Math.min(3, accuracy * 0.2));
+        if (moved < movementFloor && Date.now() - lastPublished.at < 4000) return;
       }
+
 
 
       // Use the locally cached session: a network round-trip here (getUser)
