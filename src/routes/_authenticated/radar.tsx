@@ -49,11 +49,7 @@ import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
-import {
-  useDistanceUnit,
-  formatDistance,
-  formatAccuracy,
-} from "@/hooks/useDistanceUnit";
+
 
 
 
@@ -221,7 +217,7 @@ function RadarPage() {
         const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
         if (precise || stillHopeful) {
           setGeoError(
-            "Getting a precise GPS fix… distances stay hidden until your location is exact.",
+            "Getting a precise GPS fix… hold on a moment.",
           );
           return;
         }
@@ -658,7 +654,6 @@ function RadarPage() {
     request: requestCompass,
     calibrating,
   } = useCompassHeading(headingUp);
-  const { unit } = useDistanceUnit();
   const compassActive = headingUp && heading != null;
   const compassCalibrating = headingUp && calibrating;
   const rot = compassActive ? -(heading as number) : 0;
@@ -995,7 +990,7 @@ function RadarPage() {
                 transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
               }}
 
-              aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
+              aria-label={`${person.display_name ?? person.username}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
               className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
               // Only tween position/fade. Tweening `all` restarted a 500ms
               // animation on every compass tick, which smeared the beacons.
