@@ -96,36 +96,43 @@ function GuidePage() {
   }, [query]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 pb-24 pt-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Back
-      </Link>
-
-      <header className="mt-6 max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-          {appName} documentation
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">How {appName} works</h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Every screen, symbol and colour in the app, explained end to end — including the male and
-          female avatar symbols, beacon rings, badges and buttons, drawn here exactly as they appear
-          on your radar.
-        </p>
-      </header>
-
-      <div className="relative mt-6 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search the guide — avatar, beacon, compass, Pro…"
-          className="pl-9"
-          aria-label="Search the user guide"
-        />
+    <div className="pb-24">
+      <div className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-5 py-3">
+          <Link
+            to="/"
+            className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" /> Back
+          </Link>
+          <span className="truncate text-sm font-semibold">{appName} guide</span>
+        </div>
       </div>
+
+      <div className="mx-auto w-full max-w-6xl px-5 pt-8">
+        <header className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+            {appName} documentation
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">How {appName} works</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Every screen, symbol and colour in the app, explained end to end — including the male
+            and female avatar symbols, beacon rings, badges and buttons, drawn here exactly as they
+            appear on your radar.
+          </p>
+        </header>
+
+        <div className="relative mt-6 max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search the guide…"
+            className="truncate pl-9"
+            aria-label="Search the user guide"
+          />
+        </div>
+
 
       {sections.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">
