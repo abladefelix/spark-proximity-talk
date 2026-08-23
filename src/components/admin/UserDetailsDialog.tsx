@@ -153,10 +153,7 @@ export function UserDetailsDialog({
     mutationFn: async () => {
       if (!data) return null;
       return await sendReset({
-        data: {
-          userId: data.id,
-          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined,
-        },
+        data: { userId: data.id, redirectTo: `${window.location.origin}/auth` },
       });
     },
     onSuccess: (res) => toast.success(res ? `Reset link sent to ${res.email}` : "Reset link sent"),
