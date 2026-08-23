@@ -37,6 +37,8 @@
 	<string>SKANAROUND uses Face ID to make sure only you can open the app.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SKANAROUND uses your location to show people nearby on the radar. Your location stays private and is never shared without a match.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>SKANAROUND uses motion and orientation to point the radar in the direction you are facing.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>SKANAROUND needs photo library access so you can choose a profile picture.</string>
 	<key>UIApplicationSceneManifest</key>
