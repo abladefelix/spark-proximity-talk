@@ -76,6 +76,7 @@ function GuidePage() {
   const appName = settings.app_name?.trim() || "SKANAROUND";
   const supportEmail = settings.support_email?.trim();
   const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Opened both in-app and from a browser, so scroll like a normal page.
   useEffect(() => {
@@ -84,18 +85,22 @@ function GuidePage() {
   }, []);
 
   const sections = useMemo(() => {
+    let base = GUIDE_SECTIONS;
+    if (selectedId) base = base.filter((section) => section.id === selectedId);
     const q = query.trim().toLowerCase();
-    if (!q) return GUIDE_SECTIONS;
-    return GUIDE_SECTIONS.map((section) => {
-      const titleHit =
-        section.title.toLowerCase().includes(q) || section.summary.toLowerCase().includes(q);
-      const items = section.items.filter(
-        (item) => item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
-      );
-      if (titleHit) return section;
-      return items.length ? { ...section, items } : null;
-    }).filter((s): s is GuideSection => s !== null);
-  }, [query]);
+    if (!q) return base;
+    return base
+      .map((section) => {
+        const titleHit =
+          section.title.toLowerCase().includes(q) || section.summary.toLowerCase().includes(q);
+        const items = section.items.filter(
+          (item) => item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
+        );
+        if (titleHit) return section;
+        return items.length ? { ...section, items } : null;
+      })
+      .filter((s): s is GuideSection => s !== null);
+  }, [query, selectedId]);
 
   return (
     <div className="pb-24">
