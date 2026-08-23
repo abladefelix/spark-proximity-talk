@@ -25,17 +25,27 @@ export function useCompassHeading(enabled: boolean) {
       smoothed.current = next;
     } else {
       // Shortest-arc low-pass filter so the rose doesn't jitter or spin
-      // the long way round when crossing 0/360.
+      // the long way round when crossing 0/360. The gain scales with the
+      // size of the turn: small readings (sensor noise while walking) are
+      // damped hard, deliberate turns still follow the phone immediately.
       let delta = ((next - prev + 540) % 360) - 180;
-      delta *= 0.25;
+      const magnitude = Math.abs(delta);
+      const gain = magnitude < 3 ? 0.06 : magnitude < 15 ? 0.16 : 0.4;
+      delta *= gain;
       smoothed.current = (prev + delta + 360) % 360;
     }
     samples.current += 1;
     // The first readings lag behind reality while the magnetometer settles,
     // so only trust the rose once enough samples have flowed through.
     if (samples.current >= 12) setSettled(true);
-    setHeading(smoothed.current);
+    // Quantise to half a degree: below that the rotation is invisible but
+    // still forces a full radar re-render on every sensor tick.
+    setHeading((current) => {
+      const value = Math.round(smoothed.current! * 2) / 2;
+      return current != null && Math.abs(value - current) < 0.5 ? current : value;
+    });
   }, []);
+
 
 
   useEffect(() => {
@@ -125,7 +135,7 @@ export function useCompassHeading(enabled: boolean) {
           accuracyHandle = await CapgoCompass.addListener("accuracyChange", ({ accuracy }) => {
             if (!disposed && accuracy > 0) setSettled(true);
           });
-          await CapgoCompass.startListening({ minInterval: 80, minHeadingChange: 1 });
+          await CapgoCompass.startListening({ minInterval: 100, minHeadingChange: 2 });
           // A one-off read is a nice-to-have: some devices reject it until the
           // first sensor tick arrives, which must not fail the whole start.
           try {

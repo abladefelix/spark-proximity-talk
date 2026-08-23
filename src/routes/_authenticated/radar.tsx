@@ -914,12 +914,17 @@ function RadarPage() {
         className="relative aspect-square size-[min(100%,24rem)] shrink-0 overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
-          className="absolute inset-0 origin-center will-change-transform"
+          className="absolute inset-0 origin-center"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rot}deg)`,
-            transition: gesture.current ? "none" : "transform 200ms linear",
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotate(${rot}deg)`,
+            // will-change only while pinching/panning: keeping it on during
+            // compass rotation makes the browser reuse a cached bitmap, which
+            // is what made the grid and labels look blurry while walking.
+            willChange: gesture.current ? "transform" : "auto",
+            transition: gesture.current ? "none" : "transform 260ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
+
           <div className="radar-grid absolute inset-0" />
           {/* Compass rose: beacons sit at their true bearing. In heading-up mode
               the rose turns with the phone so N always points at real north. */}
@@ -963,9 +968,13 @@ function RadarPage() {
                 top,
                 opacity: person.is_online ? 1 : 0.5,
                 zIndex: priority ? 3 : 2,
+                transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
               }}
+
               aria-label={`${person.display_name ?? person.username}, ${formatDistance(person.distance_m, unit)}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 active:scale-90"
+              className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
+              // Only tween position/fade. Tweening `all` restarted a 500ms
+              // animation on every compass tick, which smeared the beacons.
             >
               <span
                 className="relative flex items-center justify-center"
@@ -973,8 +982,10 @@ function RadarPage() {
                   width: beaconSize,
                   height: beaconSize,
                   transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
+                  transition: "transform 260ms cubic-bezier(0.22,1,0.36,1)",
                 }}
               >
+
                 {(() => {
                   const token = genderToken(person.gender);
                   const glowClass = {
