@@ -4,6 +4,7 @@ import { withTimeoutFallback } from "@/lib/net";
 import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useDeviceSessionGuard } from "@/hooks/useDeviceSessionGuard";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BiometricGate } from "@/components/BiometricGate";
 
@@ -29,6 +30,8 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
   useNotifications(user?.id ?? null);
+  useDeviceSessionGuard(user?.id ?? null);
+
 
   return (
     <BiometricGate>

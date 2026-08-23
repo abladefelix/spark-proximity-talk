@@ -8,7 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
 import { useSettings } from "@/hooks/useAppSettings";
-import { signInWithIdentifier } from "@/lib/username-auth.functions";
+import {
+  signInSingleDevice,
+  revokeOtherDeviceAndSignIn,
+  requestPasswordResetFor,
+} from "@/lib/device-session.functions";
+import { getDeviceId, getDeviceLabel } from "@/lib/device-id";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -58,8 +70,54 @@ function AuthPage() {
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
+  // Set when the account is already signed in on another device.
+  const [otherDevice, setOtherDevice] = useState<{ label: string; lastSeen: string } | null>(null);
   // While a sign-up is completing we must not auto-redirect on a transient session.
   const signingUp = useRef(false);
+
+  async function takeOverDevice() {
+    setBusy(true);
+    try {
+      const res = await revokeOtherDeviceAndSignIn({
+        data: {
+          identifier: identifier.trim(),
+          password,
+          deviceId: getDeviceId(),
+          deviceLabel: getDeviceLabel(),
+        },
+      });
+      const { error } = await supabase.auth.setSession({
+        access_token: res.access_token,
+        refresh_token: res.refresh_token,
+      });
+      if (error) throw error;
+      setOtherDevice(null);
+      navigate({ to: "/radar" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not sign the other device out");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetFromDeviceBlock() {
+    setBusy(true);
+    try {
+      await requestPasswordResetFor({
+        data: {
+          identifier: identifier.trim(),
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      setOtherDevice(null);
+      toast.success("Check your email for the password reset link");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send the reset link");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   // A restored email session can land here when the native shell resumes.
   useEffect(() => {
@@ -150,16 +208,26 @@ function AuthPage() {
         return;
       } else {
         const id = identifier.trim();
-        if (id.includes("@")) {
-          const { error } = await supabase.auth.signInWithPassword({ email: id, password });
-          if (error) throw error;
-        } else {
-          const tokens = await signInWithIdentifier({ data: { identifier: id, password } });
-          const { error } = await supabase.auth.setSession(tokens);
-          if (error) throw error;
+        const res = await signInSingleDevice({
+          data: {
+            identifier: id,
+            password,
+            deviceId: getDeviceId(),
+            deviceLabel: getDeviceLabel(),
+          },
+        });
+        if (res.status === "other_device") {
+          setOtherDevice({ label: res.device_label, lastSeen: res.last_seen });
+          return;
         }
+        const { error } = await supabase.auth.setSession({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
+        if (error) throw error;
       }
       navigate({ to: "/radar" });
+
 
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -322,6 +390,43 @@ function AuthPage() {
           {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
         </button>
       )}
+
+      <Dialog open={otherDevice !== null} onOpenChange={(open) => !open && setOtherDevice(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Already signed in elsewhere</DialogTitle>
+            <DialogDescription>
+              Your account is active on {otherDevice?.label ?? "another device"}
+              {otherDevice?.lastSeen
+                ? ` (last used ${new Date(otherDevice.lastSeen).toLocaleString()})`
+                : ""}
+              . SKANAROUND allows one device at a time — sign out there, or sign that device out
+              from here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Button
+              variant="heat"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={takeOverDevice}
+            >
+              Sign out the other device
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={resetFromDeviceBlock}
+            >
+              That wasn't me — reset my password
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </main>
   );
 }
