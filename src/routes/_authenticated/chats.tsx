@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
@@ -37,7 +38,10 @@ type Row = {
 function ChatsPage() {
   const queryClient = useQueryClient();
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: retention } = useChatRetention();
+  const retentionDays = retention?.effectiveDays ?? DEFAULT_CHAT_TTL_DAYS;
+
+  const { data: allRows = [], isLoading } = useQuery({
     queryKey: ["matches"],
     queryFn: async (): Promise<Row[]> => {
       const me = (await supabase.auth.getUser()).data.user?.id;
@@ -101,10 +105,20 @@ function ChatsPage() {
     };
   }, [queryClient]);
 
+  // Links fade out once they pass the retention window admin set (Pro members
+  // keep theirs longer), even before the server purge sweeps them away.
+  const cutoff = retentionDays > 0 ? Date.now() - retentionDays * 86400000 : 0;
+  const rows = allRows.filter((r) => new Date(r.at).getTime() >= cutoff);
+
   return (
     <main className="min-h-full px-5 pb-12 pt-8">
       <h1 className="text-2xl font-semibold">Your links</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Mutual signals only. No noise.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Mutual signals only. Chats disappear after {retentionDays} {retentionDays === 1 ? "day" : "days"}
+        {retention && !retention.isPro && retention.proDays > retention.freeDays
+          ? " — Pro keeps them for " + retention.proDays + " days."
+          : "."}
+      </p>
 
 
       <section className="mt-6 space-y-3">
