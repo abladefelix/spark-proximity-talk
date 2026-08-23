@@ -48,7 +48,7 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
-import { GeoKalman } from "@/lib/geo-filter";
+import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
 import {
   useDistanceUnit,
   formatDistance,
@@ -180,22 +180,18 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
-    const metresBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-      const R = 6371000;
-      const dLat = ((bLat - aLat) * Math.PI) / 180;
-      const dLng = ((bLng - aLng) * Math.PI) / 180;
-      const la = (aLat * Math.PI) / 180;
-      const lb = (bLat * Math.PI) / 180;
-      const h =
-        Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLng / 2) ** 2;
-      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-    };
     const filter = new GeoKalman();
     const push = async (
-      raw: { latitude: number; longitude: number; accuracy?: number | null },
+      raw: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number | null;
+        speed?: number | null;
+      },
       force = false,
       preSmoothed = false,
     ) => {
+
       if (cancelled) return;
       if (!Number.isFinite(raw.latitude) || !Number.isFinite(raw.longitude)) return;
 
@@ -238,15 +234,15 @@ function RadarPage() {
       // Track motion promptly. The threshold follows the reported horizontal
       // uncertainty so stationary GPS noise is not presented as real motion.
       if (!force && lastPublished) {
-        const moved = metresBetween(
-          lastPublished.lat,
-          lastPublished.lng,
-          coords.latitude,
-          coords.longitude,
+        const moved = preciseDistance(
+          { latitude: lastPublished.lat, longitude: lastPublished.lng },
+          coords,
         );
-        const movementFloor = Math.max(1, Math.min(3, accuracy * 0.2));
-        if (moved < movementFloor && Date.now() - lastPublished.at < 5000) return;
+        // Keep the floor sub-metre on a good fix so short walks register.
+        const movementFloor = Math.max(0.5, Math.min(3, accuracy * 0.2));
+        if (moved < movementFloor && Date.now() - lastPublished.at < 4000) return;
       }
+
 
 
       // Use the locally cached session: a network round-trip here (getUser)
