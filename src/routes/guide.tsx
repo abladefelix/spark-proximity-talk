@@ -247,8 +247,7 @@ function GuidePage() {
                 </section>
               );
             })}
-          </main>
-        </div>
+        </main>
       )}
 
       <div className="mt-14 rounded-2xl border border-border p-4 text-sm">
