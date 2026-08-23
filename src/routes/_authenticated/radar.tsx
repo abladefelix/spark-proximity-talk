@@ -1082,9 +1082,6 @@ function RadarPage() {
                   );
                 })()}
               </span>
-              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur-sm">
-                {formatDistance(person.distance_m, unit)}
-              </span>
             </button>
             );
           })}
@@ -1195,22 +1192,16 @@ function RadarPage() {
                 </DialogTitle>
                 <DialogDescription asChild>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-primary">
-                      {Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0) >=
-                      selected.distance_m
-                        ? `Within ${formatDistance(Math.max(selected.distance_m, Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0)), unit)}`
-                        : `${formatDistance(selected.distance_m, unit)} away`}
-                      {selected.bearing_deg != null &&
-                      Number.isFinite(Number(selected.bearing_deg))
-                        ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
-                        : ""}
-                    </p>
+                    {selected.bearing_deg != null &&
+                      Number.isFinite(Number(selected.bearing_deg)) && (
+                        <p className="text-sm font-semibold text-primary">
+                          {compassPoint(Number(selected.bearing_deg))}{" "}
+                          {Math.round(Number(selected.bearing_deg))}°
+                        </p>
+                      )}
                     <p className="text-xs text-muted-foreground">
                       @{selected.username}
                       {selected.is_online ? " · active now" : ""}
-                      {accuracyM != null || selected.accuracy_m != null
-                        ? ` · GPS ±${formatAccuracy(Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0), unit)}`
-                        : ""}
                     </p>
                   </div>
                 </DialogDescription>
