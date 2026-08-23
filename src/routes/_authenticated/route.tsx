@@ -30,6 +30,8 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
   useNotifications(user?.id ?? null);
+  useDeviceSessionGuard(user?.id ?? null);
+
 
   return (
     <BiometricGate>
