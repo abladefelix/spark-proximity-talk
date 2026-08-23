@@ -16,14 +16,9 @@ import {
   UserRound,
 } from "lucide-react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { GUIDE_SECTIONS, type GuideSection } from "@/lib/guide";
+import { GuideLegend } from "@/components/guide/GuideLegend";
 import radarShot from "@/assets/guide/radar_people.png.asset.json";
 import beaconShot from "@/assets/guide/profile_dialog.png.asset.json";
 import chatShot from "@/assets/guide/chat.png.asset.json";
@@ -60,12 +55,12 @@ export const Route = createFileRoute("/guide")({
       {
         name: "description",
         content:
-          "Learn the radar, beacon colours, signals, matching, chats, Pro perks and safety tips so you can use SKANAROUND with confidence.",
+          "Learn the radar, beacon colours, male and female avatar symbols, signals, matching, chats, Pro perks and safety tips so you can use SKANAROUND with confidence.",
       },
       { property: "og:title", content: "User guide — how SKANAROUND works" },
       {
         property: "og:description",
-        content: "Radar, beacons, signals, chats, Pro and safety explained step by step.",
+        content: "Radar, beacons, avatar symbols, signals, chats, Pro and safety explained step by step.",
       },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,18 +88,15 @@ function GuidePage() {
       const titleHit =
         section.title.toLowerCase().includes(q) || section.summary.toLowerCase().includes(q);
       const items = section.items.filter(
-        (item) =>
-          item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
+        (item) => item.term.toLowerCase().includes(q) || item.body.toLowerCase().includes(q),
       );
       if (titleHit) return section;
       return items.length ? { ...section, items } : null;
     }).filter((s): s is GuideSection => s !== null);
   }, [query]);
 
-  const defaultOpen = query.trim() ? sections.map((s) => s.id) : [];
-
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pb-24 pt-10">
+    <div className="mx-auto w-full max-w-6xl px-5 pb-24 pt-10">
       <Link
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -112,20 +104,24 @@ function GuidePage() {
         <ArrowLeft className="size-4" /> Back
       </Link>
 
-      <header className="mt-6">
-        <h1 className="text-2xl font-semibold tracking-tight">How {appName} works</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Everything on the radar explained — what the colours mean, how signals turn into chats,
-          and what to do when something looks off.
+      <header className="mt-6 max-w-2xl">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+          {appName} documentation
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">How {appName} works</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Every screen, symbol and colour in the app, explained end to end — including the male and
+          female avatar symbols, beacon rings, badges and buttons, drawn here exactly as they appear
+          on your radar.
         </p>
       </header>
 
-      <div className="relative mt-6">
+      <div className="relative mt-6 max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search the guide — beacon, compass, Pro…"
+          placeholder="Search the guide — avatar, beacon, compass, Pro…"
           className="pl-9"
           aria-label="Search the user guide"
         />
@@ -146,32 +142,52 @@ function GuidePage() {
           )}
         </p>
       ) : (
-        <Accordion
-          key={query.trim() ? "filtered" : "all"}
-          type="multiple"
-          defaultValue={defaultOpen}
-          className="mt-6"
-        >
-          {sections.map((section) => {
-            const Icon = ICONS[section.icon];
-            return (
-              <AccordionItem key={section.id} value={section.id}>
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+        <div className="mt-8 gap-10 lg:flex lg:items-start">
+          {/* Docs-style sidebar navigation */}
+          <nav
+            aria-label="Guide contents"
+            className="mb-8 shrink-0 lg:sticky lg:top-8 lg:mb-0 lg:w-60"
+          >
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              On this page
+            </p>
+            <ul className="space-y-0.5 border-l border-border">
+              {sections.map((section) => (
+                <li key={section.id}>
+                  <a
+                    href={`#${section.id}`}
+                    className="-ml-px block border-l border-transparent py-1.5 pl-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                  >
+                    {section.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <main className="min-w-0 flex-1 space-y-14">
+            {sections.map((section) => {
+              const Icon = ICONS[section.icon];
+              return (
+                <section key={section.id} id={section.id} className="scroll-mt-8">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
                       <Icon className="size-4" />
                     </span>
-                    <span>
-                      <span className="block text-sm font-semibold">{section.title}</span>
-                      <span className="block text-xs font-normal text-muted-foreground">
-                        {section.summary}
-                      </span>
-                    </span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
+                    <div>
+                      <h2 className="text-lg font-semibold tracking-tight">{section.title}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">{section.summary}</p>
+                    </div>
+                  </div>
+
+                  {section.legend ? (
+                    <div className="mt-5">
+                      <GuideLegend />
+                    </div>
+                  ) : null}
+
                   {section.shot ? (
-                    <figure className="mb-5 pl-11">
+                    <figure className="mt-5">
                       <img
                         src={SHOTS[section.shot].src}
                         alt={SHOTS[section.shot].alt}
@@ -185,7 +201,8 @@ function GuidePage() {
                       ) : null}
                     </figure>
                   ) : null}
-                  <dl className="space-y-4 pl-11">
+
+                  <dl className="mt-5 space-y-4 border-l border-border pl-4">
                     {section.items.map((item) => (
                       <div key={item.term}>
                         <dt className="text-sm font-medium">{item.term}</dt>
@@ -195,14 +212,14 @@ function GuidePage() {
                       </div>
                     ))}
                   </dl>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
+                </section>
+              );
+            })}
+          </main>
+        </div>
       )}
 
-      <div className="mt-10 rounded-2xl border border-border p-4 text-sm">
+      <div className="mt-14 rounded-2xl border border-border p-4 text-sm">
         <p className="font-semibold">Still need a hand?</p>
         <p className="mt-1 text-muted-foreground">
           Read the{" "}
@@ -227,6 +244,6 @@ function GuidePage() {
           .
         </p>
       </div>
-    </main>
+    </div>
   );
 }
