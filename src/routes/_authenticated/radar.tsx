@@ -180,6 +180,7 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
+    const startedAt = Date.now();
     const filter = new GeoKalman();
     const push = async (
       raw: {
