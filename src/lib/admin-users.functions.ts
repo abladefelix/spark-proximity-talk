@@ -194,11 +194,12 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
     }
 
     if (data.banned !== undefined) {
-      const { error } = await context.supabase.rpc("admin_set_ban", {
+      const banArgs = {
         _user_id: data.userId,
         _banned: data.banned,
-        _reason: data.bannedReason ?? undefined,
-      });
+        ...(data.bannedReason ? { _reason: data.bannedReason } : {}),
+      };
+      const { error } = await context.supabase.rpc("admin_set_ban", banArgs);
       if (error) throw new Error(error.message);
     }
 
