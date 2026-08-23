@@ -247,7 +247,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
           const signedRows = await signImages([row]);
           const withMedia = signedRows[0] ?? row;
           queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
-            ["messages", matchId, limit],
+            ["messages", matchId, limit, retentionDays],
             (prev) =>
               !prev || prev.messages.some((m) => m.id === row.id)
                 ? prev
@@ -350,7 +350,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     if (inserted) {
       const row = inserted as Message;
       queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
-        ["messages", matchId, limit],
+        ["messages", matchId, limit, retentionDays],
         (prev) =>
           !prev || prev.messages.some((m) => m.id === row.id)
             ? prev
