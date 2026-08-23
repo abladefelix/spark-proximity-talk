@@ -390,6 +390,43 @@ function AuthPage() {
           {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
         </button>
       )}
+
+      <Dialog open={otherDevice !== null} onOpenChange={(open) => !open && setOtherDevice(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Already signed in elsewhere</DialogTitle>
+            <DialogDescription>
+              Your account is active on {otherDevice?.label ?? "another device"}
+              {otherDevice?.lastSeen
+                ? ` (last used ${new Date(otherDevice.lastSeen).toLocaleString()})`
+                : ""}
+              . SKANAROUND allows one device at a time — sign out there, or sign that device out
+              from here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Button
+              variant="heat"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={takeOverDevice}
+            >
+              Sign out the other device
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={resetFromDeviceBlock}
+            >
+              That wasn't me — reset my password
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </main>
   );
 }
