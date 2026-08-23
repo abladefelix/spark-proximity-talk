@@ -19,6 +19,8 @@ export type GuideSection = {
   /** Screenshot captured from the live app, illustrating the section. */
   shot?: "radar" | "beacon" | "chat" | "chats" | "profile";
   shotCaption?: string;
+  /** Renders the live symbol legend (real components) above the items. */
+  legend?: boolean;
   items: GuideItem[];
 };
 
