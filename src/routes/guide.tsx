@@ -197,30 +197,7 @@ function GuidePage() {
           )}
         </p>
       ) : (
-        <div className="mt-8 gap-10 lg:flex lg:items-start">
-          {/* Docs-style sidebar navigation */}
-          <nav
-            aria-label="Guide contents"
-            className="mb-8 shrink-0 lg:sticky lg:top-20 lg:mb-0 lg:w-60"
-          >
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              On this page
-            </p>
-            <ul className="space-y-0.5 border-l border-border">
-              {sections.map((section) => (
-                <li key={section.id}>
-                  <a
-                    href={`#${section.id}`}
-                    className="-ml-px block border-l border-transparent py-1.5 pl-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
-                  >
-                    {section.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <main className="min-w-0 flex-1 space-y-14">
+        <main className="mt-8 max-w-3xl space-y-14">
             {sections.map((section) => {
               const Icon = ICONS[section.icon];
               return (
