@@ -1196,7 +1196,10 @@ function RadarPage() {
                 <DialogDescription asChild>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-primary">
-                      {formatDistance(selected.distance_m, unit)} away
+                      {Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0) >=
+                      selected.distance_m
+                        ? `Within ${formatDistance(Math.max(selected.distance_m, Math.hypot(accuracyM ?? 0, selected.accuracy_m ?? 0)), unit)}`
+                        : `${formatDistance(selected.distance_m, unit)} away`}
                       {selected.bearing_deg != null &&
                       Number.isFinite(Number(selected.bearing_deg))
                         ? ` · ${compassPoint(Number(selected.bearing_deg))} ${Math.round(Number(selected.bearing_deg))}°`
