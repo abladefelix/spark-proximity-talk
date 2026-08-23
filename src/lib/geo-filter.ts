@@ -14,10 +14,14 @@
  *    the first good fix after a drive) resets the estimate instead of being
  *    dragged towards slowly.
  *
- * Distances between points use geolib's Vincenty solution on the WGS84
- * ellipsoid, matching the ellipsoidal distance the server reports.
+ * Distances between points use GeographicLib (Karney's exact geodesic
+ * algorithm) on the WGS84 ellipsoid — accurate to nanometres and always
+ * convergent, unlike Vincenty — matching the ellipsoidal distance the server
+ * reports via PostGIS.
  */
-import { getPreciseDistance } from "geolib";
+import { Geodesic } from "geographiclib-geodesic";
+
+const geod = Geodesic.WGS84;
 
 export type Fix = {
   latitude: number;
