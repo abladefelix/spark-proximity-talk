@@ -70,8 +70,54 @@ function AuthPage() {
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
+  // Set when the account is already signed in on another device.
+  const [otherDevice, setOtherDevice] = useState<{ label: string; lastSeen: string } | null>(null);
   // While a sign-up is completing we must not auto-redirect on a transient session.
   const signingUp = useRef(false);
+
+  async function takeOverDevice() {
+    setBusy(true);
+    try {
+      const res = await revokeOtherDeviceAndSignIn({
+        data: {
+          identifier: identifier.trim(),
+          password,
+          deviceId: getDeviceId(),
+          deviceLabel: getDeviceLabel(),
+        },
+      });
+      const { error } = await supabase.auth.setSession({
+        access_token: res.access_token,
+        refresh_token: res.refresh_token,
+      });
+      if (error) throw error;
+      setOtherDevice(null);
+      navigate({ to: "/radar" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not sign the other device out");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetFromDeviceBlock() {
+    setBusy(true);
+    try {
+      await requestPasswordResetFor({
+        data: {
+          identifier: identifier.trim(),
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      setOtherDevice(null);
+      toast.success("Check your email for the password reset link");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send the reset link");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   // A restored email session can land here when the native shell resumes.
   useEffect(() => {
