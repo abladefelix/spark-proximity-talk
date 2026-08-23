@@ -153,7 +153,7 @@ function GuidePage() {
           {/* Docs-style sidebar navigation */}
           <nav
             aria-label="Guide contents"
-            className="mb-8 shrink-0 lg:sticky lg:top-8 lg:mb-0 lg:w-60"
+            className="mb-8 shrink-0 lg:sticky lg:top-20 lg:mb-0 lg:w-60"
           >
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               On this page
@@ -176,7 +176,7 @@ function GuidePage() {
             {sections.map((section) => {
               const Icon = ICONS[section.icon];
               return (
-                <section key={section.id} id={section.id} className="scroll-mt-8">
+                <section key={section.id} id={section.id} className="scroll-mt-24">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
                       <Icon className="size-4" />
