@@ -206,7 +206,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
   }, []);
 
   const { data: page } = useQuery({
-    queryKey: ["messages", matchId, limit],
+    queryKey: ["messages", matchId, limit, retentionDays],
     // Keep the previous window on screen while a bigger page streams in.
     placeholderData: (prev) => prev,
     staleTime: 30_000,
