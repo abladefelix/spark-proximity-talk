@@ -135,7 +135,7 @@ export function useCompassHeading(enabled: boolean) {
           accuracyHandle = await CapgoCompass.addListener("accuracyChange", ({ accuracy }) => {
             if (!disposed && accuracy > 0) setSettled(true);
           });
-          await CapgoCompass.startListening({ minInterval: 80, minHeadingChange: 1 });
+          await CapgoCompass.startListening({ minInterval: 100, minHeadingChange: 2 });
           // A one-off read is a nice-to-have: some devices reject it until the
           // first sensor tick arrives, which must not fail the whole start.
           try {
