@@ -56,6 +56,8 @@
     "@revenuecat/purchases-capacitor": "^13.4.1",
     "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/query-persist-client-core": "^5.102.0",
+    "@tanstack/query-sync-storage-persister": "^5.102.0",
     "@tanstack/react-query": "^5.101.1",
     "@tanstack/react-router": "^1.170.31",
     "@tanstack/react-start": "1.168.48",
