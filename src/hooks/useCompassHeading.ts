@@ -101,11 +101,15 @@ export function useCompassHeading(enabled: boolean) {
           }
         };
       }
-      // If the plugin hasn't produced a heading shortly after start, stop
-      // showing "Finding north…" forever and use the WebView sensors instead.
+      // Android: the WebView already exposes absolute orientation without any
+      // runtime permission, and several devices never emit through the native
+      // plugin. Race both sources from the start instead of waiting.
+      if (platform !== "ios") attachFallback();
+      // If nothing has produced a heading shortly after start, stop showing
+      // "Finding north…" forever and use the WebView sensors instead.
       const fallbackTimer = window.setTimeout(() => {
         if (smoothed.current == null) attachFallback();
-      }, 3000);
+      }, 1200);
 
 
       const startNative = async () => {
@@ -146,7 +150,10 @@ export function useCompassHeading(enabled: boolean) {
           }
           return true;
         } catch {
-          setListening(false);
+          // The WebView sensors may still be feeding the rose — don't claim
+          // the compass is off just because the native plugin refused.
+          if (!fallbackAttached) setListening(false);
+          attachFallback();
           return false;
         }
       };
