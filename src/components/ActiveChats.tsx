@@ -94,32 +94,45 @@ export function ActiveChats() {
   const rows = allRows.filter((r) => r.lastAt >= cutoff);
 
   const latest = rows[0];
-  if (!latest) return null;
 
-  const behind = Math.min(rows.length - 1, 2);
-
+  // Removals paint immediately and roll back only if the server refuses.
   async function removeChat(matchId: string) {
+    const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
+    queryClient.setQueryData<Row[]>(["active-chats"], (old) =>
+      (old ?? []).filter((r) => r.matchId !== matchId),
+    );
     const { error } = await supabase.from("matches").delete().eq("id", matchId);
     if (error) {
+      queryClient.setQueryData(["active-chats"], previous);
       toast.error("Could not remove chat");
       return;
     }
     toast.success("Chat removed");
     queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+    queryClient.invalidateQueries({ queryKey: ["matches"] });
   }
 
   async function clearAll() {
     const ids = rows.map((r) => r.matchId);
     if (!ids.length) return;
+    const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
+    queryClient.setQueryData<Row[]>(["active-chats"], []);
+    setExpanded(false);
     const { error } = await supabase.from("matches").delete().in("id", ids);
     if (error) {
+      queryClient.setQueryData(["active-chats"], previous);
       toast.error("Could not clear chats");
       return;
     }
-    setExpanded(false);
     toast.success("All chats cleared");
     queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+    queryClient.invalidateQueries({ queryKey: ["matches"] });
   }
+
+  if (isLoading && allRows.length === 0) return <ActiveChatsSkeleton />;
+  if (!latest) return null;
+
+  const behind = Math.min(rows.length - 1, 2);
 
   return (
     <div className="relative z-10 mt-4">
