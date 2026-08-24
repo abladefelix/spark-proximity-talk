@@ -14,6 +14,7 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
+import { TranscriptSkeleton } from "@/components/Skeletons";
 
 type Message = {
   id: string;
@@ -24,6 +25,8 @@ type Message = {
   lat: number | null;
   lng: number | null;
   mediaUrl?: string;
+  /** True while the row is still on its way to the server. */
+  pending?: boolean;
 };
 
 function lastSeenLabel(iso: string | null | undefined) {
@@ -75,7 +78,11 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
   );
 
   return (
-    <div className="shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px]">
+    <div
+      className={`shrink-0 [content-visibility:auto] [contain-intrinsic-size:auto_48px] transition-opacity ${
+        m.pending ? "opacity-60" : "opacity-100"
+      }`}
+    >
       {newDay && (
         <div className="my-3 flex justify-center">
           <span className="rounded-[7px] bg-card px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground shadow-sm">
@@ -205,7 +212,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
     });
   }, []);
 
-  const { data: page } = useQuery({
+  const { data: page, isLoading: loadingMessages } = useQuery({
     queryKey: ["messages", matchId, limit, retentionDays],
     // Keep the previous window on screen while a bigger page streams in.
     placeholderData: (prev) => prev,
@@ -336,27 +343,51 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
       }
     }
     setText("");
-    // Show the bubble immediately; realtime de-dupes by id when the row echoes back.
+
+    // Optimistic bubble: it appears the instant you hit send, then swaps for
+    // the real row (or disappears if the send failed).
+    const tempId = `pending-${crypto.randomUUID()}`;
+    const optimistic: Message = {
+      id: tempId,
+      sender_id: me,
+      content,
+      created_at: new Date().toISOString(),
+      kind: "text",
+      lat: null,
+      lng: null,
+      pending: true,
+    };
+    const key = ["messages", matchId, limit, retentionDays];
+    queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(key, (prev) =>
+      prev ? { ...prev, messages: [...prev.messages, optimistic] } : prev,
+    );
+
     const { data: inserted, error } = await supabase
       .from("messages")
       .insert({ match_id: matchId, sender_id: me, content })
       .select("id, sender_id, content, created_at, kind, lat, lng")
       .maybeSingle();
+
     if (error) {
+      queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(key, (prev) =>
+        prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== tempId) } : prev,
+      );
       toast.error("Message didn't send");
       setText(content);
       return;
     }
-    if (inserted) {
-      const row = inserted as Message;
-      queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(
-        ["messages", matchId, limit, retentionDays],
-        (prev) =>
-          !prev || prev.messages.some((m) => m.id === row.id)
-            ? prev
-            : { ...prev, messages: [...prev.messages, row] },
-      );
-    }
+
+    const row = (inserted as Message | null) ?? null;
+    queryClient.setQueryData<{ messages: Message[]; hasMore: boolean }>(key, (prev) => {
+      if (!prev) return prev;
+      const withoutTemp = prev.messages.filter((m) => m.id !== tempId);
+      if (!row) return { ...prev, messages: withoutTemp };
+      return withoutTemp.some((m) => m.id === row.id)
+        ? { ...prev, messages: withoutTemp }
+        : { ...prev, messages: [...withoutTemp, row] };
+    });
+    queryClient.invalidateQueries({ queryKey: ["active-chats"] });
+    queryClient.invalidateQueries({ queryKey: ["matches"] });
     if (other?.id) {
       sendPush({
         data: {
@@ -499,9 +530,11 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             </div>
           )}
 
-          {rows.map((row) => (
-            <Bubble key={row.m.id} {...row} />
-          ))}
+          {loadingMessages && rows.length === 0 ? (
+            <TranscriptSkeleton />
+          ) : (
+            rows.map((row) => <Bubble key={row.m.id} {...row} />)
+          )}
         </div>
       </div>
 
