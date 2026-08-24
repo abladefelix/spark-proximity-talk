@@ -150,7 +150,10 @@ export function useCompassHeading(enabled: boolean) {
           }
           return true;
         } catch {
-          setListening(false);
+          // The WebView sensors may still be feeding the rose — don't claim
+          // the compass is off just because the native plugin refused.
+          if (!fallbackAttached) setListening(false);
+          attachFallback();
           return false;
         }
       };
