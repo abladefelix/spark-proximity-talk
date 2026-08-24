@@ -20,7 +20,8 @@ export function startCachePersistence(queryClient: QueryClient) {
     });
 
     const [unsubscribe] = persistQueryClient({
-      queryClient,
+      // Duplicate query-core copies in the tree make the nominal types differ.
+      queryClient: queryClient as never,
       persister,
       // Anything older than a day is stale enough to just refetch.
       maxAge: 24 * 60 * 60 * 1000,
