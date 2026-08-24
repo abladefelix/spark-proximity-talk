@@ -224,6 +224,9 @@ function RootComponent() {
     };
   }, [router, queryClient]);
 
+  // Keep the last known data on disk so a relaunch paints instantly.
+  useEffect(() => startCachePersistence(queryClient), [queryClient]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
