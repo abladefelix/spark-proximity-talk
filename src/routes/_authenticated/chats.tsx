@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
+import { ChatListSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
