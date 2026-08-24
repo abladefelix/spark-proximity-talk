@@ -6,6 +6,7 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
+import { ActiveChatsSkeleton } from "@/components/Skeletons";
 
 type Row = {
   matchId: string;
@@ -24,7 +25,7 @@ export function ActiveChats() {
   const [expanded, setExpanded] = useState(false);
   const { data: retention } = useChatRetention();
 
-  const { data: allRows = [] } = useQuery({
+  const { data: allRows = [], isLoading } = useQuery({
     queryKey: ["active-chats"],
     refetchInterval: 15000,
     queryFn: async (): Promise<Row[]> => {
