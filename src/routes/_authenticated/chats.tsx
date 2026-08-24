@@ -122,6 +122,7 @@ function ChatsPage() {
 
 
       <section className="mt-6 space-y-3">
+        {isLoading && rows.length === 0 && <ChatListSkeleton />}
         {!isLoading && rows.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <p className="text-base font-semibold">No links yet</p>
