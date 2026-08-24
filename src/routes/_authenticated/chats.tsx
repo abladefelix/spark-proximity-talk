@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
+import { ChatListSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
@@ -122,6 +123,7 @@ function ChatsPage() {
 
 
       <section className="mt-6 space-y-3">
+        {isLoading && rows.length === 0 && <ChatListSkeleton />}
         {!isLoading && rows.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <p className="text-base font-semibold">No links yet</p>

@@ -19,6 +19,7 @@ import { AppSettingsProvider } from "@/hooks/useAppSettings";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
+import { startCachePersistence } from "@/lib/query-persist";
 
 function useNativeViewportLock() {
   useEffect(() => {
@@ -223,6 +224,9 @@ function RootComponent() {
       window.removeEventListener("pageshow", recheck);
     };
   }, [router, queryClient]);
+
+  // Keep the last known data on disk so a relaunch paints instantly.
+  useEffect(() => startCachePersistence(queryClient), [queryClient]);
 
 
   return (

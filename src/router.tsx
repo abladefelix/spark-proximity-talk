@@ -16,6 +16,9 @@ export const getRouter = () => {
         networkMode: "offlineFirst",
         refetchOnReconnect: true,
         refetchOnWindowFocus: false,
+        // Serve cached data instantly on revisit, refresh quietly behind it.
+        staleTime: 30_000,
+        gcTime: 24 * 60 * 60 * 1000,
         retry: (failureCount, error) => (isNetworkError(error) ? failureCount < 3 : failureCount < 1),
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
       },
