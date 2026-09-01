@@ -39,6 +39,7 @@ Never expose the service-role key to browser code.
 | [docs/ADMIN.md](./docs/ADMIN.md) | Admin console: every tab, setting and moderation action |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Stack, data model, routes, security model |
 | [docs/DATABASE.md](./docs/DATABASE.md) | Migrations, tables, RPCs, storage buckets |
+| [docs/DEPLOY_WINDOWS_VPS.md](./docs/DEPLOY_WINDOWS_VPS.md) | Self-hosting on a Windows VPS at skanaround.bytenetdigital.com |
 | [docs/SETUP.md](./docs/SETUP.md) | Local setup, first admin, billing/mail configuration |
 | [docs/LAUNCH.md](./docs/LAUNCH.md) | Line-by-line iOS + Android run commands |
 | [docs/MOBILE.md](./docs/MOBILE.md) | Native builds, permissions, store checklist |
