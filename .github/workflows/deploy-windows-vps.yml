@@ -1,7 +1,8 @@
-name: Deploy to Windows VPS
+name: Deploy to VPS (WSL)
 
-# Requires a self-hosted GitHub Actions runner installed on the VPS with the
-# labels [self-hosted, windows, skanaround]. See docs/DEPLOY_WINDOWS_VPS.md.
+# Requires a self-hosted GitHub Actions runner installed on the Windows VPS with
+# the labels [self-hosted, windows, skanaround]. The runner shells into WSL and
+# runs the Linux deploy script. See docs/DEPLOY_WINDOWS_VPS.md.
 
 on:
   push:
@@ -9,16 +10,23 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-windows-vps
+  group: deploy-vps-wsl
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: [self-hosted, windows, skanaround]
     env:
-      APP_DIR: C:\apps\skanaround
+      WSL_DISTRO: Ubuntu
+      APP_DIR: /srv/skanaround
     steps:
-      - name: Pull, build and restart
+      - name: Pull, build and restart inside WSL
         shell: pwsh
         run: |
-          & "$env:APP_DIR\deploy\windows\deploy.ps1" -AppDir "$env:APP_DIR" -Branch main
+          wsl -d $env:WSL_DISTRO -- bash -lc "bash $env:APP_DIR/deploy/wsl/deploy.sh main $env:APP_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Refresh WSL port forwarding
+        shell: pwsh
+        run: |
+          & "$PWD\deploy\windows\wsl-portproxy.ps1" -Distro $env:WSL_DISTRO
