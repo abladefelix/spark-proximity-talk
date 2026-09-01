@@ -215,24 +215,43 @@ function AuthPage() {
         return;
       } else {
         const id = identifier.trim();
-        const res = await signInSingleDevice({
-          data: {
-            identifier: id,
+        let res: Awaited<ReturnType<typeof signInSingleDevice>> | null = null;
+        try {
+          res = await signInSingleDevice({
+            data: {
+              identifier: id,
+              password,
+              deviceId: getDeviceId(),
+              deviceLabel: getDeviceLabel(),
+            },
+          });
+        } catch (fnErr) {
+          // The server-function endpoint can be blocked by an upstream proxy
+          // (plain-text "Unauthorized" / non-JSON body). Fall back to a direct
+          // email + password sign-in so people are never locked out.
+          const msg = fnErr instanceof Error ? fnErr.message : "";
+          const proxyBlocked =
+            /unauthorized|not valid json|unexpected token|failed to fetch|<!doctype/i.test(msg);
+          if (!proxyBlocked || !id.includes("@")) throw fnErr;
+          const { error } = await supabase.auth.signInWithPassword({
+            email: id,
             password,
-            deviceId: getDeviceId(),
-            deviceLabel: getDeviceLabel(),
-          },
-        });
-        if (res.status === "other_device") {
-          setOtherDevice({ label: res.device_label, lastSeen: res.last_seen });
-          return;
+          });
+          if (error) throw error;
         }
-        const { error } = await supabase.auth.setSession({
-          access_token: res.access_token,
-          refresh_token: res.refresh_token,
-        });
-        if (error) throw error;
+        if (res) {
+          if (res.status === "other_device") {
+            setOtherDevice({ label: res.device_label, lastSeen: res.last_seen });
+            return;
+          }
+          const { error } = await supabase.auth.setSession({
+            access_token: res.access_token,
+            refresh_token: res.refresh_token,
+          });
+          if (error) throw error;
+        }
       }
+
       navigate({ to: "/radar" });
 
 
