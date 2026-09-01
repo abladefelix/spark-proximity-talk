@@ -75,7 +75,7 @@ sudo systemctl restart skanaround
 ```
 
 `VITE_*` values are compiled into the browser bundle and must be present before
-`npm run build` (they already are, via the committed `.env`).
+`bun run build` (they already are, via the committed `.env`).
 
 ## 4. Expose WSL to the internet
 
