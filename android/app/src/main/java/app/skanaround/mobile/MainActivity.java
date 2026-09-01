@@ -32,7 +32,7 @@ public class MainActivity extends BridgeActivity {
     private static final int BACKDROP = Color.parseColor("#0E0C0B");
 
     /** Must match `server.url` in capacitor.config.ts. */
-    private static final String SERVER_URL = "https://shatta.caymanirs.com";
+    private static final String SERVER_URL = "https://skanaround.bytenetdigital.com";
 
     private View overlay;
     private View splash;
