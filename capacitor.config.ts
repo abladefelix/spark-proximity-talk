@@ -5,11 +5,8 @@ const config: CapacitorConfig = {
   appName: "SKANAROUND",
   webDir: ".output/public",
   server: {
-    // Live URL — the native shell loads the published web app so updates ship
-    // without resubmitting to the stores. No query string, and no `hostname`
-    // alongside `url`: setting both makes iOS treat the first load as an
-    // external link and hand it to Safari.
-    url: "https://shatta.caymanirs.com",
+    // The web build is bundled inside the binary (no remote `url`), so the
+    // stores see a real native app rather than a webview wrapper.
     androidScheme: "https",
     iosScheme: "https",
     allowNavigation: [
@@ -20,7 +17,6 @@ const config: CapacitorConfig = {
       "*.lovable.dev",
       "*.supabase.co",
     ],
-    cleartext: true,
   },
 
 
@@ -29,7 +25,7 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
   },
   android: {
-    allowMixedContent: true,
+    allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
   },
