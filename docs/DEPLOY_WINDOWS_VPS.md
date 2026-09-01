@@ -4,8 +4,10 @@ Target: `https://skanaround.bytenetdigital.com`. The app runs on **Linux inside
 WSL2** on the Windows VPS, behind Caddy, updated automatically from GitHub. No
 Lovable hosting involved.
 
-> The database, auth, storage and realtime still run on Supabase (the project the
-> app already uses). Self-hosting the web app does not move that.
+> This document covers the web app (SSR, server functions, `/api` routes). To
+> also move the database, auth, storage and realtime onto the same VPS — making
+> the product fully independent — follow `docs/SELF_HOST_BACKEND.md` afterwards.
+
 
 ## What the build produces
 
