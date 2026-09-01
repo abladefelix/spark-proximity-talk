@@ -182,7 +182,7 @@ function AuthPage() {
           toast.error("Please accept the Terms and Privacy Policy");
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -196,6 +196,9 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // With email confirmation on, signUp returns no session — the account
+        // is not usable until the link in the email is clicked.
+        const needsConfirmation = !data.session;
         // Send them to the sign-in form instead of assuming a session exists.
         await supabase.auth.signOut();
         setPassword("");
@@ -204,7 +207,11 @@ function AuthPage() {
         setGender("");
         setAcceptedTerms(false);
         setMode("signin");
-        toast.success("Account created. Sign in to continue.");
+        toast.success(
+          needsConfirmation
+            ? `Almost there — check ${email} and tap the confirmation link to activate your account.`
+            : "Account created. Sign in to continue.",
+        );
         return;
       } else {
         const id = identifier.trim();
@@ -230,7 +237,12 @@ function AuthPage() {
 
 
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      const raw = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(
+        /email not confirmed|not confirmed/i.test(raw)
+          ? "Confirm your email first — tap the link we sent you, then sign in."
+          : raw,
+      );
     } finally {
       signingUp.current = false;
       setBusy(false);
