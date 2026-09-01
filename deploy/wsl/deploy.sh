@@ -14,10 +14,10 @@ git fetch --all --prune
 git reset --hard "origin/$BRANCH"
 
 echo "==> Installing dependencies"
-npm ci
+bun install --frozen-lockfile
 
 echo "==> Building"
-npm run build
+bun run build
 
 echo "==> Restarting service"
 sudo systemctl restart skanaround
