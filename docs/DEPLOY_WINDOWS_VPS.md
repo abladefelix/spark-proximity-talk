@@ -11,7 +11,7 @@ Lovable hosting involved.
 
 ## What the build produces
 
-`npm run build` outputs a standalone Node server:
+`bun run build` outputs a standalone Node server:
 
 ```text
 .output/server/index.mjs   Node HTTP server (SSR + server functions + /api routes)
@@ -75,7 +75,7 @@ sudo systemctl restart skanaround
 ```
 
 `VITE_*` values are compiled into the browser bundle and must be present before
-`npm run build` (they already are, via the committed `.env`).
+`bun run build` (they already are, via the committed `.env`).
 
 ## 4. Expose WSL to the internet
 
@@ -108,7 +108,7 @@ Install a self-hosted runner on the **Windows** side:
 3. Install it as a service: `.\svc.ps1 install` then `.\svc.ps1 start`.
 
 `.github/workflows/deploy-windows-vps.yml` then runs on every push to `main`: it
-shells into WSL, runs `deploy/wsl/deploy.sh` (fetch → `npm ci` → `npm run build`
+shells into WSL, runs `deploy/wsl/deploy.sh` (fetch → `bun install` → `bun run build`
 → `systemctl restart` → health check) and refreshes the port proxy.
 
 Manual deploy at any time, from WSL:
@@ -125,7 +125,7 @@ bash /srv/skanaround/deploy/wsl/deploy.sh main /srv/skanaround
 | Logs | `journalctl -u skanaround -f` |
 | Restart | `sudo systemctl restart skanaround` |
 | Caddy logs | `journalctl -u caddy -f` |
-| Rollback | `cd /srv/skanaround && git checkout <sha> && npm ci && npm run build && sudo systemctl restart skanaround` |
+| Rollback | `cd /srv/skanaround && git checkout <sha> && bun install && bun run build && sudo systemctl restart skanaround` |
 
 Windows side: `netsh interface portproxy show all` lists the active forwards;
 `wsl --shutdown` restarts the whole distro (re-run the port proxy script after).
@@ -149,5 +149,5 @@ URL Rewrite + ARR + win-acme) in front. Point the GitHub workflow step at
 - RevenueCat: point its webhook at
   `https://skanaround.bytenetdigital.com/api/public/revenuecat/webhook`.
 - Native apps: `capacitor.config.ts`, `MainActivity.java` and `SceneDelegate.swift`
-  already reference the new domain; run `npm run build && npx cap sync` and ship a
+  already reference the new domain; run `bun run build && npx cap sync` and ship a
   new build.

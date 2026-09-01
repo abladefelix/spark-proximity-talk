@@ -35,6 +35,12 @@ if ! command -v node >/dev/null; then
   apt-get install -y nodejs
 fi
 
+if ! command -v bun >/dev/null; then
+  curl -fsSL https://bun.sh/install | bash
+  install -m 0755 /root/.bun/bin/bun /usr/local/bin/bun 2>/dev/null \
+    || install -m 0755 "$HOME/.bun/bin/bun" /usr/local/bin/bun
+fi
+
 if ! command -v caddy >/dev/null; then
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
     | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
@@ -52,7 +58,7 @@ chown -R "$RUN_USER":"$RUN_USER" "$APP_DIR"
 git config --global --add safe.directory "$APP_DIR"
 
 echo "==> Install + build"
-sudo -u "$RUN_USER" bash -lc "cd '$APP_DIR' && npm ci && npm run build"
+sudo -u "$RUN_USER" bash -lc "cd '$APP_DIR' && bun install --frozen-lockfile && bun run build"
 
 echo "==> systemd units"
 sed -e "s#__APP_DIR__#$APP_DIR#g" -e "s#__RUN_USER__#$RUN_USER#g" \

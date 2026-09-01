@@ -101,7 +101,7 @@ Then `bash deploy/wsl/deploy.sh main /srv/skanaround`.
 iOS/Android bundle the web build, so rebuild and resubmit after switching:
 
 ```bash
-npm run build && npx cap sync
+bun run build && npx cap sync
 ```
 
 ## 6. Auth email
