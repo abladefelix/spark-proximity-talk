@@ -11,3 +11,20 @@ skanaround.bytenetdigital.com {
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
 }
+
+# Self-hosted backend gateway (database API, auth, storage, realtime).
+# Only needed when running deploy/wsl/supabase-selfhost.sh.
+# Add DNS: api.skanaround.bytenetdigital.com A -> VPS public IP
+api.skanaround.bytenetdigital.com {
+	encode gzip zstd
+	reverse_proxy 127.0.0.1:8000
+
+	# Keep the admin Studio off the public internet.
+	@studio path /project* /api/platform*
+	respond @studio 404
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+	}
+}
