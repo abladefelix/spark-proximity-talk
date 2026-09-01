@@ -10,11 +10,8 @@ const config: CapacitorConfig = {
     androidScheme: "https",
     iosScheme: "https",
     allowNavigation: [
-      "shatta.caymanirs.com",
-      "*.caymanirs.com",
-      "*.lovable.app",
-      "oauth.lovable.app",
-      "*.lovable.dev",
+      "skanaround.bytenetdigital.com",
+      "*.bytenetdigital.com",
       "*.supabase.co",
     ],
   },
