@@ -1,7 +1,7 @@
 # SKANAROUND — Mobile (iOS + Android)
 
 SKANAROUND ships as a Capacitor shell around the live web app. The native apps load
-`https://shatta.caymanirs.com`, so web updates go live without an app-store resubmit.
+`https://skanaround.bytenetdigital.com`, so web updates go live without an app-store resubmit.
 
 ## Project layout
 

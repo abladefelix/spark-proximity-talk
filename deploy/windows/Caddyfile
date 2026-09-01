@@ -1,0 +1,15 @@
+# Simplest HTTPS option on Windows (alternative to IIS).
+# Install:  winget install CaddyServer.Caddy
+# Run as a service:  caddy add-package ... / nssm install caddy
+#   caddy run --config deploy\windows\Caddyfile
+# Caddy obtains and renews the Let's Encrypt certificate automatically.
+
+skanaround.bytenetdigital.com {
+	encode gzip zstd
+	reverse_proxy 127.0.0.1:3000
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

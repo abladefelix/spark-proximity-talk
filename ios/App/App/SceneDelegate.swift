@@ -12,7 +12,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Must match `server.url` in capacitor.config.ts. A load that failed while
     /// offline leaves the web view with no URL, so `reload()` does nothing and
     /// the user is stuck on white — we re-load this address instead.
-    private static let serverURL = "https://shatta.caymanirs.com"
+    private static let serverURL = "https://skanaround.bytenetdigital.com"
 
     /// Separate window kept above the Capacitor window so the offline screen is
     /// never replaced by the bridge's own view controller setup.
