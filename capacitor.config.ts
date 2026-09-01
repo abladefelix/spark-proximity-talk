@@ -5,8 +5,11 @@ const config: CapacitorConfig = {
   appName: "SKANAROUND",
   webDir: ".output/public",
   server: {
-    // The web build is bundled inside the binary (no remote `url`), so the
-    // stores see a real native app rather than a webview wrapper.
+    // The app is a server-rendered TanStack Start site (server functions power
+    // auth, radar and chat), so the web view must load the live deployment.
+    // A purely bundled build has no index.html and cannot reach the backend.
+    url: "https://skanaround.bytenetdigital.com",
+    cleartext: false,
     androidScheme: "https",
     iosScheme: "https",
     allowNavigation: [
