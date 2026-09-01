@@ -1,11 +1,11 @@
-# SKANAROUND — Deploy to a Windows VPS (GitHub-driven)
+# SKANAROUND — Deploy to a Windows VPS via WSL (GitHub-driven)
 
-Target: `https://skanaround.bytenetdigital.com`, served by a Node process on the
-VPS, updated automatically from GitHub. No Lovable hosting involved.
+Target: `https://skanaround.bytenetdigital.com`. The app runs on **Linux inside
+WSL2** on the Windows VPS, behind Caddy, updated automatically from GitHub. No
+Lovable hosting involved.
 
 > The database, auth, storage and realtime still run on Supabase (the project the
-> app already uses). Self-hosting the web app does not move that; if you also want
-> to move it, that is a separate Supabase self-host/migration exercise.
+> app already uses). Self-hosting the web app does not move that.
 
 ## What the build produces
 
@@ -17,98 +17,126 @@ VPS, updated automatically from GitHub. No Lovable hosting involved.
 ```
 
 Start it with `node .output/server/index.mjs`, listening on `HOST`/`PORT`.
-(Inside Lovable the same command builds a Cloudflare bundle instead — the preset
-switch is automatic, so both keep working.)
 
-## 1. Prerequisites on the VPS
+## Layout
 
-- Windows Server 2019+ (or Windows 10/11), administrator access
-- Ports 80 and 443 open in the firewall
+```text
+Internet :80/:443
+   -> Windows netsh portproxy      (deploy/windows/wsl-portproxy.ps1)
+      -> Caddy in WSL :80/:443     (deploy/wsl/Caddyfile, TLS via Let's Encrypt)
+         -> node .output/server/index.mjs on 127.0.0.1:3000
+            (systemd unit "skanaround", deploy/wsl/skanaround.service)
+```
+
+## 1. Prerequisites
+
+- Windows Server 2022 / Windows 10+ with virtualization enabled, administrator access
+- Ports 80 and 443 open to the internet
 - DNS: `skanaround.bytenetdigital.com` A record → the VPS public IP
 
-## 2. One-time setup
+## 2. Install WSL2 + Ubuntu
 
-Open PowerShell as Administrator and run:
+Elevated PowerShell:
 
 ```powershell
-git clone https://github.com/<your-org>/<your-repo>.git C:\apps\skanaround
-cd C:\apps\skanaround
+wsl --install -d Ubuntu
+# reboot if prompted, then set up the Linux user when Ubuntu first launches
+wsl --set-default-version 2
+wsl --set-default Ubuntu
+```
+
+## 3. One-time setup inside WSL
+
+```powershell
+wsl -d Ubuntu
+```
+
+```bash
+sudo apt-get update && sudo apt-get install -y git
+git clone https://github.com/<your-org>/<your-repo>.git /tmp/skanaround-bootstrap
+sudo bash /tmp/skanaround-bootstrap/deploy/wsl/setup.sh \
+  https://github.com/<your-org>/<your-repo>.git main /srv/skanaround
+```
+
+The script installs Node LTS, Git and Caddy, clones to `/srv/skanaround`, builds,
+and installs two systemd services (`skanaround`, `caddy`) that start with WSL.
+
+If it reports that systemd was just enabled, run `wsl --shutdown` in Windows,
+reopen WSL and run the same command again.
+
+**Secrets** — the repo `.env` is overwritten on every deploy, so server-only
+secrets live in `/etc/skanaround.env` (mode 600):
+
+```bash
+sudo nano /etc/skanaround.env      # SUPABASE_SERVICE_ROLE_KEY=...
+sudo systemctl restart skanaround
+```
+
+`VITE_*` values are compiled into the browser bundle and must be present before
+`npm run build` (they already are, via the committed `.env`).
+
+## 4. Expose WSL to the internet
+
+WSL gets a fresh internal IP on every boot, so Windows must re-point its port
+proxy. Elevated PowerShell:
+
+```powershell
+cd C:\apps\skanaround   # or wherever you keep a Windows-side checkout
 Set-ExecutionPolicy Bypass -Scope Process -Force
-.\deploy\windows\setup.ps1 -AppDir C:\apps\skanaround -RepoUrl https://github.com/<your-org>/<your-repo>.git
+.\deploy\windows\wsl-portproxy.ps1 -Register
 ```
 
-This installs Node LTS + Git, installs dependencies, installs PM2 as a Windows
-startup service, builds and starts the app on `http://127.0.0.1:3000`.
+`-Register` also creates a scheduled task that re-runs it at every Windows boot.
 
-`.env` in the repo holds only publishable values and is overwritten on every
-deploy, so **server-only secrets go in machine environment variables**:
+Keep WSL running without an open console:
 
 ```powershell
-[System.Environment]::SetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY","<key>","Machine")
-# reopen PowerShell, then
-pm2 restart skanaround --update-env
+# make sure the distro starts at boot
+schtasks /Create /TN "Start WSL" /TR "wsl.exe -d Ubuntu -- /bin/true" /SC ONSTART /RU SYSTEM /F
 ```
 
-`VITE_*` values are compiled into the browser bundle, so they must be present
-before `npm run build` (they already are, via the committed `.env`).
+Verify: `curl -I https://skanaround.bytenetdigital.com` from any machine.
 
-## 3. HTTPS + the domain
+## 5. Automatic deploys from GitHub
 
-Pick one:
-
-**A. Caddy (easiest, automatic Let's Encrypt certificates)**
-
-```powershell
-winget install CaddyServer.Caddy
-caddy run --config C:\apps\skanaround\deploy\windows\Caddyfile
-```
-
-Run it as a service with NSSM so it survives reboots:
-
-```powershell
-nssm install caddy "C:\Program Files\Caddy\caddy.exe" run --config C:\apps\skanaround\deploy\windows\Caddyfile
-nssm start caddy
-```
-
-**B. IIS (if the VPS already runs IIS)**
-
-1. Install **URL Rewrite 2.1** and **Application Request Routing**, then enable
-   *Server Proxy Settings → Enable proxy*.
-2. Create a site bound to `skanaround.bytenetdigital.com` with an empty physical
-   root, e.g. `C:\inetpub\skanaround`.
-3. Copy `deploy\windows\web.config` into that root.
-4. Issue the certificate with [win-acme](https://www.win-acme.com/) (`wacs.exe`)
-   and bind it to port 443.
-
-## 4. Automatic deploys from GitHub
-
-Install a self-hosted runner on the VPS:
+Install a self-hosted runner on the **Windows** side:
 
 1. GitHub repo → **Settings → Actions → Runners → New self-hosted runner → Windows**.
-2. Follow the shown commands, and when asked for labels enter `skanaround`.
-3. Install it as a service: `.\svc.ps1 install` then `.\svc.ps1 start`
-   (or `./config.cmd --runasservice`).
+2. Follow the shown commands; when asked for labels enter `skanaround`.
+3. Install it as a service: `.\svc.ps1 install` then `.\svc.ps1 start`.
 
-`.github/workflows/deploy-windows-vps.yml` then runs on every push to `main`:
-it pulls, `npm ci`, `npm run build`, reloads PM2 and health-checks the app.
+`.github/workflows/deploy-windows-vps.yml` then runs on every push to `main`: it
+shells into WSL, runs `deploy/wsl/deploy.sh` (fetch → `npm ci` → `npm run build`
+→ `systemctl restart` → health check) and refreshes the port proxy.
 
-Manual deploy at any time:
+Manual deploy at any time, from WSL:
 
-```powershell
-C:\apps\skanaround\deploy\windows\deploy.ps1
+```bash
+bash /srv/skanaround/deploy/wsl/deploy.sh main /srv/skanaround
 ```
 
-## 5. Operations
+## 6. Operations
 
-| Task | Command |
+| Task | Command (inside WSL) |
 | --- | --- |
-| Status | `pm2 status` |
-| Logs | `pm2 logs skanaround` |
-| Restart | `pm2 restart skanaround --update-env` |
-| Persist across reboot | `pm2 save` (already done by setup) |
-| Rollback | `git checkout <sha>` then `npm ci && npm run build && pm2 restart skanaround` |
+| Status | `systemctl status skanaround` |
+| Logs | `journalctl -u skanaround -f` |
+| Restart | `sudo systemctl restart skanaround` |
+| Caddy logs | `journalctl -u caddy -f` |
+| Rollback | `cd /srv/skanaround && git checkout <sha> && npm ci && npm run build && sudo systemctl restart skanaround` |
 
-## 6. After the domain change
+Windows side: `netsh interface portproxy show all` lists the active forwards;
+`wsl --shutdown` restarts the whole distro (re-run the port proxy script after).
+
+## 7. Windows-native fallback (no WSL)
+
+If WSL2 is unavailable on the VPS, the original PowerShell path still works:
+`deploy/windows/setup.ps1` + `deploy/windows/deploy.ps1` run the same Node build
+under PM2, with `deploy/windows/Caddyfile` or IIS (`deploy/windows/web.config`,
+URL Rewrite + ARR + win-acme) in front. Point the GitHub workflow step at
+`deploy\windows\deploy.ps1` instead of the WSL step.
+
+## 8. After the domain change
 
 - Supabase → Auth → URL configuration: set Site URL to
   `https://skanaround.bytenetdigital.com` and add it (plus

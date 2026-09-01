@@ -1,0 +1,22 @@
+[Unit]
+Description=SKANAROUND (TanStack Start node-server)
+After=network.target
+
+[Service]
+Type=simple
+User=__RUN_USER__
+WorkingDirectory=__APP_DIR__
+# Publishable values compiled/read from the repo .env, secrets from /etc/skanaround.env
+EnvironmentFile=-__APP_DIR__/.env
+EnvironmentFile=-/etc/skanaround.env
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+ExecStart=/usr/bin/node __APP_DIR__/.output/server/index.mjs
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
