@@ -19,10 +19,12 @@ if [[ -z "$REPO_URL" ]]; then
   exit 1
 fi
 
-echo "==> Enabling systemd in WSL"
-if ! grep -q '^systemd=true' /etc/wsl.conf 2>/dev/null; then
-  printf '[boot]\nsystemd=true\n' >> /etc/wsl.conf
-  echo "    systemd enabled — run 'wsl --shutdown' in Windows, reopen WSL, then re-run this script."
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  echo "==> Enabling systemd in WSL"
+  if ! grep -q '^systemd=true' /etc/wsl.conf 2>/dev/null; then
+    printf '[boot]\nsystemd=true\n' >> /etc/wsl.conf
+    echo "    systemd enabled — run 'wsl --shutdown' in Windows, reopen WSL, then re-run this script."
+  fi
 fi
 
 echo "==> Installing packages"
