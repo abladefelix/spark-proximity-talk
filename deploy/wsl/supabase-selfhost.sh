@@ -105,10 +105,16 @@ PY
 fi
 
 # Bind the gateway to localhost only; Caddy terminates TLS in front of it.
+# The stack's gateway is "envoy" on current releases and "kong" on older ones —
+# only override the one this checkout actually defines.
 mkdir -p "$STACK_DIR"
-cat > docker-compose.override.yml <<'YML'
+GATEWAY="envoy"
+if ! docker compose config --services 2>/dev/null | grep -qx envoy; then
+  GATEWAY="kong"
+fi
+cat > docker-compose.override.yml <<YML
 services:
-  kong:
+  $GATEWAY:
     ports: !override
       - "127.0.0.1:8000:8000/tcp"
   db:
@@ -116,15 +122,18 @@ services:
       - "127.0.0.1:5432:5432"
 YML
 
-echo "==> Starting the stack"
+echo "==> Starting the stack (gateway: $GATEWAY)"
 docker compose pull
 docker compose up -d
 
 echo "==> Waiting for the API gateway"
+ANON_TMP="$(grep '^ANON_KEY=' .env | cut -d= -f2-)"
 for i in $(seq 1 60); do
-  curl -sf -o /dev/null "http://127.0.0.1:8000/rest/v1/" -H "apikey: $(grep '^ANON_KEY=' .env | cut -d= -f2-)" && break
+  code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000/rest/v1/" -H "apikey: $ANON_TMP" || true)"
+  [[ "$code" != "000" && -n "$code" ]] && { echo "    gateway responding (HTTP $code)"; break; }
   sleep 3
 done
+
 
 echo "==> Enabling PostGIS (used by proximity search)"
 docker compose exec -T db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS postgis;" || true
