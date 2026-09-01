@@ -4,6 +4,9 @@ Target: `https://skanaround.bytenetdigital.com`. The app runs on **Linux inside
 WSL2** on the Windows VPS, behind Caddy, updated automatically from GitHub. No
 Lovable hosting involved.
 
+> **On an Azure Ubuntu VM?** Use `docs/DEPLOY_AZURE_UBUNTU.md` instead — no WSL,
+> no port proxy, and Let's Encrypt works directly.
+
 > **No public inbound ports?** If the host is a Windows 365 Cloud PC, behind
 > NAT, or a firewall you don't control, sections 4 and the Let's Encrypt setup
 > here cannot work. Use `docs/DEPLOY_CLOUDFLARE_TUNNEL.md` instead.
