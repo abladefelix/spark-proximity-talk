@@ -6,7 +6,7 @@
 
 param(
   [int[]]$Ports = @(80, 443),
-  [string]$Distro = "Ubuntu",
+  [string]$Distro = "Ubuntu-24.04",
   [switch]$Register
 )
 

@@ -17,7 +17,7 @@ jobs:
   deploy:
     runs-on: [self-hosted, windows, skanaround]
     env:
-      WSL_DISTRO: Ubuntu
+      WSL_DISTRO: Ubuntu-24.04
       APP_DIR: /srv/skanaround
     steps:
       - name: Pull, build and restart inside WSL

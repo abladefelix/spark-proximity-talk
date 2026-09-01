@@ -41,16 +41,16 @@ Internet :80/:443
 Elevated PowerShell:
 
 ```powershell
-wsl --install -d Ubuntu
+wsl --install -d Ubuntu-24.04
 # reboot if prompted, then set up the Linux user when Ubuntu first launches
 wsl --set-default-version 2
-wsl --set-default Ubuntu
+wsl --set-default Ubuntu-24.04
 ```
 
 ## 3. One-time setup inside WSL
 
 ```powershell
-wsl -d Ubuntu
+wsl -d Ubuntu-24.04
 ```
 
 ```bash
@@ -94,7 +94,7 @@ Keep WSL running without an open console:
 
 ```powershell
 # make sure the distro starts at boot
-schtasks /Create /TN "Start WSL" /TR "wsl.exe -d Ubuntu -- /bin/true" /SC ONSTART /RU SYSTEM /F
+schtasks /Create /TN "Start WSL" /TR "wsl.exe -d Ubuntu-24.04 -- /bin/true" /SC ONSTART /RU SYSTEM /F
 ```
 
 Verify: `curl -I https://skanaround.bytenetdigital.com` from any machine.
