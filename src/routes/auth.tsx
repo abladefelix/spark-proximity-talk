@@ -237,7 +237,12 @@ function AuthPage() {
 
 
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      const raw = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(
+        /email not confirmed|not confirmed/i.test(raw)
+          ? "Confirm your email first — tap the link we sent you, then sign in."
+          : raw,
+      );
     } finally {
       signingUp.current = false;
       setBusy(false);
