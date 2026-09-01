@@ -37,18 +37,20 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 .\deploy\windows\setup.ps1 -AppDir C:\apps\skanaround -RepoUrl https://github.com/<your-org>/<your-repo>.git
 ```
 
-This installs Node LTS + Git, installs dependencies, creates `.env` from
-`.env.example`, installs PM2 as a Windows startup service, builds and starts the app
-on `http://127.0.0.1:3000`.
+This installs Node LTS + Git, installs dependencies, installs PM2 as a Windows
+startup service, builds and starts the app on `http://127.0.0.1:3000`.
 
-Fill in `C:\apps\skanaround\.env` (especially `SUPABASE_SERVICE_ROLE_KEY`) and then:
+`.env` in the repo holds only publishable values and is overwritten on every
+deploy, so **server-only secrets go in machine environment variables**:
 
 ```powershell
+[System.Environment]::SetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY","<key>","Machine")
+# reopen PowerShell, then
 pm2 restart skanaround --update-env
 ```
 
 `VITE_*` values are compiled into the browser bundle, so they must be present
-before `npm run build`.
+before `npm run build` (they already are, via the committed `.env`).
 
 ## 3. HTTPS + the domain
 

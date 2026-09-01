@@ -32,10 +32,13 @@ if (-not (Test-Path $AppDir)) {
 }
 Set-Location $AppDir
 
-# 3. Environment file (never committed)
-if (-not (Test-Path "$AppDir\.env")) {
-  Copy-Item "$AppDir\.env.example" "$AppDir\.env"
-  Write-Warning "Created .env from .env.example — fill in the values before starting."
+# 3. Server-only secrets as machine environment variables.
+# `.env` is tracked in git (publishable values only) and is overwritten on every
+# deploy, so secrets must NOT live there.
+if (-not [System.Environment]::GetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY", "Machine")) {
+  Write-Warning "SUPABASE_SERVICE_ROLE_KEY is not set. Set it with:"
+  Write-Warning '  [System.Environment]::SetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY","<key>","Machine")'
+  Write-Warning "Then reopen PowerShell and run: pm2 restart skanaround --update-env"
 }
 
 # 4. Process manager: PM2 + Windows service wrapper
