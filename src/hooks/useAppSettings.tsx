@@ -33,7 +33,7 @@ export const APP_SETTINGS_DEFAULTS = {
   color_male: "#3b82f6",
   color_female: "#ec4899",
   color_other: "#f59e0b",
-  default_theme: "dark",
+  default_theme: "light",
   font_family: "Sora",
   verified_badge_style: "check",
   verified_badge_color: "#22c55e",
@@ -143,7 +143,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loaded || typeof window === "undefined") return;
-    const preferred = settings.default_theme === "light" ? "light" : "dark";
+    const preferred = settings.default_theme === "dark" ? "dark" : "light";
     // Cached so the pre-paint boot script can apply it on the next cold start.
     try {
       localStorage.setItem("skanaround-default-theme", preferred);
