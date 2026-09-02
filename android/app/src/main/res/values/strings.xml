@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">SKANAROUND</string>
     <string name="title_activity_main">SKANAROUND</string>
-    <string name="package_name">app.skanaround.mobile</string>
-    <string name="custom_url_scheme">app.skanaround.mobile</string>
+    <string name="package_name">com.skanaround</string>
+    <string name="custom_url_scheme">com.skanaround</string>
 </resources>
