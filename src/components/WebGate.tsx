@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { BrandMark } from "@/components/Brand";
 
 export const APP_STORE_URL = "https://apps.apple.com/app/skanaround";
@@ -13,6 +15,22 @@ const WEB_ALLOWED = ["/verified", "/privacy", "/terms", "/upgrade", "/admin", "/
  * The product ships as a native app for now. In a desktop/mobile browser every
  * app screen is replaced by a download page; only legal/utility pages remain.
  */
+/** Admin switch: is the browser version of the app turned on? */
+export function useWebAppEnabled() {
+  return useQuery({
+    queryKey: ["web-app-enabled"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("web_app_enabled")
+        .eq("id", "global")
+        .maybeSingle();
+      return Boolean(data?.web_app_enabled);
+    },
+  });
+}
+
 export function WebGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [hydrated, setHydrated] = useState(false);
@@ -21,8 +39,12 @@ export function WebGate({ children }: { children: ReactNode }) {
 
   const allowed = WEB_ALLOWED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const isNative = hydrated && Capacitor.isNativePlatform();
+  const { data: webEnabled, isLoading } = useWebAppEnabled();
 
   if (!hydrated || isNative || allowed) return <>{children}</>;
+  // Wait for the admin setting before deciding, so the wall never flashes.
+  if (isLoading) return null;
+  if (webEnabled) return <>{children}</>;
 
   return <DownloadWall />;
 }

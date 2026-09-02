@@ -24,6 +24,7 @@ export const APP_SETTINGS_DEFAULTS = {
   signups_enabled: true,
   push_enabled: true,
   radar_sweep_enabled: true,
+  web_app_enabled: false,
   signal_expiry_hours: 6,
   presence_timeout_min: 5,
   default_radius_m: 500,
@@ -75,6 +76,7 @@ export function useSaveAppSettings() {
     await queryClient.invalidateQueries({ queryKey: ["app-accent"] });
     await queryClient.invalidateQueries({ queryKey: ["app-max-radius"] });
     await queryClient.invalidateQueries({ queryKey: ["app-chat-ttl"] });
+    await queryClient.invalidateQueries({ queryKey: ["web-app-enabled"] });
   };
 }
 
