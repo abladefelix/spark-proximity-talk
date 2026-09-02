@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import Network
 import WebKit
 
 /// The web UI is served from the live site, so with no connection the web view
@@ -19,8 +18,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var offlineWindow: UIWindow?
     private var splashWindow: UIWindow?
     private var splashTimer: Timer?
-    private let monitor = NWPathMonitor()
-    private let monitorQueue = DispatchQueue(label: "app.skanaround.network")
     private var wasOffline = false
     private weak var statusLabel: UILabel?
     private weak var retryButton: UIButton?
@@ -29,7 +26,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// A satisfied network path only means an interface is up — a Wi-Fi router
     /// with no upstream still reports `.satisfied`. Everything below decides
     /// offline state from an actual request to the site instead.
-    private var reachabilityTimer: Timer?
     private var probing = false
     private var consecutiveProbeFailures = 0
     private lazy var probeSession: URLSession = {
@@ -49,40 +45,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         showSplash(in: windowScene)
 
-        monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                guard let self else { return }
-                // NWPathMonitor can briefly report an unsatisfied path while iOS
-                // is restoring Wi-Fi/cellular after launch. A real HTTPS request
-                // is the source of truth, so always probe before showing offline.
-                self.evaluateConnectivity()
-            }
-        }
-        monitor.start(queue: monitorQueue)
-
-        // Poll while the app is in use so a Wi-Fi network that silently loses
-        // its upstream still flips the app to the offline screen.
-        reachabilityTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
-            self?.evaluateConnectivity()
-        }
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(evaluateConnectivity),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
-
-        // Give the network stack a moment to settle after a cold launch.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            self?.evaluateConnectivity()
-        }
+        // Do not put a separate native reachability gate in front of WKWebView.
+        // URLSession and network-path probes can disagree with WebKit on real
+        // devices (especially while cellular service is settling), leaving an
+        // online phone trapped behind a false offline screen. Capacitor loads
+        // the live URL directly; the web app owns connection-state messaging.
     }
 
     deinit {
-        monitor.cancel()
         splashTimer?.invalidate()
-        reachabilityTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
 
