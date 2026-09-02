@@ -6,7 +6,7 @@ Everything below is specific to this app. Follow it top to bottom.
 | --- | --- |
 | App name | SKANAROUND |
 | Package (application id) | `com.skanaround` |
-| Version | `versionName 1.0.0`, `versionCode 1` (`android/app/build.gradle`) |
+| Version | `versionName 1.0.2`, `versionCode 3` (`android/app/build.gradle`) |
 | Category | Social |
 | Content rating | Mature 17+ (user-generated content + location) |
 | Target audience | 18+ only (app enforces a date-of-birth age gate) |
@@ -104,8 +104,11 @@ Declare **no data is shared with third parties** and **no advertising or trackin
 ### Permissions
 Location is used only while the app is in use — there is **no background location**, so
 you will not need the sensitive-permission declaration form. Say so if asked.
-`CAMERA`, `READ_MEDIA_IMAGES`, `POST_NOTIFICATIONS` and `HIGH_SAMPLING_RATE_SENSORS`
-(compass) are all justified by profile photos, notifications and the radar heading.
+`CAMERA`, `POST_NOTIFICATIONS` and `HIGH_SAMPLING_RATE_SENSORS` (compass) are justified
+by profile photos, notifications and the radar heading. `READ_MEDIA_IMAGES` is **not**
+declared: profile and chat images are chosen through the Android system photo picker
+(WebView file input), which needs no storage permission. Never re-add it — Play rejects
+undeclared photo/video permissions under the Photo and Video Permissions policy.
 
 ### Content rating questionnaire
 Answer honestly: users can interact, share user-generated content, share their
