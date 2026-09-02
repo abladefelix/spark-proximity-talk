@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Capacitor } from "@capacitor/core";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouterState, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandMark } from "@/components/Brand";
@@ -31,11 +31,35 @@ export function useWebAppEnabled() {
   });
 }
 
+/** Does this URL look like it came from an email confirmation link? */
+function isConfirmationUrl() {
+  const raw = `${window.location.hash.replace(/^#/, "")}&${window.location.search.replace(/^\?/, "")}`;
+  const params = new URLSearchParams(raw);
+  const type = params.get("type");
+  if (type === "signup" || type === "email_change" || type === "invite") return true;
+  const err = params.get("error") || params.get("error_code") || params.get("error_description");
+  return Boolean(err && /expired|otp|token|invalid/i.test(err));
+}
+
 export function WebGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [hydrated, setHydrated] = useState(false);
+  const router = useRouter();
 
   useEffect(() => setHydrated(true), []);
+
+  // GoTrue can drop the user on the site root instead of /verified (depending on
+  // the backend's allowed redirect URLs). Recognise the confirmation payload and
+  // send them to the branded "Account activated" page.
+  useEffect(() => {
+    if (pathname === "/verified") return;
+    if (!isConfirmationUrl()) return;
+    const hash = window.location.hash;
+    router.navigate({ to: "/verified", replace: true }).then(() => {
+      if (hash) window.history.replaceState(null, "", `/verified${hash}`);
+    });
+  }, [pathname, router]);
+
 
   const allowed = WEB_ALLOWED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const isNative = hydrated && Capacitor.isNativePlatform();
