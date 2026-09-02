@@ -32,7 +32,7 @@ export const Route = createFileRoute("/delete-account")({
 function body(email: string) {
   return `# Delete your account and data
 
-_App: SKANAROUND (app.skanaround.mobile)_
+_App: SKANAROUND (com.skanaround)_
 
 ## Delete from inside the app
 1. Open SKANAROUND and sign in.

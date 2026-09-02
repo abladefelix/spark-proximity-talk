@@ -5,7 +5,7 @@ Everything below is specific to this app. Follow it top to bottom.
 | Fact | Value |
 | --- | --- |
 | App name | SKANAROUND |
-| Package (application id) | `app.skanaround.mobile` |
+| Package (application id) | `com.skanaround` |
 | Version | `versionName 1.0.0`, `versionCode 1` (`android/app/build.gradle`) |
 | Category | Social |
 | Content rating | Mature 17+ (user-generated content + location) |
@@ -61,7 +61,7 @@ Every later upload must increase `versionCode` in `android/app/build.gradle`.
 
 The app uses FCM. Before the release build:
 
-1. In the Firebase console add an Android app with package `app.skanaround.mobile`.
+1. In the Firebase console add an Android app with package `com.skanaround`.
 2. Add the SHA-1 and SHA-256 of your **upload key** and of the **Play App Signing key**
    (Play Console → Setup → App signing).
 3. Download `google-services.json` into `android/app/google-services.json`.

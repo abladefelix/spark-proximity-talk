@@ -1,4 +1,4 @@
-package app.skanaround.mobile;
+package com.skanaround;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;

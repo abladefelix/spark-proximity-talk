@@ -12,7 +12,7 @@ android/              Android Studio / Gradle project
 dist/                 web build copied into both platforms by `npx cap sync`
 ```
 
-App ID: `app.skanaround.mobile`
+App ID: `com.skanaround`
 App name: `SKANAROUND`
 
 ## Prerequisites
