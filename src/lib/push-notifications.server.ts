@@ -95,7 +95,7 @@ export async function sendApnsNotification({
   const key = (process.env["APNS_KEY"] ?? "").replace(/\\n/g, "\n");
   const keyId = process.env["APNS_KEY_ID"];
   const teamId = process.env["APNS_TEAM_ID"];
-  const bundleId = process.env["APNS_BUNDLE_ID"] ?? "com.skanaround";
+  const bundleId = process.env["APNS_BUNDLE_ID"] ?? "app.skanaround.mobile";
 
   if (!key || !keyId || !teamId) {
     return { sent: false, reason: "apns-not-configured" };
