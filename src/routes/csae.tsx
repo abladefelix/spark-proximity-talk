@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalDocument } from "@/components/LegalDocument";
 import { DEFAULT_CSAE } from "@/lib/legal";
-import { useSettings } from "@/hooks/useAppSettings";
 
 export const Route = createFileRoute("/csae")({
   head: () => ({
@@ -26,12 +25,10 @@ export const Route = createFileRoute("/csae")({
 });
 
 function CsaePage() {
-  const settings = useSettings();
-  const email = settings.support_email?.trim();
   return (
     <LegalDocument
       markdown={DEFAULT_CSAE}
-      {...(email ? { supportEmail: email } : {})}
+
     />
   );
 }
