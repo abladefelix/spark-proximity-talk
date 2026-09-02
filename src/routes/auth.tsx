@@ -186,7 +186,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/radar`,
+            emailRedirectTo: `${window.location.origin}/verified`,
             data: {
               username: clean,
               display_name: username.trim(),
