@@ -443,6 +443,10 @@ function ProfilePage() {
             <Link to="/privacy" className="text-muted-foreground underline-offset-4 hover:underline">
               Privacy Policy
             </Link>
+            <Link to="/csae" className="text-muted-foreground underline-offset-4 hover:underline">
+              Child Safety Standards
+            </Link>
+
             <Link
               to="/delete-account"
               className="text-muted-foreground underline-offset-4 hover:underline"
