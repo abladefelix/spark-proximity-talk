@@ -31,6 +31,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// offline state from an actual request to the site instead.
     private var reachabilityTimer: Timer?
     private var probing = false
+    private var consecutiveProbeFailures = 0
     private lazy var probeSession: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 6
@@ -51,11 +52,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 guard let self else { return }
-                if path.status == .satisfied {
-                    self.evaluateConnectivity()
-                } else {
-                    self.applyConnectivity(online: false)
-                }
+                // NWPathMonitor can briefly report an unsatisfied path while iOS
+                // is restoring Wi-Fi/cellular after launch. A real HTTPS request
+                // is the source of truth, so always probe before showing offline.
+                self.evaluateConnectivity()
             }
         }
         monitor.start(queue: monitorQueue)
@@ -72,6 +72,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             name: UIApplication.didBecomeActiveNotification,
             object: nil
         )
+
+        // Give the network stack a moment to settle after a cold launch.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.evaluateConnectivity()
+        }
     }
 
     deinit {
@@ -86,26 +91,40 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Cheap request against the site itself; any response at all means the
     /// device can reach the internet.
     private func probeReachability(_ completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: Self.serverURL) else { return completion(false) }
+        guard var components = URLComponents(string: Self.serverURL + "/favicon.png") else {
+            return completion(false)
+        }
+        components.queryItems = [URLQueryItem(name: "native_ping", value: UUID().uuidString)]
+        guard let url = components.url else { return completion(false) }
         var request = URLRequest(url: url)
-        request.httpMethod = "HEAD"
+        request.httpMethod = "GET"
         request.timeoutInterval = 6
         probeSession.dataTask(with: request) { _, response, error in
-            let ok = error == nil && response != nil
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            // Any HTTP response proves that DNS, TLS and the internet path work.
+            let ok = error == nil && status > 0
             DispatchQueue.main.async { completion(ok) }
         }.resume()
     }
 
     @objc private func evaluateConnectivity() {
         guard !probing else { return }
-        if monitor.currentPath.status != .satisfied {
-            applyConnectivity(online: false)
-            return
-        }
         probing = true
         probeReachability { [weak self] ok in
-            self?.probing = false
-            self?.applyConnectivity(online: ok)
+            guard let self else { return }
+            self.probing = false
+            if ok {
+                self.consecutiveProbeFailures = 0
+                self.applyConnectivity(online: true)
+                return
+            }
+
+            self.consecutiveProbeFailures += 1
+            // Avoid covering a usable web view because of one transient timeout.
+            // Retry immediately when the native offline screen is already open.
+            if self.offlineWindow != nil || self.consecutiveProbeFailures >= 2 {
+                self.applyConnectivity(online: false)
+            }
         }
     }
 
@@ -407,11 +426,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         statusLabel?.textColor = UIColor(white: 1, alpha: 0.6)
         UIView.animate(withDuration: 0.2) { self.statusLabel?.alpha = 1 }
 
-        if monitor.currentPath.status != .satisfied {
-            failRetry()
-            return
-        }
-
         probing = true
         retryButton?.isEnabled = false
         probeReachability { [weak self] ok in
@@ -419,6 +433,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.probing = false
             self.retryButton?.isEnabled = true
             if ok {
+                self.consecutiveProbeFailures = 0
                 self.hideOffline(reload: true)
                 self.wasOffline = false
             } else {
