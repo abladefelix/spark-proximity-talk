@@ -206,7 +206,14 @@ export function AppTab() {
           checked={value.radar_sweep_enabled}
           onChange={(v) => set("radar_sweep_enabled", v)}
         />
+        <Toggle
+          label="Web version"
+          hint="On means the app works in a normal browser. Off shows a download page instead."
+          checked={value.web_app_enabled}
+          onChange={(v) => set("web_app_enabled", v)}
+        />
       </Section>
+
 
       <Section title="Rules & limits">
         <Field label="Signal stays active (hours)">{num("signal_expiry_hours", 1, 168)}</Field>
