@@ -30,7 +30,7 @@ function CsaePage() {
   const email = settings.support_email?.trim();
   return (
     <LegalDocument
-      markdown={settings.csae_text?.trim() ? settings.csae_text : DEFAULT_CSAE}
+      markdown={DEFAULT_CSAE}
       {...(email ? { supportEmail: email } : {})}
     />
   );
