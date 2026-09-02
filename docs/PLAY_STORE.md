@@ -48,14 +48,8 @@ keytool -genkey -v -keystore ~/skanaround-upload.jks \
   -alias skanaround -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-Add to `android/key.properties` (this file is git-ignored — keep it off GitHub):
-
-```properties
-storeFile=/absolute/path/to/skanaround-upload.jks
-storePassword=YOUR_STORE_PASSWORD
-keyAlias=skanaround
-keyPassword=YOUR_KEY_PASSWORD
-```
+Keep the keystore and its passwords backed up somewhere safe — losing them means you can
+never update the app under this package name.
 
 Then in Android Studio: **Build → Generate Signed App Bundle → Android App Bundle**,
 select the keystore, choose **release**, and upload the resulting `app-release.aab`.
