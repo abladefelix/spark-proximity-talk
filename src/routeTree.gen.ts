@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CsaeRouteImport } from './routes/csae'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -44,6 +45,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CsaeRoute = CsaeRouteImport.update({
+  id: '/csae',
+  path: '/csae',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/csae'
     | '/delete-account'
     | '/guide'
     | '/privacy'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/csae'
     | '/delete-account'
     | '/guide'
     | '/privacy'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/auth'
+    | '/csae'
     | '/delete-account'
     | '/guide'
     | '/privacy'
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  CsaeRoute: typeof CsaeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   GuideRoute: typeof GuideRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/csae': {
+      id: '/csae'
+      path: '/csae'
+      fullPath: '/csae'
+      preLoaderRoute: typeof CsaeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/delete-account': {
@@ -391,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  CsaeRoute: CsaeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   GuideRoute: GuideRoute,
   PrivacyRoute: PrivacyRoute,
