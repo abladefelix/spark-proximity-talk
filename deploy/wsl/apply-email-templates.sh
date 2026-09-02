@@ -51,6 +51,70 @@ set_env GOTRUE_MAILER_OTP_EXP                  "86400"
 
 chmod 600 "$ENV_FILE"
 
+# --- Make sure docker compose actually passes these vars into the auth container.
+# The stock supabase compose file only maps a fixed list of GOTRUE_* vars, so
+# values added to .env are otherwise silently ignored.
+COMPOSE_FILE=""
+for f in "$COMPOSE_DIR/docker-compose.yml" "$COMPOSE_DIR/docker-compose.yaml"; do
+  [[ -f "$f" ]] && COMPOSE_FILE="$f" && break
+done
+
+if [[ -n "$COMPOSE_FILE" ]]; then
+  cp "$COMPOSE_FILE" "${COMPOSE_FILE}.bak.$(date +%s)"
+  python3 - "$COMPOSE_FILE" <<'PY'
+import re, sys
+
+path = sys.argv[1]
+lines = open(path).read().splitlines()
+
+keys = [
+    "GOTRUE_MAILER_TEMPLATES_CONFIRMATION",
+    "GOTRUE_MAILER_TEMPLATES_RECOVERY",
+    "GOTRUE_MAILER_TEMPLATES_MAGIC_LINK",
+    "GOTRUE_MAILER_TEMPLATES_INVITE",
+    "GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE",
+    "GOTRUE_MAILER_SUBJECTS_CONFIRMATION",
+    "GOTRUE_MAILER_SUBJECTS_RECOVERY",
+    "GOTRUE_MAILER_SUBJECTS_MAGIC_LINK",
+    "GOTRUE_MAILER_SUBJECTS_INVITE",
+    "GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE",
+]
+
+# locate `auth:` service block, then its `environment:` list
+auth_i = next((i for i, l in enumerate(lines)
+               if re.match(r"^\s{2}auth:\s*$", l)), None)
+if auth_i is None:
+    print("  !! could not find the auth service in the compose file; skipping")
+    sys.exit(0)
+
+end = len(lines)
+for i in range(auth_i + 1, len(lines)):
+    if re.match(r"^\s{2}\S", lines[i]):
+        end = i
+        break
+
+env_i = next((i for i in range(auth_i + 1, end)
+              if re.match(r"^\s+environment:\s*$", lines[i])), None)
+if env_i is None:
+    print("  !! auth service has no environment block; skipping")
+    sys.exit(0)
+
+indent = " " * (len(lines[env_i]) - len(lines[env_i].lstrip()) + 2)
+block = "\n".join(lines[env_i:end])
+missing = [k for k in keys if f"{k}:" not in block]
+if not missing:
+    print("  compose already passes the mailer template vars through")
+    sys.exit(0)
+
+insert = [f'{indent}{k}: ${{{k}}}' for k in missing]
+lines[env_i + 1:env_i + 1] = insert
+open(path, "w").write("\n".join(lines) + "\n")
+print(f"  added {len(missing)} mailer var(s) to the auth service")
+PY
+else
+  echo "  !! no docker-compose file found next to $ENV_FILE"
+fi
+
 echo "== Checking templates are reachable =="
 for f in confirm recovery magic-link invite email-change; do
   code=$(curl -s -o /dev/null -w '%{http_code}' "${SITE_URL}/email/${f}.html")
