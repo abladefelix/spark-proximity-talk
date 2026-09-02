@@ -17,6 +17,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { WebGate } from "@/components/WebGate";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
 import { startCachePersistence } from "@/lib/query-persist";
@@ -237,7 +238,9 @@ function RootComponent() {
             <ProUpgradeSheetProvider>
               <OfflineBanner />
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
+              <WebGate>
+                <Outlet />
+              </WebGate>
               <Toaster position="top-center" />
             </ProUpgradeSheetProvider>
           </AppSettingsProvider>
