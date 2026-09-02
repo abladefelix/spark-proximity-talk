@@ -101,6 +101,53 @@ Data is stored on managed infrastructure with encryption in transit, and access 
 Questions or data requests: use the support email shown on your profile screen.
 `;
 
+/**
+ * Child safety standards, published publicly so app stores can link to them
+ * (Google Play CSAE policy / Apple child safety requirements).
+ */
+export const DEFAULT_CSAE = `# Child Safety Standards
+
+_Last updated: 2 September 2026_
+
+SKANAROUND has zero tolerance for child sexual abuse and exploitation (CSAE), including child sexual abuse material (CSAM). This page is our published standard against CSAE.
+
+## 1. Adults only
+SKANAROUND is an 18+ service. Sign-up requires a date of birth and anyone under 18 is refused. Accounts later found to belong to a minor are terminated and their data removed.
+
+## 2. Prohibited conduct
+The following are strictly forbidden and result in immediate, permanent removal:
+
+- child sexual abuse material (CSAM) of any kind, real, drawn or AI-generated;
+- sexualisation of a minor in text, images, usernames or profile content;
+- grooming, solicitation, or attempting to arrange contact with a minor;
+- sextortion, trafficking, or sharing links to CSAE material;
+- impersonating a minor, or seeking minors on the service.
+
+## 3. Reporting
+Any user can report a profile or a chat from the report action in the profile dialog and in the chat safety menu. Child-safety reports are prioritised above all other reports.
+
+Reports can also be sent directly to our child safety point of contact at the support email published on the profile screen, with "CSAE" in the subject line.
+
+## 4. What we do with a report
+- Child-safety reports are triaged as soon as they arrive and reviewed within 24 hours.
+- Offending content is removed and the account is permanently banned and blocked from re-registration.
+- Confirmed CSAM is reported to the National Center for Missing & Exploited Children (NCMEC) and, where required, to local law enforcement.
+- Related evidence is preserved as required by law.
+
+## 5. Prevention
+- 18+ age gate at sign-up; gender and date of birth cannot be silently changed.
+- No public browsing: another member is only visible when nearby, and chat only opens after both people accept.
+- Block and report are available everywhere a person appears.
+- Exact coordinates are never shared with other members.
+
+## 6. Compliance
+We comply with applicable child protection laws in the jurisdictions where the app is distributed, including US 18 U.S.C. §2258A reporting obligations, and with the Google Play CSAE policy and the Apple App Store child safety requirements.
+
+## 7. Contact
+Child safety point of contact: the support email shown on your profile screen and in the app store listing. Mark the message "CSAE" for priority handling.
+`;
+
+
 /** Minimal markdown → sections renderer input (headings, list items, text). */
 export type LegalBlock =
   | { kind: "h1" | "h2" | "p" | "em"; text: string }

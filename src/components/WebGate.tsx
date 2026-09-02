@@ -9,7 +9,16 @@ export const APP_STORE_URL = "https://apps.apple.com/app/skanaround";
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.skanaround";
 
 /** Pages that stay reachable in a normal browser while the web app is off. */
-const WEB_ALLOWED = ["/verified", "/privacy", "/terms", "/upgrade", "/admin", "/delete-account"];
+const WEB_ALLOWED = [
+  "/verified",
+  "/privacy",
+  "/terms",
+  "/csae",
+  "/upgrade",
+  "/admin",
+  "/delete-account",
+];
+
 
 /**
  * The product ships as a native app for now. In a desktop/mobile browser every
