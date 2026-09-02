@@ -52,6 +52,7 @@ export type Database = {
           verification_enabled: boolean
           verified_badge_color: string
           verified_badge_style: string
+          web_app_enabled: boolean
           welcome_text: string
         }
         Insert: {
@@ -91,6 +92,7 @@ export type Database = {
           verification_enabled?: boolean
           verified_badge_color?: string
           verified_badge_style?: string
+          web_app_enabled?: boolean
           welcome_text?: string
         }
         Update: {
@@ -130,6 +132,7 @@ export type Database = {
           verification_enabled?: boolean
           verified_badge_color?: string
           verified_badge_style?: string
+          web_app_enabled?: boolean
           welcome_text?: string
         }
         Relationships: []
