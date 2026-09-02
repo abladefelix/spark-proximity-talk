@@ -441,6 +441,7 @@ function ProfilePage() {
               Terms of Service
             </Link>
             <Link to="/privacy" className="text-muted-foreground underline-offset-4 hover:underline">
+              Privacy Policy
             </Link>
             <Link
               to="/delete-account"
