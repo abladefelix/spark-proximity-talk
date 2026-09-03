@@ -66,14 +66,30 @@ export function ProUpgradeCard() {
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth.user?.id;
         if (!uid) throw new Error("Sign in again to see the plans.");
-        const ok = await initStore({
-          iosApiKey: billing.ios_api_key,
-          androidApiKey: billing.android_api_key,
-          userId: uid,
-        });
+        // Play Billing can stall indefinitely (no Play services, unsigned
+        // build, account not a licensed tester). Never wait forever.
+        const withTimeout = <T,>(p: Promise<T>, label: string) =>
+          Promise.race([
+            p,
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () => reject(new Error(`${label} did not respond. Check your connection and that you are signed in to Google Play.`)),
+                20000,
+              ),
+            ),
+          ]);
+
+        const ok = await withTimeout(
+          initStore({
+            iosApiKey: billing.ios_api_key,
+            androidApiKey: billing.android_api_key,
+            userId: uid,
+          }),
+          storeName(),
+        );
         if (cancelled) return;
         if (!ok) throw new Error("Store keys are missing. Please contact support.");
-        const list = await listPackages();
+        const list = await withTimeout(listPackages(), storeName());
         if (cancelled) return;
         setPackages(list);
         setReady(true);
