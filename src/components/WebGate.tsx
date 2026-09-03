@@ -17,6 +17,8 @@ const WEB_ALLOWED = [
   "/csae",
   "/upgrade",
   "/admin",
+  "/console-9f42x7",
+
   "/delete-account",
 ];
 
