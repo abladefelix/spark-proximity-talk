@@ -84,7 +84,7 @@ if [[ -z "$USER_ID" ]]; then
     -H "Authorization: Bearer $SERVICE_KEY" \
     -H "Content-Type: application/json" \
     -d "$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" --arg u "$ADMIN_USERNAME" \
-          '{email:$e, password:$p, email_confirm:true, user_metadata:{username:$u, display_name:$u}}')")
+          '{email:$e, password:$p, email_confirm:true, user_metadata:{username:$u, display_name:$u, date_of_birth:"1990-01-01", gender:"other"}}')")
   USER_ID=$(echo "$RESP" | jq -r '.id // empty')
   if [[ -z "$USER_ID" ]]; then
     echo "Failed to create user: $RESP" >&2
