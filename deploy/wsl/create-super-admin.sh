@@ -62,8 +62,15 @@ if [[ -z "$ADMIN_PASSWORD" ]]; then
 fi
 [[ ${#ADMIN_PASSWORD} -ge 8 ]] || { echo "Password must be at least 8 characters." >&2; exit 1; }
 
+# Find the running Postgres container of the Supabase stack.
+DB_CONTAINER=${DB_CONTAINER:-$(docker ps --format '{{.Names}}' | grep -E 'supabase[-_]db|(^|[-_])db([-_]|$)' | head -n1)}
+if [[ -z "$DB_CONTAINER" ]]; then
+  echo "Could not find the database container. Set DB_CONTAINER=<name> and retry (docker ps)." >&2
+  exit 1
+fi
+
 psql_run() {
-  docker compose --project-directory "$STACK_DIR" exec -T db \
+  docker exec -i "$DB_CONTAINER" \
     psql -v ON_ERROR_STOP=1 -U postgres -d postgres -qtA -c "$1"
 }
 
