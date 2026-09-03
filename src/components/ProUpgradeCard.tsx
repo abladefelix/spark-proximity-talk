@@ -49,6 +49,8 @@ export function ProUpgradeCard() {
 
   const [packages, setPackages] = useState<StorePackage[]>([]);
   const [ready, setReady] = useState(false);
+  const [storeError, setStoreError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [managementUrl, setManagementUrl] = useState<string | null>(null);
 
@@ -57,29 +59,34 @@ export function ProUpgradeCard() {
   useEffect(() => {
     if (!native || !billing?.enabled) return;
     let cancelled = false;
+    setReady(false);
+    setStoreError(null);
     (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth.user?.id;
-        if (!uid) return;
+        if (!uid) throw new Error("Sign in again to see the plans.");
         const ok = await initStore({
           iosApiKey: billing.ios_api_key,
           androidApiKey: billing.android_api_key,
           userId: uid,
         });
-        if (!ok || cancelled) return;
+        if (cancelled) return;
+        if (!ok) throw new Error("Store keys are missing. Please contact support.");
         const list = await listPackages();
         if (cancelled) return;
         setPackages(list);
         setReady(true);
-      } catch {
-        if (!cancelled) setReady(false);
+      } catch (e) {
+        if (cancelled) return;
+        setStoreError(e instanceof Error ? e.message : "Could not reach the store.");
+        setReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [native, billing?.enabled, billing?.ios_api_key, billing?.android_api_key]);
+  }, [native, billing?.enabled, billing?.ios_api_key, billing?.android_api_key, attempt]);
 
   const afterStoreChange = useCallback(
     async (managed: string | null) => {
@@ -188,9 +195,19 @@ export function ProUpgradeCard() {
               Loading plans from {storeName()}…
             </p>
           ) : packages.length === 0 ? (
-            <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
-              No plans are available right now. Please check back soon.
-            </p>
+            <div className="space-y-2">
+              <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+                {storeError ?? "No plans are available right now. Please check back soon."}
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setAttempt((n) => n + 1)}
+              >
+                <RefreshCw className="mr-2 size-4" />
+                Try again
+              </Button>
+            </div>
           ) : (
             packages.map((pkg, i) => (
               <Button

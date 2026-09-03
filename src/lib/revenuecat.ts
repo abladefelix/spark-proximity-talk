@@ -70,8 +70,13 @@ function periodOf(pkg: any): StorePackage["period"] {
 export async function listPackages(): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
   const Purchases = await sdk();
-  const offerings = await Purchases.getOfferings();
-  const packages: any[] = (offerings as any)?.current?.availablePackages ?? [];
+  const offerings: any = await Purchases.getOfferings();
+  let packages: any[] = offerings?.current?.availablePackages ?? [];
+  if (packages.length === 0) {
+    // No "current" offering set in RevenueCat — fall back to any offering.
+    const all = Object.values(offerings?.all ?? {}) as any[];
+    packages = all.flatMap((o) => o?.availablePackages ?? []);
+  }
   return packages.map((p) => ({
     identifier: p.identifier,
     productId: p.product?.identifier ?? "",
