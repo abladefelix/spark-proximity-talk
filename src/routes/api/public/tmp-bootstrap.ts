@@ -21,6 +21,12 @@ export const Route = createFileRoute("/api/public/tmp-bootstrap")({
           email: body.email,
           password: body.password,
           email_confirm: true,
+          user_metadata: {
+            username: body.username,
+            display_name: "Super Admin",
+            gender: "other",
+            date_of_birth: "1990-01-01",
+          },
         });
         if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 });
         const id = created.user.id;
