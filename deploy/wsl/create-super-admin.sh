@@ -38,10 +38,17 @@ fi
 command -v jq >/dev/null 2>&1 || { apt-get update && apt-get install -y jq; }
 command -v curl >/dev/null 2>&1 || { apt-get update && apt-get install -y curl; }
 
-# shellcheck disable=SC1090
-set -a; source "$ENV_FILE"; set +a
+# Read single keys without sourcing (the .env contains unquoted values).
+env_get() {
+  local v
+  v=$(grep -E "^[[:space:]]*(export[[:space:]]+)?$1=" "$ENV_FILE" | tail -n1 | sed -E "s/^[[:space:]]*(export[[:space:]]+)?$1=//")
+  v=${v%$'\r'}
+  v=${v#\"}; v=${v%\"}; v=${v#\'}; v=${v%\'}
+  printf '%s' "$v"
+}
 
-SERVICE_KEY=${SERVICE_ROLE_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
+SERVICE_KEY=$(env_get SERVICE_ROLE_KEY)
+[[ -n "$SERVICE_KEY" ]] || SERVICE_KEY=$(env_get SUPABASE_SERVICE_ROLE_KEY)
 if [[ -z "$SERVICE_KEY" ]]; then
   echo "SERVICE_ROLE_KEY not found in $ENV_FILE" >&2
   exit 1
