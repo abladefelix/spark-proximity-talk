@@ -131,7 +131,7 @@ function Stat({
 
 
 
-function AdminPage() {
+export function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
