@@ -25,7 +25,6 @@ import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
-import { Route as ApiPublicTmpBootstrapRouteImport } from './routes/api/public/tmp-bootstrap'
 import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack.webhook'
 import { Route as ApiPublicRevenuecatWebhookRouteImport } from './routes/api/public/revenuecat.webhook'
 
@@ -109,11 +108,6 @@ const AuthenticatedChatMatchIdRoute =
     path: '/chat/$matchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicTmpBootstrapRoute = ApiPublicTmpBootstrapRouteImport.update({
-  id: '/api/public/tmp-bootstrap',
-  path: '/api/public/tmp-bootstrap',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaystackWebhookRoute =
   ApiPublicPaystackWebhookRouteImport.update({
     id: '/api/public/paystack/webhook',
@@ -143,7 +137,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/tmp-bootstrap': typeof ApiPublicTmpBootstrapRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
@@ -163,7 +156,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/tmp-bootstrap': typeof ApiPublicTmpBootstrapRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
@@ -185,7 +177,6 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
-  '/api/public/tmp-bootstrap': typeof ApiPublicTmpBootstrapRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/revenuecat/webhook': typeof ApiPublicRevenuecatWebhookRoute
 }
@@ -207,7 +198,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
-    | '/api/public/tmp-bootstrap'
     | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -227,7 +217,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
-    | '/api/public/tmp-bootstrap'
     | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   id:
@@ -248,7 +237,6 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/radar'
     | '/_authenticated/chat/$matchId'
-    | '/api/public/tmp-bootstrap'
     | '/api/public/paystack/webhook'
     | '/api/public/revenuecat/webhook'
   fileRoutesById: FileRoutesById
@@ -266,7 +254,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UpgradeRoute: typeof UpgradeRoute
   VerifiedRoute: typeof VerifiedRoute
-  ApiPublicTmpBootstrapRoute: typeof ApiPublicTmpBootstrapRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
   ApiPublicRevenuecatWebhookRoute: typeof ApiPublicRevenuecatWebhookRoute
 }
@@ -385,13 +372,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatMatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/tmp-bootstrap': {
-      id: '/api/public/tmp-bootstrap'
-      path: '/api/public/tmp-bootstrap'
-      fullPath: '/api/public/tmp-bootstrap'
-      preLoaderRoute: typeof ApiPublicTmpBootstrapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/paystack/webhook': {
       id: '/api/public/paystack/webhook'
       path: '/api/public/paystack/webhook'
@@ -439,7 +419,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UpgradeRoute: UpgradeRoute,
   VerifiedRoute: VerifiedRoute,
-  ApiPublicTmpBootstrapRoute: ApiPublicTmpBootstrapRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
   ApiPublicRevenuecatWebhookRoute: ApiPublicRevenuecatWebhookRoute,
 }
