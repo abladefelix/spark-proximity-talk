@@ -88,12 +88,55 @@ function setDegraded(value: boolean) {
   else stopRetrying();
 }
 
+/**
+ * Decide whether an error signals a service problem. Ordinary client errors
+ * (401/403/404, validation failures, aborted requests) are app-level — they
+ * must never flip the status banner, otherwise one broken query loops the
+ * banner forever.
+ */
+function isServiceLevelError(error: unknown): boolean {
+  if (!error) return true;
+  const err = error as { name?: string; status?: number; code?: string; context?: { status?: number } };
+  if (err.name === "AbortError") return false;
+  const status =
+    typeof err.status === "number"
+      ? err.status
+      : typeof err.context?.status === "number"
+        ? err.context.status
+        : undefined;
+  if (typeof status === "number") {
+    // 4xx = the request itself was wrong/unauthorized, not a service outage.
+    if (status >= 400 && status < 500) return false;
+    return true;
+  }
+  // No status at all (TypeError: fetch failed, network reset) = connectivity.
+  return true;
+}
+
 /** Call this when a request/load fails unexpectedly. */
-export function reportServiceProblem(_source: string) {
+export function reportServiceProblem(_source: string, error?: unknown) {
   // Offline is handled by OfflineBanner; don't double-report.
   if (!isOnline()) return;
-  consecutiveFailures += 1;
+  if (!isServiceLevelError(error)) return;
+  // Freshly recovered — don't let one stubborn query re-trip the banner.
+  if (Date.now() < mutedUntil) return;
+
+  const now = Date.now();
+  if (now - firstFailureAt > FAILURE_WINDOW_MS) {
+    // Outside the cluster window: start a new streak.
+    firstFailureAt = now;
+    consecutiveFailures = 1;
+  } else {
+    consecutiveFailures += 1;
+  }
   if (consecutiveFailures >= FAILURE_THRESHOLD) setDegraded(true);
+}
+
+/** Call this when a request succeeds — proves the service is fine. */
+export function reportServiceSuccess() {
+  if (degraded) return; // only the health probe clears a degraded state
+  consecutiveFailures = 0;
+  firstFailureAt = 0;
 }
 
 export function isServiceDegraded(): boolean {
