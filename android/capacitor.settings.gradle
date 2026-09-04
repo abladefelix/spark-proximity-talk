@@ -16,3 +16,6 @@ project(':capacitor-push-notifications').projectDir = new File('../node_modules/
 
 include ':capgo-capacitor-compass'
 project(':capgo-capacitor-compass').projectDir = new File('../node_modules/@capgo/capacitor-compass/android')
+
+include ':revenuecat-purchases-capacitor'
+project(':revenuecat-purchases-capacitor').projectDir = new File('../node_modules/@revenuecat/purchases-capacitor/android')
