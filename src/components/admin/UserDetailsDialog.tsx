@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PersonAvatar } from "@/components/PersonAvatar";
+import { supabase } from "@/integrations/supabase/client";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import {
   adminDeleteUser,
@@ -83,6 +84,27 @@ export function UserDetailsDialog({
     queryKey: ["admin-user-details", userId],
     enabled: Boolean(userId),
     queryFn: () => fetchDetails({ data: { userId: userId! } }),
+  });
+
+  const logs = useQuery({
+    queryKey: ["admin-user-logs", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data: rows, error: err } = await supabase.rpc("admin_activity_log", {
+        _user: userId!,
+        _days: 365,
+        _limit: 25,
+        _offset: 0,
+      });
+      if (err) throw err;
+      return (rows ?? []) as unknown as {
+        id: string;
+        created_at: string;
+        category: string;
+        action: string;
+        summary: string;
+      }[];
+    },
   });
 
   useEffect(() => {
@@ -277,6 +299,42 @@ export function UserDetailsDialog({
                       : "—"
                   }
                 />
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                Recent activity log
+              </p>
+              <div className="max-h-56 overflow-y-auto rounded-lg border border-border">
+                {logs.isLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (logs.data ?? []).length === 0 ? (
+                  <p className="px-2.5 py-3 text-[11px] text-muted-foreground">
+                    Nothing recorded for this member yet.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {(logs.data ?? []).map((l) => (
+                      <li key={l.id} className="px-2.5 py-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full border border-border bg-secondary px-1.5 py-[1px] text-[10px] capitalize text-muted-foreground">
+                            {l.category}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {l.action.replace(/_/g, " ")}
+                          </span>
+                          <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                            {new Date(l.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-[12px]">{l.summary}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
