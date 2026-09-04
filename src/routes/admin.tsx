@@ -51,6 +51,7 @@ import { NotificationsTab } from "@/components/admin/NotificationsTab";
 
 import { AppTab } from "@/components/admin/AppTab";
 import { BillingTab } from "@/components/admin/BillingTab";
+import { ZonesTab } from "@/components/admin/ZonesTab";
 import {
   ACCENT_PRESETS,
   DEFAULT_HUE,
@@ -934,6 +935,11 @@ export function AdminPage() {
           >
             Billing
           </TabsTrigger>
+          <TabsTrigger value="zones"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
+            Zones
+          </TabsTrigger>
           <TabsTrigger value="app"
             className="shrink-0 whitespace-nowrap px-3"
           >
@@ -944,6 +950,10 @@ export function AdminPage() {
 
         <TabsContent value="billing" className="mt-3">
           <BillingTab />
+        </TabsContent>
+
+        <TabsContent value="zones" className="mt-3">
+          <ZonesTab />
         </TabsContent>
 
         <TabsContent value="app" className="mt-3">
