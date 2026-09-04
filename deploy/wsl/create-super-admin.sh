@@ -6,8 +6,8 @@
 # Run this on the VM to create the account there:
 #
 #   sudo bash deploy/wsl/create-super-admin.sh
-#   sudo ADMIN_EMAIL=sa2@skanaround.app ADMIN_PASSWORD='Skn!Admin2026#Radar' \
-#        ADMIN_USERNAME=superadmin bash deploy/wsl/create-super-admin.sh
+#   sudo ADMIN_EMAIL=sa2@skanaround.app ADMIN_USERNAME=superadmin \
+#        bash deploy/wsl/create-super-admin.sh
 #
 # It will:
 #   1. create the auth user (email pre-confirmed) or reset its password

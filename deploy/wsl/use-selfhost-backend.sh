@@ -17,7 +17,7 @@ SYS_ENV="/etc/skanaround.env"
 
 [[ $EUID -eq 0 ]] || { echo "Run with sudo."; exit 1; }
 
-read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'"; }
+read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true; }
 
 API_DOMAIN="${1:-}"
 SUPA_URL=""; ANON=""; SRK=""
