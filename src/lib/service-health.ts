@@ -58,6 +58,8 @@ async function ping() {
     // Any HTTP response means the backend is reachable again.
     if (res.status > 0) {
       consecutiveFailures = 0;
+      firstFailureAt = 0;
+      mutedUntil = Date.now() + RECOVERY_MUTE_MS;
       setDegraded(false);
     }
   } catch {
