@@ -20,7 +20,7 @@ export function usePushNotifications(userId: string | null) {
     // opt-in: set VITE_FIREBASE_CONFIGURED=true once the file is in place.
     if (
       Capacitor.getPlatform() === "android" &&
-      import.meta.env.VITE_FIREBASE_CONFIGURED !== "true"
+      import.meta.env['VITE_FIREBASE_CONFIGURED'] !== "true"
     ) {
       return;
     }
