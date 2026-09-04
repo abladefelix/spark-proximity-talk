@@ -7,10 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import logoUrl from "@/assets/skanaround-logo.png";
 import { reportAppError } from "../lib/app-error-reporting";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/hooks/useTheme";
@@ -82,14 +84,48 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   const offline = isNetworkError(error);
+  const [retrying, setRetrying] = useState(false);
+
   useEffect(() => {
     reportAppError(error, { boundary: "tanstack_root_error_component" });
     reportServiceProblem("root_error_boundary");
   }, [error]);
 
+  // A failed load leaves nothing to re-render, so a soft retry can silently do
+  // nothing. Force a real reload as the fallback, and retry by itself the
+  // moment the connection is back.
+  const retry = () => {
+    setRetrying(true);
+    try {
+      router.invalidate();
+      reset();
+    } catch {
+      /* fall through to the hard reload */
+    }
+    setTimeout(() => {
+      if (typeof window !== "undefined") window.location.reload();
+    }, 600);
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onBackOnline = () => window.location.reload();
+    window.addEventListener("online", onBackOnline);
+    return () => window.removeEventListener("online", onBackOnline);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
+        <img
+          src={logoUrl}
+          alt=""
+          aria-hidden="true"
+          className="mx-auto mb-5 size-16 object-contain"
+        />
+        <p className="mb-4 text-xs font-semibold tracking-[0.28em] text-muted-foreground">
+          SKANAROUND
+        </p>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {offline ? "You're offline" : "This page didn't load"}
         </h1>
@@ -100,25 +136,28 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            type="button"
+            onClick={retry}
+            disabled={retrying}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
-            Try again
+            {retrying ? "Trying…" : "Try again"}
           </button>
-          <a
-            href="/"
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") window.location.href = "/";
+            }}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
-          </a>
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

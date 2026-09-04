@@ -15,6 +15,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private var splashWindow: UIWindow?
     private var splashTimer: Timer?
+    private var offlineWindow: UIWindow?
+    private var offlineTimer: Timer?
+
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
@@ -33,6 +36,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     deinit {
         splashTimer?.invalidate()
+        offlineTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -141,13 +145,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         splashTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] timer in
             guard let self else { timer.invalidate(); return }
             elapsed += 0.25
-            let ready = (self.bridgeWebView?.estimatedProgress ?? 0) >= 0.9
-            if ready || elapsed >= 8 {
+            let progress = self.bridgeWebView?.estimatedProgress ?? 0
+            if progress >= 0.9 {
                 timer.invalidate()
                 self.hideSplash()
+            } else if elapsed >= 8 {
+                timer.invalidate()
+                self.hideSplash()
+                // The first load produced nothing — rather than leaving a blank
+                // web view, show the branded offline screen and keep retrying.
+                if progress < 0.1 { self.showOffline() }
             }
         }
     }
+
 
     private func hideSplash() {
         splashTimer?.invalidate()
@@ -160,6 +171,133 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         })
         splashWindow = nil
     }
+
+    // MARK: - Offline screen
+
+    /// Branded "no connection" screen shown only after a load has actually
+    /// failed, with a manual retry and an automatic retry loop.
+    private func showOffline() {
+        guard offlineWindow == nil, let windowScene = window?.windowScene else { return }
+
+        let host = UIWindow(windowScene: windowScene)
+        host.windowLevel = .normal + 2
+        let vc = UIViewController()
+        let root = vc.view!
+        root.backgroundColor = UIColor(red: 0.055, green: 0.047, blue: 0.043, alpha: 1)
+
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(stack)
+
+        let mark = UIView()
+        mark.translatesAutoresizingMaskIntoConstraints = false
+        mark.backgroundColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1)
+        mark.layer.cornerRadius = 8
+        mark.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        mark.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+        let ring = UIView()
+        ring.translatesAutoresizingMaskIntoConstraints = false
+        ring.layer.cornerRadius = 42
+        ring.layer.borderWidth = 1
+        ring.layer.borderColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 0.25).cgColor
+        ring.widthAnchor.constraint(equalToConstant: 84).isActive = true
+        ring.heightAnchor.constraint(equalToConstant: 84).isActive = true
+        ring.addSubview(mark)
+        NSLayoutConstraint.activate([
+            mark.centerXAnchor.constraint(equalTo: ring.centerXAnchor),
+            mark.centerYAnchor.constraint(equalTo: ring.centerYAnchor),
+        ])
+
+        let wordmark = UILabel()
+        wordmark.attributedText = NSAttributedString(string: "SKANAROUND", attributes: [.kern: 4.0])
+        wordmark.font = .systemFont(ofSize: 13, weight: .heavy)
+        wordmark.textColor = .white
+
+        let title = UILabel()
+        title.text = "You're offline"
+        title.font = .systemFont(ofSize: 19, weight: .semibold)
+        title.textColor = .white
+
+        let body = UILabel()
+        body.text = "Turn off aeroplane mode or reconnect to the internet — we'll pick things up automatically."
+        body.font = .systemFont(ofSize: 14)
+        body.textColor = UIColor(white: 1, alpha: 0.65)
+        body.numberOfLines = 0
+        body.textAlignment = .center
+
+        let retry = UIButton(type: .system)
+        retry.setTitle("Try again", for: .normal)
+        retry.setTitleColor(UIColor(red: 0.055, green: 0.047, blue: 0.043, alpha: 1), for: .normal)
+        retry.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        retry.backgroundColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1)
+        retry.layer.cornerRadius = 10
+        retry.contentEdgeInsets = UIEdgeInsets(top: 12, left: 26, bottom: 12, right: 26)
+        retry.addTarget(self, action: #selector(retryTapped), for: .touchUpInside)
+
+        stack.addArrangedSubview(ring)
+        stack.setCustomSpacing(24, after: ring)
+        stack.addArrangedSubview(wordmark)
+        stack.addArrangedSubview(title)
+        stack.addArrangedSubview(body)
+        stack.setCustomSpacing(24, after: body)
+        stack.addArrangedSubview(retry)
+
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: root.centerYAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: root.leadingAnchor, constant: 32),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -32),
+        ])
+
+        host.rootViewController = vc
+        host.isHidden = false
+        offlineWindow = host
+
+        // Keep trying by itself so the user never has to tap anything.
+        offlineTimer?.invalidate()
+        offlineTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            self?.attemptRecovery()
+        }
+    }
+
+    @objc private func retryTapped() {
+        attemptRecovery()
+    }
+
+    /// Reload, then drop the offline screen only once the web view really has
+    /// content — a failed retry leaves the screen in place.
+    private func attemptRecovery() {
+        guard offlineWindow != nil else { return }
+        reloadWeb()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self else { return }
+            if (self.bridgeWebView?.estimatedProgress ?? 0) >= 0.5 {
+                self.hideOffline()
+            }
+        }
+    }
+
+    private func hideOffline() {
+        offlineTimer?.invalidate()
+        offlineTimer = nil
+        guard let host = offlineWindow else { return }
+        offlineWindow = nil
+        UIView.animate(withDuration: 0.3, animations: {
+            host.alpha = 0
+        }, completion: { _ in
+            host.isHidden = true
+        })
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        if offlineWindow != nil { attemptRecovery() }
+    }
+
+
 
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
