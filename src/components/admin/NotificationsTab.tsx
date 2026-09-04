@@ -108,6 +108,18 @@ export function NotificationsTab() {
   const nameOf = (id: string | null) =>
     people.find((p) => p.id === id)?.username ?? "member";
 
+  const sentQ = sentQuery.trim().toLowerCase();
+  const filteredSent = sent.filter((n) => {
+    if (sentAudience === "everyone" && n.audience !== "all") return false;
+    if (sentAudience === "user" && n.audience === "all") return false;
+    if (!sentQ) return true;
+    return (
+      n.title.toLowerCase().includes(sentQ) ||
+      n.body.toLowerCase().includes(sentQ) ||
+      nameOf(n.user_id).toLowerCase().includes(sentQ)
+    );
+  });
+
   return (
     <div className="space-y-4">
       <div className="space-y-3 rounded-xl border border-border p-3">
