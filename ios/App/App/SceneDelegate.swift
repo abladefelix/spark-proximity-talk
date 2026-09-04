@@ -206,7 +206,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 self.hideSplash()
                 // The first load produced nothing — rather than leaving a blank
                 // web view, show the branded offline screen and keep retrying.
-                if progress < 0.1 { self.showOffline() }
+                // A blank or half-loaded web view after 8s means the first load
+                // never completed — check reachability and, if the site really
+                // is unreachable, show the branded offline screen.
+                if progress < 0.9 { self.evaluateConnectivity() }
+
             }
         }
     }
@@ -346,8 +350,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        if offlineWindow != nil { attemptRecovery() }
+        evaluateConnectivity()
     }
+
 
 
 
