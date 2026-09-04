@@ -5,13 +5,17 @@ export async function resolveEmail(username: string): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const admin = supabaseAdmin as any;
   const clean = username.toLowerCase().replace(/\s+/g, "_");
-  const { data: profile } = await admin
+  const { data: profile, error } = await admin
     .from("profiles")
     .select("id")
     .ilike("username", clean)
     .maybeSingle();
+  // A misconfigured backend (missing/incorrect service key) must not be
+  // reported to the user as a wrong password.
+  if (error) throw new Error("Username sign-in is unavailable right now. Use your email address.");
   if (!profile?.id) return null;
-  const { data } = await admin.auth.admin.getUserById(profile.id);
+  const { data, error: adminError } = await admin.auth.admin.getUserById(profile.id);
+  if (adminError) throw new Error("Username sign-in is unavailable right now. Use your email address.");
   return data?.user?.email ?? null;
 }
 
