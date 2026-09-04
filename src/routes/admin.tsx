@@ -1308,16 +1308,25 @@ export function AdminPage() {
                 </DropdownMenu>
               </li>
             ))}
-            {reports.length === 0 && (
+            {filteredReports.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">No reports.</li>
             )}
           </ul>
-          <Pager page={reportsPage} perPage={PER_PAGE} total={reports.length} onPageChange={setReportsPage} label="reports" />
+          <Pager page={reportsPage} perPage={PER_PAGE} total={filteredReports.length} onPageChange={setReportsPage} label="reports" />
         </TabsContent>
 
         <TabsContent value="appeals" className="mt-3">
+          <AdminSearch
+            value={appealsSearch}
+            onChange={(v) => {
+              setAppealsSearch(v);
+              setAppealsPage(0);
+            }}
+            placeholder="Search appeals by member or message"
+            className="mb-2"
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(appeals, appealsPage, PER_PAGE).map((a) => (
+            {paginate(filteredAppeals, appealsPage, PER_PAGE).map((a) => (
               <li key={a.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <PersonAvatar
                   path={a.person?.avatar_url ?? null}
