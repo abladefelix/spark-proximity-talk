@@ -1213,6 +1213,14 @@ export function AdminPage() {
                 </div>
                 <Button
                   size="sm"
+                  variant="ghost"
+                  aria-label={`View details for @${v.person?.username ?? "member"}`}
+                  onClick={() => setDetailsUserId(v.user_id)}
+                >
+                  <Eye className="size-4" />
+                </Button>
+                <Button
+                  size="sm"
                   variant="heat"
                   onClick={() => void reviewVerification(v.id, v.user_id, true)}
                 >
@@ -1227,16 +1235,25 @@ export function AdminPage() {
                 </Button>
               </li>
             ))}
-            {verifications.length === 0 && (
+            {filteredVerifications.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">Nothing to review.</li>
             )}
           </ul>
-          <Pager page={verifyPage} perPage={PER_PAGE} total={verifications.length} onPageChange={setVerifyPage} label="requests" />
+          <Pager page={verifyPage} perPage={PER_PAGE} total={filteredVerifications.length} onPageChange={setVerifyPage} label="requests" />
         </TabsContent>
 
         <TabsContent value="reports" className="mt-3">
+          <AdminSearch
+            value={reportsSearch}
+            onChange={(v) => {
+              setReportsSearch(v);
+              setReportsPage(0);
+            }}
+            placeholder="Search reports by member or reason"
+            className="mb-2"
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(reports, reportsPage, PER_PAGE).map((r) => (
+            {paginate(filteredReports, reportsPage, PER_PAGE).map((r) => (
               <li key={r.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium leading-tight">
