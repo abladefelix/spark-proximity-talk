@@ -274,9 +274,16 @@ function AuthPage() {
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Something went wrong";
       toast.error(
-        /email not confirmed|not confirmed/i.test(raw)
-          ? "Confirm your email first — tap the link we sent you, then sign in."
-          : raw,
+        /username_already_taken|username.*(already|taken)|duplicate key/i.test(raw)
+          ? "That username is already taken — try another one."
+          : // A trigger rejection during sign-up surfaces as a generic database
+            // error from auth; on the sign-up form that almost always means the
+            // username check raced with another registration.
+            mode === "signup" && /database error saving new user/i.test(raw)
+            ? "That username is already taken — try another one."
+            : /email not confirmed|not confirmed/i.test(raw)
+              ? "Confirm your email first — tap the link we sent you, then sign in."
+              : raw,
       );
     } finally {
       signingUp.current = false;
