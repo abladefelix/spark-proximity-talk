@@ -41,6 +41,7 @@ import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 import { StatDetailDialog, type StatMetric } from "@/components/admin/StatDetailDialog";
 import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { LogsTab } from "@/components/admin/LogsTab";
 import { InsightsTab } from "@/components/admin/InsightsTab";
