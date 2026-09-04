@@ -54,6 +54,7 @@ import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
+import { withTimeout } from "@/lib/net";
 
 
 
@@ -534,22 +535,36 @@ function RadarPage() {
     mutationFn: async (person: NearbyPerson) => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
-      const { error } = await (supabase as any)
-        .from("signals")
-        .insert({
-          from_user: me,
-          to_user: person.id,
-          intent: myIntent?.intent ?? null,
-          intent_note: myIntent?.intent_note ?? null,
-        });
+      const { error } = await withTimeout(
+        (supabase as any)
+          .from("signals")
+          .insert({
+            from_user: me,
+            to_user: person.id,
+            intent: myIntent?.intent ?? null,
+            intent_note: myIntent?.intent_note ?? null,
+          }),
+        10_000,
+        "Signal",
+      );
       if (error) throw error;
       return person;
     },
     onSuccess: async (person) => {
-      const { data } = await supabase.rpc("nearby_people", { radius_m: radius });
-      queryClient.setQueryData(["nearby", radius], data ?? []);
-      const updated = ((data ?? []) as NearbyPerson[]).find((p) => p.id === person.id);
       setSelectedId(null);
+      let updated: NearbyPerson | undefined;
+      try {
+        const { data, error } = await withTimeout(
+          supabase.rpc("nearby_people", { radius_m: radius }),
+          8_000,
+          "Radar refresh",
+        );
+        if (error) throw error;
+        queryClient.setQueryData(["nearby", radius], data ?? []);
+        updated = ((data ?? []) as NearbyPerson[]).find((p) => p.id === person.id);
+      } catch {
+        void queryClient.invalidateQueries({ queryKey: ["nearby"] });
+      }
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
         openChat(updated.match_id);
@@ -571,7 +586,7 @@ function RadarPage() {
   });
 
 
-  const people = nearby.data ?? [];
+  const people = (nearby.data ?? []).filter((person) => person.is_online);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Optional alert tone whenever somebody new shows up on the scope.
@@ -1307,10 +1322,15 @@ function RadarPage() {
                     <Button
                       variant="heat"
                       className="w-full"
-                      disabled={signal.isPending}
+                      disabled={signal.isPending || !selected.is_online}
                       onClick={() => signal.mutate(selected)}
                     >
-                      <Zap className="size-4" /> Signal
+                      {signal.isPending ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      ) : (
+                        <Zap className="size-4" />
+                      )}
+                      {selected.is_online ? "Signal" : "No longer nearby"}
                     </Button>
                   )}
 

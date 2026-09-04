@@ -92,18 +92,18 @@ export function BatSignalButton() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
             {HELP_KINDS.map((k) => (
               <button
                 key={k.key}
                 type="button"
                 onClick={() => setKind(k.key)}
-                className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs ${
+                className={`flex min-h-12 items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs ${
                   kind === k.key ? "border-destructive bg-destructive/10" : "border-border"
                 }`}
               >
                 <span className="text-base leading-none">{k.emoji}</span>
-                <span className="truncate">{k.label}</span>
+                <span className="min-w-0 leading-snug">{k.label}</span>
               </button>
             ))}
           </div>
@@ -178,8 +178,12 @@ export function HelpBeaconList() {
               <p className="truncate text-sm font-medium">
                 {k?.emoji} {k?.label ?? b.kind}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {b.note ? `${b.note} · ` : ""}
+              {b.note ? (
+                <p className="line-clamp-3 break-words text-xs leading-relaxed text-muted-foreground">
+                  {b.note}
+                </p>
+              ) : null}
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {Math.round(b.distance_m)} m away
               </p>
             </div>
