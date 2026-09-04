@@ -142,9 +142,20 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
 });
 
 
-export function ChatPanel({ matchId, className }: { matchId: string; leading?: React.ReactNode; className?: string }) {
+export function ChatPanel({
+  matchId,
+  className,
+  onBack,
+}: {
+  matchId: string;
+  leading?: React.ReactNode;
+  className?: string;
+  /** Used when the chat is a full page rather than the swipe-in sheet. */
+  onBack?: () => void;
+}) {
   const queryClient = useQueryClient();
-  const { closeChat } = useChatSheet();
+  const { closeChat: closeSheet } = useChatSheet();
+  const closeChat = onBack ?? closeSheet;
   const sendPush = useServerFn(sendPushNotification);
   const { data: billing } = useBillingInfo();
   const hasUnlimitedMessages = useFeatureAccess().has(FEATURE.unlimitedMessages);
