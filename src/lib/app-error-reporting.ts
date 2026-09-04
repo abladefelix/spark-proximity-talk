@@ -25,6 +25,9 @@ declare global {
 
 export function reportAppError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
+  // Let the service-health banner know something failed so it can warn the
+  // user and auto-clear once the backend responds again.
+  import("./service-health").then((m) => m.reportServiceProblem("app_error")).catch(() => {});
   window.__appErrorEvents?.captureException?.(
     error,
     {
