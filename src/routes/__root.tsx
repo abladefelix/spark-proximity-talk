@@ -17,9 +17,11 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AccentProvider } from "@/hooks/useAccent";
 import { AppSettingsProvider } from "@/hooks/useAppSettings";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ServiceStatusBanner } from "@/components/ServiceStatusBanner";
 import { WebGate } from "@/components/WebGate";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
+import { reportServiceProblem } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
 
 function useNativeViewportLock() {
@@ -82,6 +84,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const offline = isNetworkError(error);
   useEffect(() => {
     reportAppError(error, { boundary: "tanstack_root_error_component" });
+    reportServiceProblem("root_error_boundary");
   }, [error]);
 
   return (
@@ -223,6 +226,27 @@ function RootComponent() {
   // Keep the last known data on disk so a relaunch paints instantly.
   useEffect(() => startCachePersistence(queryClient), [queryClient]);
 
+  // Feed query/mutation failures into the service-health monitor so the
+  // banner appears when things break and clears itself when they recover.
+  useEffect(() => {
+    const unsubQueries = queryClient.getQueryCache().subscribe((event) => {
+      if (event?.type === "updated" && event.query.state.status === "error") {
+        reportServiceProblem("query");
+      }
+    });
+    const unsubMutations = queryClient.getMutationCache().subscribe((event) => {
+      if (event?.type === "updated" && event.mutation.state.status === "error") {
+        reportServiceProblem("mutation");
+      }
+    });
+    return () => {
+      unsubQueries();
+      unsubMutations();
+    };
+  }, [queryClient]);
+
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -231,6 +255,7 @@ function RootComponent() {
           <AppSettingsProvider>
             <ProUpgradeSheetProvider>
               <OfflineBanner />
+              <ServiceStatusBanner />
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
               <WebGate>
                 <Outlet />
