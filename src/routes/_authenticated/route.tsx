@@ -30,20 +30,20 @@ export const Route = createFileRoute("/_authenticated")({
     // on every navigation and made cold app launches feel slow.
     // Offline, a token refresh inside getSession() can hang forever and the app
     // never finishes booting — cap it and fall back to the stored session.
-    const { data, timedOut } = await withTimeoutFallback(
+    const { data } = await withTimeoutFallback(
       supabase.auth.getSession(),
       { data: { session: null } } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
       5000,
       "Session check",
     );
     if (data.session?.user) return { user: data.session.user };
-    // The session check timed out (cold launch, slow or no network). A stored
-    // session means the member is still signed in — let them in and let the
-    // client's background refresh renew the token when the network allows.
-    if (timedOut) {
-      const stored = storedSessionUser();
-      if (stored) return { user: stored as never };
-    }
+    // No live session — the check may have timed out on a cold launch with
+    // slow or no network. A stored session means the member is still signed
+    // in, so let them in; the client's background refresh renews the token
+    // once the network allows. A genuine sign-out clears the stored session,
+    // so this never resurrects one.
+    const stored = storedSessionUser();
+    if (stored) return { user: stored as never };
     throw redirect({ to: "/auth" });
   },
   component: AuthedLayout,
