@@ -29,9 +29,17 @@ ANON="$(read_kv SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
 [[ -n "$ANON" ]] || ANON="$(read_kv SUPABASE_ANON_KEY "$BACKEND_ENV")"
 [[ -n "$ANON" ]] || ANON="$(read_kv VITE_SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
 [[ -n "$ANON" ]] || ANON="$(read_kv VITE_SUPABASE_ANON_KEY "$BACKEND_ENV")"
+SERVICE_KEY="$(read_kv SUPABASE_SERVICE_ROLE_KEY "$BACKEND_ENV")"
+[[ -n "$SERVICE_KEY" ]] || SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY "$BACKEND_ENV")"
 
-if [[ -z "$SUPA_URL" || -z "$ANON" ]]; then
-  echo "Could not read SUPABASE_URL / key from $BACKEND_ENV." >&2
+# Older app env files may contain only public values. Read the authoritative
+# self-hosted stack env as a fallback for the server-only service key.
+if [[ -z "$SERVICE_KEY" && -r /srv/supabase/.env ]]; then
+  SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY /srv/supabase/.env)"
+fi
+
+if [[ -z "$SUPA_URL" || -z "$ANON" || -z "$SERVICE_KEY" ]]; then
+  echo "Could not read SUPABASE_URL, publishable key, and service key from the self-hosted backend environment." >&2
   echo "Run: sudo bash deploy/wsl/use-selfhost-backend.sh api.skanaround.bytenetdigital.com" >&2
   exit 1
 fi
@@ -62,6 +70,7 @@ set_env SUPABASE_URL "$SUPA_URL"
 set_env VITE_SUPABASE_URL "$SUPA_URL"
 set_env SUPABASE_PUBLISHABLE_KEY "$ANON"
 set_env SUPABASE_ANON_KEY "$ANON"
+set_env SUPABASE_SERVICE_ROLE_KEY "$SERVICE_KEY"
 set_env VITE_SUPABASE_PUBLISHABLE_KEY "$ANON"
 set_env VITE_SUPABASE_PROJECT_ID "selfhosted"
 set_env SUPABASE_PROJECT_ID "selfhosted"
@@ -107,7 +116,7 @@ AUTH_STATUS="$(curl -sS -D "$AUTH_HEADERS" -o "$AUTH_BODY" -w '%{http_code}' \
 if [[ "$AUTH_STATUS" != "401" ]] || ! grep -qi '^content-type: application/json' "$AUTH_HEADERS" \
   || ! grep -q 'Invalid login credentials' "$AUTH_BODY"; then
   echo "Username sign-in check failed: HTTP $AUTH_STATUS (expected JSON HTTP 401)." >&2
-  echo "The service is stale or the sign-in route was not included in the build." >&2
+  echo "The service is stale, the sign-in route is missing, or its server credentials are invalid." >&2
   sudo journalctl -u skanaround -n 50 --no-pager >&2
   exit 1
 fi
