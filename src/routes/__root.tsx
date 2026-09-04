@@ -169,6 +169,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: async () => {
+    try {
+      return { look: await getAppLook() };
+    } catch {
+      return { look: null };
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
