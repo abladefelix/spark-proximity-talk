@@ -11,6 +11,34 @@ export function usePushNotifications(userId: string | null) {
   const register = useServerFn(registerPushToken);
   const settings = useSettings();
 
+  // Listen for notification taps as soon as the signed-in app shell mounts.
+  // Token registration can wait for settings, but a cold-start tap cannot.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let cancelled = false;
+    let remove: (() => void) | undefined;
+
+    void PushNotifications.addListener(
+      "pushNotificationActionPerformed",
+      ({ notification }) => {
+        const raw = notification.data;
+        const kind = typeof raw?.kind === "string" ? raw.kind : "";
+        const relatedId = typeof raw?.relatedId === "string" ? raw.relatedId : "";
+        if ((kind === "match" || kind === "message") && relatedId) {
+          openChat(relatedId);
+        }
+      },
+    ).then((handle) => {
+      if (cancelled) void handle.remove();
+      else remove = () => void handle.remove();
+    });
+
+    return () => {
+      cancelled = true;
+      remove?.();
+    };
+  }, [openChat]);
+
   useEffect(() => {
     if (!userId || !settings.push_enabled || !Capacitor.isNativePlatform()) return;
 
@@ -58,18 +86,9 @@ export function usePushNotifications(userId: string | null) {
       })
     );
 
-    listeners.push(
-      PushNotifications.addListener("pushNotificationActionPerformed", async ({ notification }) => {
-        const data = notification.data as { kind?: string; relatedId?: string } | undefined;
-        if (data?.kind === "match" || data?.kind === "message") {
-          if (data.relatedId) openChat(data.relatedId);
-        }
-      })
-    );
-
     return () => {
       unmounted = true;
       listeners.forEach((l) => l.then((h) => h.remove()));
     };
-  }, [userId, settings.push_enabled, openChat, register]);
+  }, [userId, settings.push_enabled, register]);
 }
