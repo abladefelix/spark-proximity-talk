@@ -21,11 +21,14 @@ echo "==> Applying self-hosted backend values to .env"
 BACKEND_ENV="/etc/skanaround-backend.env"
 [[ -f "$BACKEND_ENV" ]] || BACKEND_ENV="/etc/skanaround.env"
 
-read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'"; }
+read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true; }
 
 SUPA_URL="$(read_kv SUPABASE_URL "$BACKEND_ENV")"
+[[ -n "$SUPA_URL" ]] || SUPA_URL="$(read_kv VITE_SUPABASE_URL "$BACKEND_ENV")"
 ANON="$(read_kv SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
 [[ -n "$ANON" ]] || ANON="$(read_kv SUPABASE_ANON_KEY "$BACKEND_ENV")"
+[[ -n "$ANON" ]] || ANON="$(read_kv VITE_SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
+[[ -n "$ANON" ]] || ANON="$(read_kv VITE_SUPABASE_ANON_KEY "$BACKEND_ENV")"
 
 if [[ -z "$SUPA_URL" || -z "$ANON" ]]; then
   echo "Could not read SUPABASE_URL / key from $BACKEND_ENV." >&2
