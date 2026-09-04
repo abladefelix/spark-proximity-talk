@@ -28,9 +28,13 @@ if [[ -f /etc/skanaround-backend.env ]]; then
   SRK="$(read_kv SUPABASE_SERVICE_ROLE_KEY /etc/skanaround-backend.env)"
 fi
 
-if [[ -z "$ANON" || -z "$SRK" ]] && [[ -f "$STACK_DIR/.env" ]]; then
-  ANON="$(read_kv ANON_KEY "$STACK_DIR/.env")"
-  SRK="$(read_kv SERVICE_ROLE_KEY "$STACK_DIR/.env")"
+# The running stack owns the signing keys. Always prefer it over the copied
+# /etc file, which may be stale after a stack recreation or key rotation.
+if [[ -f "$STACK_DIR/.env" ]]; then
+  STACK_ANON="$(read_kv ANON_KEY "$STACK_DIR/.env")"
+  STACK_SRK="$(read_kv SERVICE_ROLE_KEY "$STACK_DIR/.env")"
+  [[ -n "$STACK_ANON" ]] && ANON="$STACK_ANON"
+  [[ -n "$STACK_SRK" ]] && SRK="$STACK_SRK"
   SUPA_URL="${SUPA_URL:-$(read_kv API_EXTERNAL_URL "$STACK_DIR/.env")}"
 fi
 
@@ -50,6 +54,26 @@ case "$SUPA_URL" in
 esac
 
 echo "==> Backend: $SUPA_URL"
+
+echo "==> Verifying the running gateway accepts the stack key"
+AUTH_HEALTH_STATUS="$(curl -sS -o /tmp/skanaround-auth-health -w '%{http_code}' \
+  "$SUPA_URL/auth/v1/health" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" || true)"
+if [[ "$AUTH_HEALTH_STATUS" != "200" ]]; then
+  echo "The gateway rejected the key in $STACK_DIR/.env (HTTP $AUTH_HEALTH_STATUS)." >&2
+  echo "Reloading the backend containers with the current stack environment..." >&2
+  (cd "$STACK_DIR" && docker compose up -d --force-recreate)
+  for _ in $(seq 1 30); do
+    AUTH_HEALTH_STATUS="$(curl -sS -o /tmp/skanaround-auth-health -w '%{http_code}' \
+      "$SUPA_URL/auth/v1/health" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" || true)"
+    [[ "$AUTH_HEALTH_STATUS" == "200" ]] && break
+    sleep 2
+  done
+fi
+if [[ "$AUTH_HEALTH_STATUS" != "200" ]]; then
+  echo "FAILED: auth gateway still rejects the authoritative stack key (HTTP $AUTH_HEALTH_STATUS)." >&2
+  echo "Backend containers are inconsistent; app deployment was stopped before changing the live site." >&2
+  exit 1
+fi
 
 set_env() { # file key value
   local f="$1" k="$2" v="$3"

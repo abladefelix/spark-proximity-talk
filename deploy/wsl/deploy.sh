@@ -32,10 +32,13 @@ ANON="$(read_kv SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
 SERVICE_KEY="$(read_kv SUPABASE_SERVICE_ROLE_KEY "$BACKEND_ENV")"
 [[ -n "$SERVICE_KEY" ]] || SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY "$BACKEND_ENV")"
 
-# Older app env files may contain only public values. Read the authoritative
-# self-hosted stack env as a fallback for the server-only service key.
-if [[ -z "$SERVICE_KEY" && -r /srv/supabase/.env ]]; then
-  SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY /srv/supabase/.env)"
+# The running stack is authoritative for signing keys. /etc may contain keys
+# from an earlier stack setup, which Envoy rejects before Auth sees the login.
+if [[ -r /srv/supabase/.env ]]; then
+  STACK_ANON="$(read_kv ANON_KEY /srv/supabase/.env)"
+  STACK_SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY /srv/supabase/.env)"
+  [[ -n "$STACK_ANON" ]] && ANON="$STACK_ANON"
+  [[ -n "$STACK_SERVICE_KEY" ]] && SERVICE_KEY="$STACK_SERVICE_KEY"
 fi
 
 if [[ -z "$SUPA_URL" || -z "$ANON" || -z "$SERVICE_KEY" ]]; then
@@ -50,6 +53,27 @@ case "$SUPA_URL" in
     echo "Run: sudo bash deploy/wsl/use-selfhost-backend.sh api.skanaround.bytenetdigital.com" >&2
     exit 1;;
 esac
+
+echo "==> Verifying backend keys against the running gateway"
+AUTH_HEALTH_STATUS="$(curl -sS -o /tmp/skanaround-auth-health -w '%{http_code}' \
+  "$SUPA_URL/auth/v1/health" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" || true)"
+if [[ "$AUTH_HEALTH_STATUS" != "200" ]]; then
+  echo "The running backend rejected the key from /srv/supabase/.env (HTTP $AUTH_HEALTH_STATUS)." >&2
+  echo "Restart the backend stack so its gateway reloads the current keys:" >&2
+  echo "  cd /srv/supabase && sudo docker compose up -d --force-recreate" >&2
+  exit 1
+fi
+
+# Keep the shared app environment synchronized with the authoritative stack.
+sudo install -m 600 /dev/null /etc/skanaround-backend.env.tmp
+sudo sh -c "cat > /etc/skanaround-backend.env.tmp" <<EOF
+SUPABASE_URL=$SUPA_URL
+SUPABASE_PUBLISHABLE_KEY=$ANON
+SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY
+VITE_SUPABASE_URL=$SUPA_URL
+VITE_SUPABASE_PUBLISHABLE_KEY=$ANON
+EOF
+sudo mv /etc/skanaround-backend.env.tmp /etc/skanaround-backend.env
 
 set_env() { # key value
   local k="$1" v="$2"
