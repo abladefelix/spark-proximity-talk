@@ -21,7 +21,7 @@ import { ServiceStatusBanner } from "@/components/ServiceStatusBanner";
 import { WebGate } from "@/components/WebGate";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, errorMessage } from "@/lib/net";
-import { reportServiceProblem } from "@/lib/service-health";
+import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
 
 function useNativeViewportLock() {
