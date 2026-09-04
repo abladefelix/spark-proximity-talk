@@ -42,6 +42,7 @@ import { useChatTtlDays } from "@/hooks/useChatTtl";
 import { StatDetailDialog, type StatMetric } from "@/components/admin/StatDetailDialog";
 import { Pager, paginate } from "@/components/admin/Pager";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { LogsTab } from "@/components/admin/LogsTab";
 import { InsightsTab } from "@/components/admin/InsightsTab";
 import { BackupTab } from "@/components/admin/BackupTab";
 import { EmailsTab } from "@/components/admin/EmailsTab";
@@ -920,6 +921,11 @@ export function AdminPage() {
           </TabsTrigger>
 
 
+          <TabsTrigger value="logs"
+            className="shrink-0 whitespace-nowrap px-3"
+          >
+            Logs
+          </TabsTrigger>
           <TabsTrigger value="insights"
             className="shrink-0 whitespace-nowrap px-3"
           >
@@ -974,6 +980,10 @@ export function AdminPage() {
         </TabsContent>
 
 
+
+        <TabsContent value="logs" className="mt-3">
+          <LogsTab />
+        </TabsContent>
 
         <TabsContent value="insights" className="mt-3">
           <InsightsTab />

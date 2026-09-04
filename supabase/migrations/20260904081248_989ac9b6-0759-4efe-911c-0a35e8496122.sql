@@ -1,0 +1,17 @@
+REVOKE ALL ON FUNCTION public.log_profile_insert() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_profile_update() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_signal() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_match() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_message() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_block() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_report() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_verification() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_reactivation() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_subscription() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_payment() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_role_change() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_settings_change() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.log_device_session() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_activity_log(text, text, uuid, integer, integer, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.admin_activity_log_summary(integer) FROM anon;
+REVOKE ALL ON FUNCTION public.admin_purge_activity_log(integer) FROM anon;
