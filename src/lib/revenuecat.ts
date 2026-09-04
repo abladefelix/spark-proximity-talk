@@ -13,6 +13,7 @@ export type StorePackage = {
   priceString: string;
   title: string;
   period: "monthly" | "yearly" | "other";
+  source: "offering" | "product";
   raw: unknown;
 };
 
@@ -77,6 +78,8 @@ export type StoreDiagnostics = {
   offeringCount: number;
   currentOffering: string | null;
   productIds: string[];
+  requestedProductIds: string[];
+  loadSource: "offering" | "product" | null;
   error: string | null;
   at: string;
 };
@@ -95,13 +98,39 @@ export function recordStoreError(message: string, keyPresent: boolean, keyPrefix
     offeringCount: 0,
     currentOffering: null,
     productIds: [],
+    requestedProductIds: [],
+    loadSource: null,
     error: message,
     at: new Date().toISOString(),
   };
 }
 
+function packageFromOffering(pkg: any): StorePackage {
+  return {
+    identifier: pkg.identifier,
+    productId: pkg.product?.identifier ?? "",
+    priceString: pkg.product?.priceString ?? "",
+    title: pkg.product?.title ?? pkg.identifier,
+    period: periodOf(pkg),
+    source: "offering",
+    raw: pkg,
+  };
+}
+
+function packageFromProduct(product: any): StorePackage {
+  return {
+    identifier: product.identifier,
+    productId: product.identifier,
+    priceString: product.priceString ?? "",
+    title: product.title ?? product.identifier,
+    period: periodOf({ identifier: product.identifier, product }),
+    source: "product",
+    raw: product,
+  };
+}
+
 /** Products available for purchase, priced and localised by the store. */
-export async function listPackages(): Promise<StorePackage[]> {
+export async function listPackages(productIds: string[] = []): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
   const Purchases = await sdk();
   const offerings: any = await Purchases.getOfferings();
@@ -111,14 +140,20 @@ export async function listPackages(): Promise<StorePackage[]> {
     const all = Object.values(offerings?.all ?? {}) as any[];
     packages = all.flatMap((o) => o?.availablePackages ?? []);
   }
-  const mapped = packages.map((p) => ({
-    identifier: p.identifier,
-    productId: p.product?.identifier ?? "",
-    priceString: p.product?.priceString ?? "",
-    title: p.product?.title ?? p.identifier,
-    period: periodOf(p),
-    raw: p,
-  }));
+  let mapped = packages.map(packageFromOffering);
+  const requestedProductIds = [...new Set(productIds.map((id) => id.trim()).filter(Boolean))];
+  let loadSource: StoreDiagnostics["loadSource"] = mapped.length > 0 ? "offering" : null;
+
+  // A RevenueCat offering is convenient but should not be a single point of
+  // failure. Google Play can return configured products directly even when an
+  // offering was not marked Current or its packages were not attached.
+  if (mapped.length === 0 && requestedProductIds.length > 0) {
+    const direct: any = await Purchases.getProducts({
+      productIdentifiers: requestedProductIds,
+    });
+    mapped = (direct?.products ?? []).map(packageFromProduct);
+    if (mapped.length > 0) loadSource = "product";
+  }
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
     keyPresent: true,
@@ -126,11 +161,13 @@ export async function listPackages(): Promise<StorePackage[]> {
     offeringCount: Object.keys(offerings?.all ?? {}).length,
     currentOffering: offerings?.current?.identifier ?? null,
     productIds: mapped.map((p) => p.productId).filter(Boolean),
+    requestedProductIds,
+    loadSource,
     error:
       mapped.length === 0
-        ? Object.keys(offerings?.all ?? {}).length === 0
-          ? "The store returned no offerings. In RevenueCat, create an offering, add packages to it, and mark it Current."
-          : "Offerings exist but no products are available. The products are usually not active in the store, or this build/tester account is not on a testing track."
+        ? requestedProductIds.length === 0
+          ? "No store product IDs are configured. Please contact support."
+          : `Google Play could not find the configured products (${requestedProductIds.join(", ")}). Install the Play testing-track build with an invited tester account, and ensure each product has an active base plan.`
         : null,
     at: new Date().toISOString(),
   };
@@ -163,7 +200,10 @@ export function isUserCancelled(error: unknown) {
 /** Runs the native purchase sheet. Throws on failure. */
 export async function purchase(pkg: StorePackage, entitlementId: string) {
   const Purchases = await sdk();
-  const res: any = await Purchases.purchasePackage({ aPackage: pkg.raw as any });
+  const res: any =
+    pkg.source === "product"
+      ? await Purchases.purchaseStoreProduct({ product: pkg.raw as any })
+      : await Purchases.purchasePackage({ aPackage: pkg.raw as any });
   return readEntitlement(res?.customerInfo, entitlementId);
 }
 
