@@ -9,6 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const PER_PAGE = 10;
 
 type Zone = {
   id: string;
@@ -49,6 +63,13 @@ export function ZonesTab() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState({ ...BLANK });
   const [creating, setCreating] = useState(false);
+  const [zoneQuery, setZoneQuery] = useState("");
+  const [zoneFilter, setZoneFilter] = useState<"all" | "active" | "paused">("all");
+  const [zonePage, setZonePage] = useState(0);
+  const [requestQuery, setRequestQuery] = useState("");
+  const [requestFilter, setRequestFilter] = useState<"all" | "new" | "handled">("all");
+  const [requestPage, setRequestPage] = useState(0);
+  const [pendingRemoval, setPendingRemoval] = useState<Zone | null>(null);
 
   const { data: zones = [] } = useQuery({
     queryKey: ["admin-zones"],
@@ -116,6 +137,34 @@ export function ZonesTab() {
     onError: () => toast.error("Could not remove zone"),
   });
 
+  const zq = zoneQuery.trim().toLowerCase();
+  const visibleZones = zones.filter((z) => {
+    if (zoneFilter === "active" && !z.active) return false;
+    if (zoneFilter === "paused" && z.active) return false;
+    if (!zq) return true;
+    return (
+      z.name.toLowerCase().includes(zq) ||
+      (z.description ?? "").toLowerCase().includes(zq) ||
+      z.perk_text.toLowerCase().includes(zq) ||
+      z.perk_prefix.toLowerCase().includes(zq) ||
+      (z.contact_email ?? "").toLowerCase().includes(zq)
+    );
+  });
+
+  const rq = requestQuery.trim().toLowerCase();
+  const visibleRequests = requests.filter((r) => {
+    const isNew = (r.status ?? "new") === "new";
+    if (requestFilter === "new" && !isNew) return false;
+    if (requestFilter === "handled" && isNew) return false;
+    if (!rq) return true;
+    return (
+      r.business_name.toLowerCase().includes(rq) ||
+      r.contact_email.toLowerCase().includes(rq) ||
+      (r.address ?? "").toLowerCase().includes(rq) ||
+      (r.notes ?? "").toLowerCase().includes(rq)
+    );
+  });
+
   const field = (key: keyof typeof BLANK, label: string, placeholder?: string) => (
     <div className="space-y-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
@@ -169,11 +218,36 @@ export function ZonesTab() {
           </div>
         ) : null}
 
+        <AdminSearch
+          className="mt-3"
+          value={zoneQuery}
+          onChange={(v) => {
+            setZoneQuery(v);
+            setZonePage(0);
+          }}
+          placeholder="Search zones by venue, perk or email"
+        />
+        <FilterChips
+          className="mt-2"
+          value={zoneFilter}
+          onChange={(v) => {
+            setZoneFilter(v);
+            setZonePage(0);
+          }}
+          options={[
+            { value: "all", label: "All", count: zones.length },
+            { value: "active", label: "Live", count: zones.filter((z) => z.active).length },
+            { value: "paused", label: "Paused", count: zones.filter((z) => !z.active).length },
+          ]}
+        />
+
         <div className="mt-3 space-y-2">
-          {zones.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No zones yet.</p>
+          {visibleZones.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {zones.length === 0 ? "No zones yet." : "No zones match those filters."}
+            </p>
           ) : null}
-          {zones.map((z) => (
+          {paginate(visibleZones, zonePage, PER_PAGE).map((z) => (
             <div key={z.id} className="rounded-lg border border-border p-3">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
@@ -190,7 +264,7 @@ export function ZonesTab() {
                   type="button"
                   aria-label={`Remove ${z.name}`}
                   className="text-destructive"
-                  onClick={() => remove.mutate(z.id)}
+                  onClick={() => setPendingRemoval(z)}
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -198,6 +272,13 @@ export function ZonesTab() {
             </div>
           ))}
         </div>
+        <Pager
+          page={zonePage}
+          perPage={PER_PAGE}
+          total={visibleZones.length}
+          onPageChange={setZonePage}
+          label="zones"
+        />
       </section>
 
       <section className="rounded-xl border border-border p-3">
@@ -205,11 +286,44 @@ export function ZonesTab() {
         <p className="mt-0.5 text-[11px] text-muted-foreground">
           Sent from the venue page on the web.
         </p>
+        <AdminSearch
+          className="mt-3"
+          value={requestQuery}
+          onChange={(v) => {
+            setRequestQuery(v);
+            setRequestPage(0);
+          }}
+          placeholder="Search requests by business, email or note"
+        />
+        <FilterChips
+          className="mt-2"
+          value={requestFilter}
+          onChange={(v) => {
+            setRequestFilter(v);
+            setRequestPage(0);
+          }}
+          options={[
+            { value: "all", label: "All", count: requests.length },
+            {
+              value: "new",
+              label: "New",
+              count: requests.filter((r) => (r.status ?? "new") === "new").length,
+            },
+            {
+              value: "handled",
+              label: "Handled",
+              count: requests.filter((r) => (r.status ?? "new") !== "new").length,
+            },
+          ]}
+        />
+
         <div className="mt-3 space-y-2">
-          {requests.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nothing yet.</p>
+          {visibleRequests.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {requests.length === 0 ? "Nothing yet." : "No requests match those filters."}
+            </p>
           ) : null}
-          {requests.map((r) => (
+          {paginate(visibleRequests, requestPage, PER_PAGE).map((r) => (
             <div key={r.id} className="rounded-lg border border-border p-3">
               <p className="text-sm font-medium">{r.business_name}</p>
               <p className="text-[11px] text-muted-foreground">
@@ -217,10 +331,47 @@ export function ZonesTab() {
                 {r.address ? ` · ${r.address}` : ""}
               </p>
               {r.notes ? <p className="mt-1 text-xs">{r.notes}</p> : null}
+              <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                {(r.status ?? "new") === "new" ? "New" : r.status} ·{" "}
+                {new Date(r.created_at).toLocaleDateString()}
+              </p>
             </div>
           ))}
         </div>
+        <Pager
+          page={requestPage}
+          perPage={PER_PAGE}
+          total={visibleRequests.length}
+          onPageChange={setRequestPage}
+          label="requests"
+        />
       </section>
+
+      <AlertDialog
+        open={pendingRemoval !== null}
+        onOpenChange={(open) => !open && setPendingRemoval(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this zone?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRemoval?.name} stops appearing to members straight away and its perk codes
+              can no longer be claimed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep zone</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRemoval) remove.mutate(pendingRemoval.id);
+                setPendingRemoval(null);
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

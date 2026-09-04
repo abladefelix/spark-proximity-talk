@@ -7,7 +7,7 @@
 
 export const DEFAULT_TERMS = `# Terms of Service & End User Licence Agreement
 
-_Last updated: 18 August 2026_
+_Last updated: 4 September 2026_
 
 By creating an account you agree to these terms. If you do not agree, do not use SKANAROUND.
 
@@ -49,18 +49,34 @@ SKANAROUND is provided "as is", without warranties of any kind. To the fullest e
 ## 10. Pro membership and auto-renewing subscriptions
 Pro is an optional paid membership sold only as an in-app purchase through the Apple App Store or Google Play. The price and billing period are shown in the app before you confirm, and payment is charged to your App Store or Google Play account at confirmation.
 
+Pro currently includes:
+
+- unlimited signals each day;
+- the full scan range the operator allows;
+- unlimited messages in a chat;
+- seeing the name and photo of everyone who signals you;
+- a priority beacon that stands out on nearby radars;
+- a custom beacon look;
+- longer chat history before conversations are purged;
+- invisible mode, letting you scan without showing your own beacon.
+
+The operator may add, change or withdraw individual Pro features; the list shown in the app at the time of purchase is the current one. Free accounts keep working with daily signal, range and message limits.
+
 Subscriptions renew automatically for the same period unless you cancel at least 24 hours before the current period ends. Your account is charged for renewal within 24 hours before the period ends. You can manage or cancel your subscription in your App Store or Google Play account settings; deleting the app does not cancel it. Refunds are handled by Apple or Google under their own policies. Unused time in a current period is not refunded when you cancel.
 
 ## 11. Apple and Google
 These terms are between you and us, not with Apple or Google. Apple and Google are not responsible for the app or for support, and they are third-party beneficiaries with the right to enforce these terms against you.
 
-## 12. Changes
+## 12. Activity records
+We keep an internal record of account and safety events — sign-ups, profile changes, sign-ins, signals, matches, blocks, reports, moderation decisions, suspensions, appeals and membership changes — so we can investigate abuse and settle disputes. The content of your private messages is not part of that record.
+
+## 13. Changes
 We may update these terms. Continued use after an update means you accept the new version.
 `;
 
 export const DEFAULT_PRIVACY = `# Privacy Policy
 
-_Last updated: 18 August 2026_
+_Last updated: 4 September 2026_
 
 This policy explains what SKANAROUND collects, why, and how to get rid of it.
 
@@ -69,20 +85,24 @@ This policy explains what SKANAROUND collects, why, and how to get rid of it.
 - **Photos:** your profile picture, optional verification selfie, and any images you send in chat.
 - **Location:** your device's coordinates while the radar screen is open, used to work out who is nearby. Other members only ever see an approximate distance — never your coordinates or address.
 - **Usage data:** signals sent, matches, messages, blocks and reports, and the time you were last active.
-- **Device data:** a push notification token if you enable notifications.
+- **Membership data:** your subscription status and payment references when you buy Pro. Card details never reach us — Apple, Google or the payment processor handle them.
+- **Device data:** a push notification token if you enable notifications, and the devices signed into your account.
+- **Activity records:** a log of account and safety events (sign-up, profile edits, sign-ins, signals, matches, blocks, reports, moderation decisions, suspensions, appeals, membership and payment status). Message text is never stored in this log — only that a message was sent.
 
 ## Why we collect it
-To show you people nearby, to deliver messages, to keep the community safe (moderation, reports, bans), and to notify you about signals and replies. We do not sell your data and we do not use it for advertising.
+To show you people nearby, to deliver messages, to keep the community safe (moderation, reports, bans), to run Pro memberships, and to notify you about signals and replies. We do not sell your data and we do not use it for advertising, and the app shows no ads.
 
 ## Who can see what
 - Other members see your username, display name, bio, photo, verified badge and approximate distance.
 - Messages are visible to you and the person you are chatting with.
-- Moderators can review reported profiles, reported content and verification selfies.
+- Moderators can review reported profiles, reported content, verification selfies and the activity records described above.
 
 ## How long we keep it
 - Location: only your most recent position is stored, and it is deleted when it goes stale or when you delete your account.
 - Signals: expire automatically (default 6 hours).
 - Chats: purged automatically after the retention period set by the operator.
+- Chat history is longer for Pro members when the operator enables that feature.
+- Activity records: kept while they are useful for safety and disputes, and cleared by the operator on a schedule (older entries are purged).
 - Everything else: until you delete your account.
 
 ## Deleting your data
@@ -97,6 +117,9 @@ SKANAROUND is for adults aged 18 and over. We do not knowingly collect data from
 ## Security
 Data is stored on managed infrastructure with encryption in transit, and access rules that limit each member to their own records.
 
+## Your rights
+You can access, correct or delete your data from inside the app: edit your profile, change your email, or use Profile → Delete account. Where local law gives you further rights (such as objection or portability), contact us at the support email and we will respond.
+
 ## Contact
 Questions or data requests: use the support email shown on your profile screen.
 `;
@@ -107,7 +130,7 @@ Questions or data requests: use the support email shown on your profile screen.
  */
 export const DEFAULT_CSAE = `# Child Safety Standards
 
-_Last updated: 2 September 2026_
+_Last updated: 4 September 2026_
 
 SKANAROUND has zero tolerance for child sexual abuse and exploitation (CSAE), including child sexual abuse material (CSAM). This page is our published standard against CSAE.
 
@@ -132,7 +155,7 @@ Reports can also be sent directly to our child safety point of contact at the su
 - Child-safety reports are triaged as soon as they arrive and reviewed within 24 hours.
 - Offending content is removed and the account is permanently banned and blocked from re-registration.
 - Confirmed CSAM is reported to the National Center for Missing & Exploited Children (NCMEC) and, where required, to local law enforcement.
-- Related evidence is preserved as required by law.
+- Related evidence, including our internal activity records for the accounts involved, is preserved as required by law.
 
 ## 5. Prevention
 - 18+ age gate at sign-up; gender and date of birth cannot be silently changed.

@@ -9,6 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
+
+const PER_PAGE = 20;
 
 type Row = {
   id: string;
@@ -26,6 +30,9 @@ export function NotificationsTab() {
   const [audience, setAudience] = useState<"all" | "user">("all");
   const [target, setTarget] = useState("");
   const [query, setQuery] = useState("");
+  const [sentQuery, setSentQuery] = useState("");
+  const [sentAudience, setSentAudience] = useState<"all" | "everyone" | "user">("all");
+  const [sentPage, setSentPage] = useState(0);
 
   const { data: sent = [], isLoading } = useQuery({
     queryKey: ["admin-notifications"],
@@ -34,7 +41,7 @@ export function NotificationsTab() {
         .from("notifications")
         .select("id,title,body,audience,user_id,created_at")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(500);
       if (error) throw error;
       return (data ?? []) as Row[];
     },
@@ -100,6 +107,18 @@ export function NotificationsTab() {
 
   const nameOf = (id: string | null) =>
     people.find((p) => p.id === id)?.username ?? "member";
+
+  const sentQ = sentQuery.trim().toLowerCase();
+  const filteredSent = sent.filter((n) => {
+    if (sentAudience === "everyone" && n.audience !== "all") return false;
+    if (sentAudience === "user" && n.audience === "all") return false;
+    if (!sentQ) return true;
+    return (
+      n.title.toLowerCase().includes(sentQ) ||
+      n.body.toLowerCase().includes(sentQ) ||
+      nameOf(n.user_id).toLowerCase().includes(sentQ)
+    );
+  });
 
   return (
     <div className="space-y-4">
@@ -197,32 +216,72 @@ export function NotificationsTab() {
           <Loader2 className="size-5 animate-spin" />
         </div>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
-          {sent.map((n) => (
-            <li key={n.id} className="flex items-start gap-2.5 px-2.5 py-2">
-              <Bell className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium leading-tight">{n.title}</p>
-                <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{n.body}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {n.audience === "all" ? "Everyone" : `@${nameOf(n.user_id)}`} ·{" "}
-                  {new Date(n.created_at).toLocaleString()}
-                </p>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-8"
-                onClick={() => remove.mutate(n.id)}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </li>
-          ))}
-          {sent.length === 0 && (
-            <li className="py-6 text-center text-sm text-muted-foreground">No notifications yet</li>
-          )}
-        </ul>
+        <div>
+          <AdminSearch
+            value={sentQuery}
+            onChange={(v) => {
+              setSentQuery(v);
+              setSentPage(0);
+            }}
+            placeholder="Search sent notifications"
+          />
+          <FilterChips
+            className="mb-2 mt-2"
+            value={sentAudience}
+            onChange={(v) => {
+              setSentAudience(v);
+              setSentPage(0);
+            }}
+            options={[
+              { value: "all", label: "All", count: sent.length },
+              {
+                value: "everyone",
+                label: "Broadcast",
+                count: sent.filter((n) => n.audience === "all").length,
+              },
+              {
+                value: "user",
+                label: "Direct",
+                count: sent.filter((n) => n.audience !== "all").length,
+              },
+            ]}
+          />
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {paginate(filteredSent, sentPage, PER_PAGE).map((n) => (
+              <li key={n.id} className="flex items-start gap-2.5 px-2.5 py-2">
+                <Bell className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-tight">{n.title}</p>
+                  <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{n.body}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {n.audience === "all" ? "Everyone" : `@${nameOf(n.user_id)}`} ·{" "}
+                    {new Date(n.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-8"
+                  onClick={() => remove.mutate(n.id)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </li>
+            ))}
+            {filteredSent.length === 0 && (
+              <li className="py-6 text-center text-sm text-muted-foreground">
+                {sent.length === 0 ? "No notifications yet" : "Nothing matches those filters."}
+              </li>
+            )}
+          </ul>
+          <Pager
+            page={sentPage}
+            perPage={PER_PAGE}
+            total={filteredSent.length}
+            onPageChange={setSentPage}
+            label="notifications"
+          />
+        </div>
       )}
     </div>
   );

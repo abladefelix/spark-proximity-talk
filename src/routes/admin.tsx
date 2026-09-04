@@ -13,7 +13,6 @@ import {
   MoreHorizontal,
   Radio,
   RefreshCw,
-  Search,
   Eye,
   ShieldCheck,
   Trash2,
@@ -41,6 +40,7 @@ import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 import { StatDetailDialog, type StatMetric } from "@/components/admin/StatDetailDialog";
 import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { LogsTab } from "@/components/admin/LogsTab";
 import { InsightsTab } from "@/components/admin/InsightsTab";
@@ -131,11 +131,17 @@ function Stat({
   );
 }
 
-
+type PeopleFilter = "all" | "verified" | "unverified" | "banned" | "staff";
+type VerifyFilter = "all" | "selfie" | "pro";
 
 export function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
+  const [verifySearch, setVerifySearch] = useState("");
+  const [verifyFilter, setVerifyFilter] = useState<VerifyFilter>("all");
+  const [reportsSearch, setReportsSearch] = useState("");
+  const [appealsSearch, setAppealsSearch] = useState("");
   const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
   const [statMetric, setStatMetric] = useState<StatMetric | null>(null);
   const [peoplePage, setPeoplePage] = useState(0);
@@ -637,11 +643,46 @@ export function AdminPage() {
 
   const filtered = people.filter((p) => {
     const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
+    const matchesSearch =
+      !q ||
       p.username.toLowerCase().includes(q) ||
       (p.display_name ?? "").toLowerCase().includes(q) ||
-      p.id.includes(q)
+      p.id.includes(q);
+    if (!matchesSearch) return false;
+    if (peopleFilter === "verified") return p.verified;
+    if (peopleFilter === "unverified") return !p.verified;
+    if (peopleFilter === "banned") return p.banned;
+    if (peopleFilter === "staff") return p.roles.length > 0;
+    return true;
+  });
+
+  const verifyQuery = verifySearch.trim().toLowerCase();
+  const filteredVerifications = verifications.filter((v) => {
+    if (verifyFilter !== "all" && (v.source ?? "selfie") !== verifyFilter) return false;
+    if (!verifyQuery) return true;
+    return (
+      (v.person?.username ?? "").toLowerCase().includes(verifyQuery) ||
+      (v.person?.display_name ?? "").toLowerCase().includes(verifyQuery)
+    );
+  });
+
+  const reportsQuery = reportsSearch.trim().toLowerCase();
+  const filteredReports = reports.filter((r) => {
+    if (!reportsQuery) return true;
+    return (
+      (r.reportedProfile?.username ?? "").toLowerCase().includes(reportsQuery) ||
+      (r.reporterProfile?.username ?? "").toLowerCase().includes(reportsQuery) ||
+      (r.reason ?? "").toLowerCase().includes(reportsQuery)
+    );
+  });
+
+  const appealsQuery = appealsSearch.trim().toLowerCase();
+  const filteredAppeals = appeals.filter((a) => {
+    if (!appealsQuery) return true;
+    return (
+      (a.person?.username ?? "").toLowerCase().includes(appealsQuery) ||
+      (a.person?.display_name ?? "").toLowerCase().includes(appealsQuery) ||
+      (a.message ?? "").toLowerCase().includes(appealsQuery)
     );
   });
 
@@ -996,18 +1037,29 @@ export function AdminPage() {
 
 
         <TabsContent value="people" className="mt-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPeoplePage(0);
-              }}
-              placeholder="Search people"
-              className="h-9 pl-9"
-            />
-          </div>
+          <AdminSearch
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setPeoplePage(0);
+            }}
+            placeholder="Search people"
+          />
+          <FilterChips
+            className="mt-2"
+            value={peopleFilter}
+            onChange={(v) => {
+              setPeopleFilter(v);
+              setPeoplePage(0);
+            }}
+            options={[
+              { value: "all", label: "All", count: people.length },
+              { value: "verified", label: "Verified", count: people.filter((p) => p.verified).length },
+              { value: "unverified", label: "Unverified", count: people.filter((p) => !p.verified).length },
+              { value: "banned", label: "Suspended", count: people.filter((p) => p.banned).length },
+              { value: "staff", label: "Staff", count: people.filter((p) => p.roles.length > 0).length },
+            ]}
+          />
           <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
             {paginate(filtered, peoplePage, PER_PAGE).map((p) => (
               <li key={p.id} className="flex items-center gap-2.5 px-2.5 py-2">
@@ -1097,8 +1149,37 @@ export function AdminPage() {
         </TabsContent>
 
         <TabsContent value="verify" className="mt-3">
+          <AdminSearch
+            value={verifySearch}
+            onChange={(v) => {
+              setVerifySearch(v);
+              setVerifyPage(0);
+            }}
+            placeholder="Search verification requests"
+          />
+          <FilterChips
+            className="mb-2 mt-2"
+            value={verifyFilter}
+            onChange={(v) => {
+              setVerifyFilter(v);
+              setVerifyPage(0);
+            }}
+            options={[
+              { value: "all", label: "All", count: verifications.length },
+              {
+                value: "selfie",
+                label: "Selfie",
+                count: verifications.filter((v) => (v.source ?? "selfie") !== "pro").length,
+              },
+              {
+                value: "pro",
+                label: "Paid",
+                count: verifications.filter((v) => v.source === "pro").length,
+              },
+            ]}
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(verifications, verifyPage, PER_PAGE).map((v) => (
+            {paginate(filteredVerifications, verifyPage, PER_PAGE).map((v) => (
               <li key={v.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 {v.selfieUrl ? (
                   <img
@@ -1132,6 +1213,14 @@ export function AdminPage() {
                 </div>
                 <Button
                   size="sm"
+                  variant="ghost"
+                  aria-label={`View details for @${v.person?.username ?? "member"}`}
+                  onClick={() => setDetailsUserId(v.user_id)}
+                >
+                  <Eye className="size-4" />
+                </Button>
+                <Button
+                  size="sm"
                   variant="heat"
                   onClick={() => void reviewVerification(v.id, v.user_id, true)}
                 >
@@ -1146,16 +1235,25 @@ export function AdminPage() {
                 </Button>
               </li>
             ))}
-            {verifications.length === 0 && (
+            {filteredVerifications.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">Nothing to review.</li>
             )}
           </ul>
-          <Pager page={verifyPage} perPage={PER_PAGE} total={verifications.length} onPageChange={setVerifyPage} label="requests" />
+          <Pager page={verifyPage} perPage={PER_PAGE} total={filteredVerifications.length} onPageChange={setVerifyPage} label="requests" />
         </TabsContent>
 
         <TabsContent value="reports" className="mt-3">
+          <AdminSearch
+            value={reportsSearch}
+            onChange={(v) => {
+              setReportsSearch(v);
+              setReportsPage(0);
+            }}
+            placeholder="Search reports by member or reason"
+            className="mb-2"
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(reports, reportsPage, PER_PAGE).map((r) => (
+            {paginate(filteredReports, reportsPage, PER_PAGE).map((r) => (
               <li key={r.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium leading-tight">
@@ -1210,16 +1308,25 @@ export function AdminPage() {
                 </DropdownMenu>
               </li>
             ))}
-            {reports.length === 0 && (
+            {filteredReports.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">No reports.</li>
             )}
           </ul>
-          <Pager page={reportsPage} perPage={PER_PAGE} total={reports.length} onPageChange={setReportsPage} label="reports" />
+          <Pager page={reportsPage} perPage={PER_PAGE} total={filteredReports.length} onPageChange={setReportsPage} label="reports" />
         </TabsContent>
 
         <TabsContent value="appeals" className="mt-3">
+          <AdminSearch
+            value={appealsSearch}
+            onChange={(v) => {
+              setAppealsSearch(v);
+              setAppealsPage(0);
+            }}
+            placeholder="Search appeals by member or message"
+            className="mb-2"
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(appeals, appealsPage, PER_PAGE).map((a) => (
+            {paginate(filteredAppeals, appealsPage, PER_PAGE).map((a) => (
               <li key={a.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 <PersonAvatar
                   path={a.person?.avatar_url ?? null}
@@ -1236,6 +1343,14 @@ export function AdminPage() {
                     {a.message}
                   </p>
                 </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`View details for @${a.person?.username ?? "member"}`}
+                  onClick={() => setDetailsUserId(a.user_id)}
+                >
+                  <Eye className="size-4" />
+                </Button>
                 <Button size="sm" variant="heat" onClick={() => void reviewAppeal(a.id, true)}>
                   Unban
                 </Button>
@@ -1244,13 +1359,13 @@ export function AdminPage() {
                 </Button>
               </li>
             ))}
-            {appeals.length === 0 && (
+            {filteredAppeals.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">
                 No reactivation requests.
               </li>
             )}
           </ul>
-          <Pager page={appealsPage} perPage={PER_PAGE} total={appeals.length} onPageChange={setAppealsPage} label="appeals" />
+          <Pager page={appealsPage} perPage={PER_PAGE} total={filteredAppeals.length} onPageChange={setAppealsPage} label="appeals" />
         </TabsContent>
       </Tabs>
     </div>
