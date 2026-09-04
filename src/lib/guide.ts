@@ -344,7 +344,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     items: [
       {
         term: "What you get",
-        body: "The exact perks are set by the admin, and typically include unlimited signals, a wider scan range, unlimited messages, invisible mode, custom beacons and priority placement. The upgrade screen always lists what is included in your plan.",
+        body: "The exact perks are set by the admin, and typically include unlimited signals, a wider scan range, unlimited messages, seeing everyone who signalled you, invisible mode, custom beacons, longer chat history and priority placement. The upgrade screen always lists what is included in your plan.",
       },
       {
         term: "How to buy",
