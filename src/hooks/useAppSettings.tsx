@@ -150,8 +150,11 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     } catch {
       /* storage unavailable */
     }
-    if (localStorage.getItem("skanaround-theme")) return;
-    if (preferred !== theme) setTheme(preferred);
+    // Light is the product default; the admin default is cached only so other
+    // surfaces can read it and never auto-switches a member into dark mode.
+    void preferred;
+    void theme;
+    void setTheme;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, settings.default_theme]);
 
