@@ -25,6 +25,8 @@ import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
 import { isNetworkError, isAbortError, errorMessage } from "@/lib/net";
 import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
+import { getAppLook, type AppLook } from "@/lib/app-look.functions";
+
 
 function useNativeViewportLock() {
   useEffect(() => {
