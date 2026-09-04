@@ -5,4 +5,4 @@
 - [x] Remove offline members from the radar and prevent stuck signals
 - [x] Prevent Android notification crashes
 - [x] Harden Google Play subscription setup and guidance
-- [ ] Verify build and mobile-facing behavior
+- [x] Verify build and mobile-facing behavior
