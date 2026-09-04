@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
   useNotifications(user?.id ?? null);
-  useDeviceSessionGuard(user?.id ?? null);
+  useInactivityTimeout(user?.id ?? null);
 
 
   return (
