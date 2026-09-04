@@ -15,6 +15,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private var splashWindow: UIWindow?
     private var splashTimer: Timer?
+    private var offlineWindow: UIWindow?
+    private var offlineTimer: Timer?
+
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
