@@ -25,7 +25,7 @@ const FAILURE_THRESHOLD = 2;
 const RETRY_MS = 12_000;
 
 function healthUrl(): string | null {
-  const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  const base = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
   if (!base) return null;
   // REST root answers (200/401) even without a session — a pure liveness probe.
   return `${base.replace(/\/$/, "")}/rest/v1/`;
@@ -42,7 +42,7 @@ async function ping() {
   try {
     const res = await fetch(url, {
       method: "GET",
-      headers: { apikey: (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ?? "" },
+      headers: { apikey: (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string) ?? "" },
       cache: "no-store",
     });
     // Any HTTP response means the backend is reachable again.
