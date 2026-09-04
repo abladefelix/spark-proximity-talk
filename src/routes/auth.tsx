@@ -145,13 +145,19 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "reset") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+        // Accepts a username or an email — the server resolves it to the
+        // account's address, so people who signed up with a username can
+        // still recover their password.
+        await requestPasswordResetFor({
+          data: {
+            identifier: identifier.trim(),
+            redirectTo: `${window.location.origin}/reset-password`,
+          },
         });
-        if (error) throw error;
-        toast.success("Check your email for the reset link");
+        toast.success("If that account exists, a reset link is on its way");
         return;
       }
+
       if (mode === "signup") {
         signingUp.current = true;
         if (!settings.signups_enabled) {
@@ -298,7 +304,7 @@ function AuthPage() {
             />
           </div>
         )}
-        {mode === "signin" ? (
+        {mode !== "signup" ? (
           <div className="space-y-2">
             <Label htmlFor="identifier">Username or email</Label>
             <Input

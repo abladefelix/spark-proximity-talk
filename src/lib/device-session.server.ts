@@ -102,5 +102,9 @@ export async function verifyPassword(email: string, password: string) {
 }
 
 export async function sendPasswordReset(email: string, redirectTo: string) {
-  await publicClient().auth.resetPasswordForEmail(email, { redirectTo });
+  const { error } = await publicClient().auth.resetPasswordForEmail(email, { redirectTo });
+  // Never leak the outcome to the caller (account probing), but make failures
+  // such as rate limits or SMTP errors visible in the server logs.
+  if (error) console.error("password reset send failed:", error.status, error.message);
 }
+
