@@ -1149,8 +1149,37 @@ export function AdminPage() {
         </TabsContent>
 
         <TabsContent value="verify" className="mt-3">
+          <AdminSearch
+            value={verifySearch}
+            onChange={(v) => {
+              setVerifySearch(v);
+              setVerifyPage(0);
+            }}
+            placeholder="Search verification requests"
+          />
+          <FilterChips
+            className="mb-2 mt-2"
+            value={verifyFilter}
+            onChange={(v) => {
+              setVerifyFilter(v);
+              setVerifyPage(0);
+            }}
+            options={[
+              { value: "all", label: "All", count: verifications.length },
+              {
+                value: "selfie",
+                label: "Selfie",
+                count: verifications.filter((v) => (v.source ?? "selfie") !== "pro").length,
+              },
+              {
+                value: "pro",
+                label: "Paid",
+                count: verifications.filter((v) => v.source === "pro").length,
+              },
+            ]}
+          />
           <ul className="divide-y divide-border rounded-xl border border-border">
-            {paginate(verifications, verifyPage, PER_PAGE).map((v) => (
+            {paginate(filteredVerifications, verifyPage, PER_PAGE).map((v) => (
               <li key={v.id} className="flex items-center gap-2.5 px-2.5 py-2">
                 {v.selfieUrl ? (
                   <img
