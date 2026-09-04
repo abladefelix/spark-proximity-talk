@@ -47,8 +47,24 @@ function looksLikeLostConnection(value: unknown): boolean {
   return isNetworkError(new Error(String(message)));
 }
 
+const CHUNK_HINTS = [
+  "dynamically imported module",
+  "importing a module script failed",
+  "module script failed",
+  "chunk",
+];
+
+/** True only for a failed code download — not for ordinary data requests. */
+function isMissingCode(value: unknown): boolean {
+  const message = (
+    value instanceof Error ? value.message : typeof value === "string" ? value : ""
+  ).toLowerCase();
+  return CHUNK_HINTS.some((hint) => message.includes(hint));
+}
+
 function reloadWhenBack() {
   if (typeof window === "undefined") return;
+  if (!mayReload()) return;
   const go = () => {
     window.removeEventListener("online", go);
     window.location.reload();
