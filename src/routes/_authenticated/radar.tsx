@@ -567,7 +567,9 @@ function RadarPage() {
       }
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
-        openChat(updated.match_id);
+        const mutualMatchId = updated.match_id;
+        setSelectedId(null);
+        setTimeout(() => openChat(mutualMatchId), 0);
       } else {
         toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
         await sendPush({
@@ -1310,7 +1312,13 @@ function RadarPage() {
                     <Button
                       variant="heat"
                       className="w-full"
-                      onClick={() => openChat(selected.match_id as string)}
+                      onClick={() => {
+                        const id = selected.match_id as string;
+                        // Close the profile card first: its focus trap blocks
+                        // the chat screen rendered above it.
+                        setSelectedId(null);
+                        setTimeout(() => openChat(id), 0);
+                      }}
                     >
                       Chat
                     </Button>
