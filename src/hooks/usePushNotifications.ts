@@ -14,6 +14,17 @@ export function usePushNotifications(userId: string | null) {
   useEffect(() => {
     if (!userId || !settings.push_enabled || !Capacitor.isNativePlatform()) return;
 
+    // Android push needs a google-services.json in the native project. Without
+    // it FirebaseApp never initialises and PushNotifications.register() throws
+    // a FATAL native exception that kills the app. Registration is therefore
+    // opt-in: set VITE_FIREBASE_CONFIGURED=true once the file is in place.
+    if (
+      Capacitor.getPlatform() === "android" &&
+      import.meta.env.VITE_FIREBASE_CONFIGURED !== "true"
+    ) {
+      return;
+    }
+
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
 
