@@ -567,7 +567,9 @@ function RadarPage() {
       }
       if (updated?.match_id) {
         toast.success(`It's mutual with @${person.username}! Chat unlocked.`);
-        openChat(updated.match_id);
+        const mutualMatchId = updated.match_id;
+        setSelectedId(null);
+        setTimeout(() => openChat(mutualMatchId), 0);
       } else {
         toast.success(`Signal sent to @${person.username} — expires in 6 hours`);
         await sendPush({
