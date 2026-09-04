@@ -78,12 +78,7 @@ function ConsoleSignIn() {
     e.preventDefault();
     setBusy(true);
     try {
-      const tokens = await signIn({ data: { identifier, password } });
-      const { error } = await supabase.auth.setSession({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-      });
-      if (error) throw error;
+      await signInWithIdentifierClient(identifier, password, signIn);
       toast.success("Signed in");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid login credentials");
@@ -91,6 +86,7 @@ function ConsoleSignIn() {
       setBusy(false);
     }
   }
+
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-background px-6 py-12">

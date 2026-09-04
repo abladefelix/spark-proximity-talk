@@ -104,14 +104,11 @@ function UpgradePage() {
 
   const signIn = useMutation({
     mutationFn: async () => {
-      const tokens = await signInWithIdentifier({
-        data: { identifier: identifier.trim(), password },
-      });
-      const { error } = await supabase.auth.setSession(tokens);
-      if (error) throw error;
+      await signInWithIdentifierClient(identifier, password, signInWithIdentifier);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not sign in"),
   });
+
 
   const checkout = useMutation({
     mutationFn: async (plan: "monthly" | "yearly") => {
