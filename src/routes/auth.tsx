@@ -188,6 +188,16 @@ function AuthPage() {
           toast.error("Please accept the Terms and Privacy Policy");
           return;
         }
+        // Catch a taken username before sign-up so people get a clear message
+        // instead of a generic account-creation failure.
+        const { data: free, error: nameErr } = await supabase.rpc("username_available", {
+          _username: clean,
+        });
+        if (!nameErr && free === false) {
+          toast.error("That username is already taken — try another one");
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
