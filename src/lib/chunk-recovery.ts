@@ -89,8 +89,10 @@ export function startChunkRecovery() {
 
   window.addEventListener("unhandledrejection", (event) => {
     if (!looksLikeLostConnection(event.reason)) return;
+    // Silence the raw browser error; only a missing piece of app code needs a
+    // reload — ordinary failed requests must never disturb what you're typing.
     event.preventDefault();
-    reloadWhenBack();
+    if (isMissingCode(event.reason)) reloadWhenBack();
   });
 
   window.addEventListener("error", (event) => {
