@@ -91,6 +91,10 @@ systemctl restart skanaround
 echo "==> Verifying"
 sleep 3
 curl -s -o /dev/null -w 'app HTTP %{http_code}\n' http://127.0.0.1:3000/ || true
-curl -s -o /dev/null -w 'backend HTTP %{http_code}\n' "$SUPA_URL/rest/v1/" -H "apikey: $ANON" || true
+# The bare /rest/v1/ OpenAPI root is intentionally service-role-only in the
+# current Envoy gateway. Test an ordinary Data API resource instead.
+curl -s -o /dev/null -w 'backend HTTP %{http_code}\n' \
+  "$SUPA_URL/rest/v1/profiles?select=id&limit=1" \
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON" || true
 
 echo "Done. The app now reads and writes the self-hosted database."
