@@ -115,18 +115,28 @@ psql_run "
   on conflict (user_id, role) do nothing;
 " >/dev/null
 
-echo "==> Verifying the new credentials against this backend"
-LOGIN_RESP=$(curl -sS -X POST "$API_URL/auth/v1/token?grant_type=password" \
-  -H "apikey: $SERVICE_KEY" \
+echo "==> Verifying the new credentials against this backend ($API_URL)"
+ANON_KEY=$(env_get ANON_KEY)
+[[ -n "$ANON_KEY" ]] || ANON_KEY=$(env_get SUPABASE_ANON_KEY)
+[[ -n "$ANON_KEY" ]] || ANON_KEY=$SERVICE_KEY
+LOGIN_RAW=$(curl -sS -w $'\n%{http_code}' -X POST "$API_URL/auth/v1/token?grant_type=password" \
+  -H "apikey: $ANON_KEY" \
+  -H "Authorization: Bearer $ANON_KEY" \
   -H "Content-Type: application/json" \
   -d "$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" \
         '{email:$e, password:$p}')")
+LOGIN_CODE=${LOGIN_RAW##*$'\n'}
+LOGIN_RESP=${LOGIN_RAW%$'\n'*}
 if ! echo "$LOGIN_RESP" | jq -e '.access_token and .user.id' >/dev/null 2>&1; then
-  LOGIN_ERROR=$(echo "$LOGIN_RESP" | jq -r '.msg // .message // .error_description // .error // "unknown authentication error"')
-  echo "The account was updated, but sign-in verification failed: $LOGIN_ERROR" >&2
-  echo "Run this script again and choose a new password that you have never used elsewhere." >&2
+  LOGIN_ERROR=$(echo "$LOGIN_RESP" | jq -r '.msg // .message // .error_description // .error // .' 2>/dev/null || echo "$LOGIN_RESP")
+  echo "The account was updated, but sign-in verification failed." >&2
+  echo "  endpoint : $API_URL/auth/v1/token?grant_type=password" >&2
+  echo "  http     : $LOGIN_CODE" >&2
+  echo "  response : $LOGIN_ERROR" >&2
+  echo "Paste the three lines above (they contain no keys) so the cause can be pinpointed." >&2
   exit 1
 fi
+
 
 echo
 echo "Super admin ready on this backend:"
