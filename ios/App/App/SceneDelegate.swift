@@ -1,6 +1,7 @@
 import UIKit
 import Capacitor
 import WebKit
+import Network
 
 /// The web UI is served from the live site, so with no connection the web view
 /// has nothing to render. A separate native window is shown on top instead of a
@@ -18,6 +19,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var offlineWindow: UIWindow?
     private var offlineTimer: Timer?
 
+    // Connectivity, mirroring the Android shell: the network path is only a
+    // hint, a real request to the site decides. That avoids the false-offline
+    // trap of a path-only gate while still catching aeroplane mode on launch.
+    private let pathMonitor = NWPathMonitor()
+    private var pathSatisfied = true
+    private var probing = false
+    private var connectivityTimer: Timer?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
@@ -27,17 +35,61 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         showSplash(in: windowScene)
 
-        // Do not put a separate native reachability gate in front of WKWebView.
-        // URLSession and network-path probes can disagree with WebKit on real
-        // devices (especially while cellular service is settling), leaving an
-        // online phone trapped behind a false offline screen. Capacitor loads
-        // the live URL directly; the web app owns connection-state messaging.
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.pathSatisfied = path.status == .satisfied
+                self.evaluateConnectivity()
+            }
+        }
+        pathMonitor.start(queue: DispatchQueue.global(qos: .utility))
+
+        connectivityTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
+            self?.evaluateConnectivity()
+        }
+    }
+
+    // MARK: - Connectivity
+
+    /// Show the branded offline screen only when the site is genuinely
+    /// unreachable, and take it down as soon as it answers again.
+    private func evaluateConnectivity() {
+        if !pathSatisfied {
+            applyConnectivity(false)
+            return
+        }
+        guard !probing, let url = URL(string: Self.serverURL) else { return }
+        probing = true
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 6
+        URLSession.shared.dataTask(with: request) { [weak self] _, response, _ in
+            let reachable = (response as? HTTPURLResponse)?.statusCode ?? 0 > 0
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.probing = false
+                self.applyConnectivity(reachable)
+            }
+        }.resume()
+    }
+
+    private func applyConnectivity(_ online: Bool) {
+        if online {
+            if offlineWindow != nil { attemptRecovery() }
+        } else {
+            hideSplash()
+            showOffline()
+        }
     }
 
     deinit {
         splashTimer?.invalidate()
         offlineTimer?.invalidate()
+        connectivityTimer?.invalidate()
+        pathMonitor.cancel()
         NotificationCenter.default.removeObserver(self)
+
     }
 
     // MARK: - Web view helpers
@@ -154,7 +206,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 self.hideSplash()
                 // The first load produced nothing — rather than leaving a blank
                 // web view, show the branded offline screen and keep retrying.
-                if progress < 0.1 { self.showOffline() }
+                // A blank or half-loaded web view after 8s means the first load
+                // never completed — check reachability and, if the site really
+                // is unreachable, show the branded offline screen.
+                if progress < 0.9 { self.evaluateConnectivity() }
+
             }
         }
     }
@@ -294,8 +350,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        if offlineWindow != nil { attemptRecovery() }
+        evaluateConnectivity()
     }
+
 
 
 

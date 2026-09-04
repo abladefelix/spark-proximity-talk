@@ -3,10 +3,15 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { isNetworkError } from "./lib/net";
 import { bootTheme } from "./lib/theme-boot";
+import { startChunkRecovery } from "./lib/chunk-recovery";
 
 // Fetch the admin-configured look immediately, before React mounts, so a stale
 // cached theme/accent is replaced as early as possible on cold start.
 void bootTheme();
+
+// Keep a mid-session connection drop from surfacing raw browser errors.
+startChunkRecovery();
+
 
 export const getRouter = () => {
   const queryClient = new QueryClient({
