@@ -155,6 +155,27 @@ export function AdminPage() {
   const { data: chatTtl } = useChatTtlDays();
   const [chatTtlDraft, setChatTtlDraft] = useState<string | null>(null);
   const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
+  const { data: idleMinutes } = useInactivityTimeoutMinutes();
+  const [idleDraft, setIdleDraft] = useState<string | null>(null);
+
+  async function saveIdleTimeout() {
+    const value = Math.round(Number(idleDraft ?? idleMinutes ?? DEFAULT_INACTIVITY_MIN));
+    if (!Number.isFinite(value) || value < 0) {
+      toast.error("Enter 0 or more minutes");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ inactivity_timeout_min: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-inactivity-timeout"] });
+    setIdleDraft(null);
+    toast.success(value === 0 ? "Auto sign-out turned off" : "Auto sign-out updated");
+  }
 
   async function saveChatTtl() {
     const value = Math.round(Number(chatTtlDraft ?? chatTtl ?? 30));
