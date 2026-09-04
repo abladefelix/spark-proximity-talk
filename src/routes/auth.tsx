@@ -72,8 +72,42 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   // Set when the account is already signed in on another device.
   const [otherDevice, setOtherDevice] = useState<{ label: string; lastSeen: string } | null>(null);
+  // Set when a sign-in is refused because the email is not confirmed yet —
+  // shows the "resend activation email" card.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   // While a sign-up is completing we must not auto-redirect on a transient session.
   const signingUp = useRef(false);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown > 0]);
+
+  async function resendActivation(target: string) {
+    const addr = target.trim();
+    if (!addr.includes("@")) {
+      toast.error("Enter your email address (not your username) to resend the activation email");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: addr,
+        options: { emailRedirectTo: `${window.location.origin}/verified` },
+      });
+      if (error) throw error;
+      toast.success(`Activation email resent to ${addr}`);
+      setResendCooldown(60);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not resend the email — try again shortly");
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function takeOverDevice() {
     setBusy(true);
