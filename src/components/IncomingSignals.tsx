@@ -11,6 +11,7 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { Crown } from "lucide-react";
+import { intentSummary } from "@/lib/intents";
 
 
 type Incoming = {
@@ -21,6 +22,8 @@ type Incoming = {
   avatar_url: string | null;
   gender: "male" | "female" | "other" | null;
   match_id: string | null;
+  intent: string | null;
+  intent_note: string | null;
 };
 
 export function IncomingSignals() {
@@ -43,7 +46,7 @@ export function IncomingSignals() {
       if (!me) return [];
       const { data: signals, error } = await supabase
         .from("signals")
-        .select("id, from_user")
+        .select("id, from_user, intent, intent_note")
         .eq("to_user", me)
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
@@ -72,6 +75,8 @@ export function IncomingSignals() {
             avatar_url: p.avatar_url,
             gender: p.gender as Incoming["gender"],
             match_id: match?.id ?? null,
+            intent: (s as { intent?: string | null }).intent ?? null,
+            intent_note: (s as { intent_note?: string | null }).intent_note ?? null,
           };
         })
         .filter((x): x is Incoming => x !== null && x.match_id === null);
@@ -182,8 +187,9 @@ export function IncomingSignals() {
                 <Crown className="size-3" /> Go Pro to see who
               </button>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                wants to chat{index > 0 ? ` · #${index + 1} in queue` : ""}
+              <p className="truncate text-xs text-muted-foreground">
+                {intentSummary(person.intent, person.intent_note) ?? "wants to chat"}
+                {index > 0 ? ` · #${index + 1} in queue` : ""}
               </p>
             )}
           </div>
