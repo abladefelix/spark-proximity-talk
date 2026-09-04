@@ -28,6 +28,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { kind: "fixed", text: "The Android chat composer now stays clear of system navigation controls." },
       { kind: "fixed", text: "Android notifications now use a dedicated compatible status icon and safely handle notification taps." },
       { kind: "fixed", text: "Added the Android billing declarations required for reliable Google Play subscription loading." },
+      { kind: "fixed", text: "Website membership payments now show a clear, friendly message when the payment service is unavailable instead of a technical error." },
       { kind: "improved", text: "Admin console: search, filters and pagination on every tab, plus search and filters inside pop-up dialogs." },
       { kind: "improved", text: "Sign out is now a clearly visible button on your profile." },
       { kind: "fixed", text: "Fixed a glitch where the status banner flickered between \"Something isn't working right\" and \"Back to normal\" in a loop." },
