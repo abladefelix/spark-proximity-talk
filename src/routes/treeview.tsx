@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
-  Crown,
   FileText,
   FolderTree,
   Lock,
@@ -151,15 +150,8 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
         <div className="min-w-0">
           {node.path ? (
             <Link
-              to={node.path}
-              // Dynamic segments aren't navigable from a static map.
-              {...(node.path.includes("$") ? { disabled: true } : {})}
-              className={cn(
-                "text-sm font-medium hover:underline underline-offset-2",
-                node.path.includes("$")
-                  ? "pointer-events-none text-muted-foreground"
-                  : "text-foreground",
-              )}
+              to={node.path as "/"}
+              className="text-sm font-medium text-foreground underline-offset-2 hover:underline"
             >
               {node.label}
             </Link>
