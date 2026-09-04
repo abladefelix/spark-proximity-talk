@@ -89,12 +89,47 @@ echo "==> Restarting"
 systemctl restart skanaround
 
 echo "==> Verifying"
-sleep 3
-curl -s -o /dev/null -w 'app HTTP %{http_code}\n' http://127.0.0.1:3000/ || true
+APP_READY=false
+for _ in $(seq 1 20); do
+  if curl -fsS -o /dev/null http://127.0.0.1:3000/; then
+    APP_READY=true
+    break
+  fi
+  sleep 1
+done
+if [[ "$APP_READY" != true ]]; then
+  echo "FAILED: the app did not become ready after restart."
+  systemctl status skanaround --no-pager -l || true
+  exit 1
+fi
+echo "app HTTP 200"
+
+# Prove that the deployed server contains the username sign-in route. A stale
+# build used to return an HTML 404 here while deployment still printed Done.
+AUTH_HEADERS="$(mktemp)"
+AUTH_BODY="$(mktemp)"
+trap 'rm -f "$AUTH_HEADERS" "$AUTH_BODY"' EXIT
+AUTH_STATUS="$(curl -sS -D "$AUTH_HEADERS" -o "$AUTH_BODY" -w '%{http_code}' \
+  -X POST http://127.0.0.1:3000/api/public/username-sign-in \
+  -H 'content-type: application/json' \
+  --data '{"identifier":"__deployment_probe__","password":"not-a-real-password"}')"
+if [[ "$AUTH_STATUS" != "401" ]] || ! grep -qi '^content-type: application/json' "$AUTH_HEADERS" \
+  || ! grep -q 'Invalid login credentials' "$AUTH_BODY"; then
+  echo "FAILED: username sign-in smoke test returned HTTP $AUTH_STATUS instead of JSON HTTP 401."
+  echo "The deployed server is stale or the sign-in route is unavailable."
+  exit 1
+fi
+echo "username sign-in HTTP 401 JSON (expected probe result)"
+
 # The bare /rest/v1/ OpenAPI root is intentionally service-role-only in the
 # current Envoy gateway. Test an ordinary Data API resource instead.
-curl -s -o /dev/null -w 'backend HTTP %{http_code}\n' \
+BACKEND_STATUS="$(curl -s -o /dev/null -w '%{http_code}' \
   "$SUPA_URL/rest/v1/profiles?select=id&limit=1" \
-  -H "apikey: $ANON" -H "Authorization: Bearer $ANON" || true
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON")"
+if [[ "$BACKEND_STATUS" != "200" && "$BACKEND_STATUS" != "401" ]]; then
+  echo "FAILED: backend returned unexpected HTTP $BACKEND_STATUS."
+  exit 1
+fi
+echo "backend HTTP $BACKEND_STATUS"
 
-echo "Done. The app now reads and writes the self-hosted database."
+echo "Done. App, self-hosted backend, and username sign-in all passed."
