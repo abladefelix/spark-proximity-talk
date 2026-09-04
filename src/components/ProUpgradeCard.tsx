@@ -56,6 +56,8 @@ export function ProUpgradeCard() {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [managementUrl, setManagementUrl] = useState<string | null>(null);
+  const [diag, setDiag] = useState<StoreDiagnostics | null>(null);
+  const [showDiag, setShowDiag] = useState(false);
 
   const native = isNativeStore();
 
