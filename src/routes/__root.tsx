@@ -22,7 +22,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { ServiceStatusBanner } from "@/components/ServiceStatusBanner";
 import { WebGate } from "@/components/WebGate";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
-import { isNetworkError, errorMessage } from "@/lib/net";
+import { isNetworkError, isAbortError, errorMessage } from "@/lib/net";
 import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
 
