@@ -44,8 +44,9 @@ function writeLastActive(at: number) {
 }
 
 /**
- * Signs a member out after a stretch of no interaction. The timestamp lives in
- * storage, so time spent with the app closed or backgrounded counts too.
+ * Signs a member out after a stretch of no interaction. Only time with the app
+ * actually open counts — closing or backgrounding the app pauses the clock, so
+ * reopening never forces a fresh sign-in while the session is still valid.
  */
 export function useInactivityTimeout(userId: string | null) {
   const navigate = useNavigate();
