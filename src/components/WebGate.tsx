@@ -16,6 +16,7 @@ const WEB_ALLOWED = [
   "/terms",
   "/csae",
   "/upgrade",
+  "/business",
   "/admin",
   "/console-9f42x7",
 

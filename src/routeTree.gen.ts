@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BusinessRouteImport } from './routes/business'
 import { Route as Console9f42x7RouteImport } from './routes/console-9f42x7'
 import { Route as CsaeRouteImport } from './routes/csae'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
@@ -23,6 +24,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
+import { Route as AuthenticatedLocalRouteImport } from './routes/_authenticated/local'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
@@ -46,6 +48,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BusinessRoute = BusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Console9f42x7Route = Console9f42x7RouteImport.update({
@@ -98,6 +105,11 @@ const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
   path: '/chats',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLocalRoute = AuthenticatedLocalRouteImport.update({
+  id: '/local',
+  path: '/local',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -131,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -141,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
+  '/local': typeof AuthenticatedLocalRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -151,6 +165,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -161,6 +176,7 @@ export interface FileRoutesByTo {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
+  '/local': typeof AuthenticatedLocalRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -173,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -183,6 +200,7 @@ export interface FileRoutesById {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
+  '/_authenticated/local': typeof AuthenticatedLocalRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -195,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -205,6 +224,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/chats'
+    | '/local'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
@@ -215,6 +235,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -225,6 +246,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/chats'
+    | '/local'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
@@ -236,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -246,6 +269,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/_authenticated/chats'
+    | '/_authenticated/local'
     | '/_authenticated/profile'
     | '/_authenticated/radar'
     | '/_authenticated/chat/$matchId'
@@ -258,6 +282,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  BusinessRoute: typeof BusinessRoute
   Console9f42x7Route: typeof Console9f42x7Route
   CsaeRoute: typeof CsaeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
@@ -299,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business': {
+      id: '/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof BusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/console-9f42x7': {
@@ -371,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/local': {
+      id: '/_authenticated/local'
+      path: '/local'
+      fullPath: '/local'
+      preLoaderRoute: typeof AuthenticatedLocalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -411,6 +450,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
+  AuthenticatedLocalRoute: typeof AuthenticatedLocalRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
   AuthenticatedChatMatchIdRoute: typeof AuthenticatedChatMatchIdRoute
@@ -418,6 +458,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsRoute: AuthenticatedChatsRoute,
+  AuthenticatedLocalRoute: AuthenticatedLocalRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRadarRoute: AuthenticatedRadarRoute,
   AuthenticatedChatMatchIdRoute: AuthenticatedChatMatchIdRoute,
@@ -431,6 +472,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  BusinessRoute: BusinessRoute,
   Console9f42x7Route: Console9f42x7Route,
   CsaeRoute: CsaeRoute,
   DeleteAccountRoute: DeleteAccountRoute,

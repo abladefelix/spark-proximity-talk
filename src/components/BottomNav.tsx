@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Radar, MessagesSquare, UserRound } from "lucide-react";
+import { Radar, MessagesSquare, UserRound, Sparkles } from "lucide-react";
 
 import { GoProButton } from "@/components/GoProButton";
 
 const items = [
   { to: "/radar", label: "Radar", icon: Radar },
+  { to: "/local", label: "Local", icon: Sparkles },
   { to: "/chats", label: "Chats", icon: MessagesSquare },
   { to: "/profile", label: "You", icon: UserRound },
 ] as const;

@@ -480,7 +480,7 @@ export function ChatPanel({ matchId, className }: { matchId: string; leading?: R
             </div>
           </div>
 
-          <ChatSafetyMenu otherId={other?.id} otherName={name} onBlocked={closeChat} />
+          <ChatSafetyMenu matchId={matchId} otherId={other?.id} otherName={name} onBlocked={closeChat} />
         </header>
 
         <div className="px-3 pb-3 pt-3">

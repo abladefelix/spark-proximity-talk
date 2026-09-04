@@ -35,6 +35,9 @@ import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
+import { IntentChip } from "@/components/IntentSheet";
+import { useMyIntent } from "@/hooks/useIntent";
+import { intentFor } from "@/lib/intents";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { beaconColor } from "@/lib/beacon-styles";
@@ -106,6 +109,10 @@ type NearbyPerson = {
   is_pro?: boolean | null;
   /** Pro members' chosen beacon colour (null unless they're Pro). */
   beacon_style?: string | null;
+  /** What they're up to right now, and their one-line mood. */
+  intent?: string | null;
+  intent_note?: string | null;
+  mood?: string | null;
 };
 
 
@@ -519,13 +526,20 @@ function RadarPage() {
     },
   });
 
+  const { data: myIntent } = useMyIntent();
+
   const signal = useMutation({
     mutationFn: async (person: NearbyPerson) => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("signals")
-        .insert({ from_user: me, to_user: person.id });
+        .insert({
+          from_user: me,
+          to_user: person.id,
+          intent: myIntent?.intent ?? null,
+          intent_note: myIntent?.intent_note ?? null,
+        });
       if (error) throw error;
       return person;
     },
@@ -835,6 +849,10 @@ function RadarPage() {
         </div>
       </div>
 
+      <div className="mt-3">
+        <IntentChip />
+      </div>
+
       <ActiveChats />
       <IncomingSignals />
 
@@ -1076,6 +1094,14 @@ function RadarPage() {
                     </>
                   );
                 })()}
+                {intentFor(person.intent) ? (
+                  <span
+                    aria-hidden
+                    className="absolute -right-1 -top-1 z-20 flex size-[45%] items-center justify-center rounded-full bg-background text-[9px] leading-none shadow-sm ring-1 ring-border"
+                  >
+                    {intentFor(person.intent)?.emoji}
+                  </span>
+                ) : null}
               </span>
             </button>
             );
@@ -1201,6 +1227,26 @@ function RadarPage() {
                   </div>
                 </DialogDescription>
               </DialogHeader>
+
+              {(() => {
+                const def = intentFor(selected.intent);
+                if (!def && !selected.mood) return null;
+                return (
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    {def ? (
+                      <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">
+                        {def.emoji} {def.label}
+                        {selected.intent_note ? ` · ${selected.intent_note}` : ""}
+                      </span>
+                    ) : null}
+                    {selected.mood ? (
+                      <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">
+                        {selected.mood}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })()}
 
               {selected.bio && (
                 <p className="text-sm leading-relaxed text-muted-foreground">{selected.bio}</p>

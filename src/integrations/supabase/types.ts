@@ -359,6 +359,71 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_answers: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          id: string
+          option_index: number
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          id?: string
+          option_index: number
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          id?: string
+          option_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_answers_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          lat: number
+          lng: number
+          options: string[]
+          question: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lat: number
+          lng: number
+          options: string[]
+          question: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          options?: string[]
+          question?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_sessions: {
         Row: {
           created_at: string
@@ -437,6 +502,39 @@ export type Database = {
         }
         Relationships: []
       }
+      help_beacons: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          lat: number
+          lng: number
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind: string
+          lat: number
+          lng: number
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          lat?: number
+          lng?: number
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           accuracy_m: number | null
@@ -470,18 +568,24 @@ export type Database = {
           id: string
           user_a: string
           user_b: string
+          vanish_hours: number
+          vanish_on_leave: boolean
         }
         Insert: {
           created_at?: string
           id?: string
           user_a: string
           user_b: string
+          vanish_hours?: number
+          vanish_on_leave?: boolean
         }
         Update: {
           created_at?: string
           id?: string
           user_a?: string
           user_b?: string
+          vanish_hours?: number
+          vanish_on_leave?: boolean
         }
         Relationships: []
       }
@@ -710,7 +814,11 @@ export type Database = {
           display_name: string | null
           gender: string | null
           id: string
+          intent: string | null
+          intent_expires_at: string | null
+          intent_note: string | null
           last_seen: string
+          mood: string | null
           radar_sound: boolean
           radar_tone: string | null
           updated_at: string
@@ -730,7 +838,11 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id: string
+          intent?: string | null
+          intent_expires_at?: string | null
+          intent_note?: string | null
           last_seen?: string
+          mood?: string | null
           radar_sound?: boolean
           radar_tone?: string | null
           updated_at?: string
@@ -750,7 +862,11 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id?: string
+          intent?: string | null
+          intent_expires_at?: string | null
+          intent_note?: string | null
           last_seen?: string
+          mood?: string | null
           radar_sound?: boolean
           radar_tone?: string | null
           updated_at?: string
@@ -843,6 +959,8 @@ export type Database = {
           expires_at: string
           from_user: string
           id: string
+          intent: string | null
+          intent_note: string | null
           to_user: string
         }
         Insert: {
@@ -850,6 +968,8 @@ export type Database = {
           expires_at?: string
           from_user: string
           id?: string
+          intent?: string | null
+          intent_note?: string | null
           to_user: string
         }
         Update: {
@@ -857,6 +977,8 @@ export type Database = {
           expires_at?: string
           from_user?: string
           id?: string
+          intent?: string | null
+          intent_note?: string | null
           to_user?: string
         }
         Relationships: []
@@ -948,6 +1070,113 @@ export type Database = {
         }
         Relationships: []
       }
+      zone_perk_claims: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+          zone_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+          zone_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zone_perk_claims_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zone_requests: {
+        Row: {
+          address: string | null
+          business_name: string
+          contact_email: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          contact_email: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          contact_email?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      zones: {
+        Row: {
+          active: boolean
+          contact_email: string | null
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          lat: number
+          lng: number
+          name: string
+          perk_prefix: string
+          perk_text: string
+          radius_m: number
+        }
+        Insert: {
+          active?: boolean
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          perk_prefix?: string
+          perk_text?: string
+          radius_m?: number
+        }
+        Update: {
+          active?: boolean
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          perk_prefix?: string
+          perk_text?: string
+          radius_m?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1026,6 +1255,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      answer_broadcast: {
+        Args: { _broadcast_id: string; _option_index: number }
+        Returns: undefined
+      }
       billing_public_info: {
         Args: never
         Returns: {
@@ -1062,6 +1295,11 @@ export type Database = {
         }[]
       }
       claim_first_admin: { Args: never; Returns: boolean }
+      claim_zone_perk: { Args: { _zone_id: string }; Returns: string }
+      drop_help_beacon: {
+        Args: { _kind: string; _note: string }
+        Returns: string
+      }
       my_profile_private: {
         Args: never
         Returns: {
@@ -1069,6 +1307,49 @@ export type Database = {
           banned_at: string
           banned_reason: string
           date_of_birth: string
+        }[]
+      }
+      my_zone: {
+        Args: never
+        Returns: {
+          claimed_code: string
+          description: string
+          distance_m: number
+          id: string
+          name: string
+          perk_text: string
+        }[]
+      }
+      nearby_broadcasts: {
+        Args: { radius_m?: number }
+        Returns: {
+          counts: number[]
+          distance_m: number
+          expires_at: string
+          id: string
+          match_id: string
+          mine: boolean
+          my_answer: number
+          options: string[]
+          question: string
+          total: number
+        }[]
+      }
+      nearby_help_beacons: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bearing_deg: number
+          display_name: string
+          distance_m: number
+          expires_at: string
+          id: string
+          kind: string
+          match_id: string
+          mine: boolean
+          note: string
+          user_id: string
+          username: string
         }[]
       }
       nearby_people: {
@@ -1084,17 +1365,38 @@ export type Database = {
           gender: string
           i_signaled: boolean
           id: string
+          intent: string
+          intent_note: string
           is_online: boolean
           is_pro: boolean
           match_id: string
+          mood: string
           they_signaled: boolean
           updated_age_s: number
           username: string
           verified: boolean
         }[]
       }
+      post_broadcast: {
+        Args: { _options: string[]; _question: string }
+        Returns: string
+      }
       purge_expired_signals: { Args: never; Returns: undefined }
       purge_old_chats: { Args: never; Returns: number }
+      purge_vanished_messages: { Args: never; Returns: number }
+      set_chat_vanish: {
+        Args: { _hours: number; _match_id: string; _on_leave: boolean }
+        Returns: undefined
+      }
+      set_my_intent: {
+        Args: { _intent: string; _minutes?: number; _note: string }
+        Returns: undefined
+      }
+      set_my_mood: { Args: { _mood: string }; Returns: undefined }
+      signal_broadcast_author: {
+        Args: { _broadcast_id: string }
+        Returns: string
+      }
       staff_profiles: {
         Args: { _limit?: number }
         Returns: {
