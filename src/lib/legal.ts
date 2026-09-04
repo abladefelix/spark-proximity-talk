@@ -130,7 +130,7 @@ Questions or data requests: use the support email shown on your profile screen.
  */
 export const DEFAULT_CSAE = `# Child Safety Standards
 
-_Last updated: 2 September 2026_
+_Last updated: 4 September 2026_
 
 SKANAROUND has zero tolerance for child sexual abuse and exploitation (CSAE), including child sexual abuse material (CSAM). This page is our published standard against CSAE.
 
@@ -155,7 +155,7 @@ Reports can also be sent directly to our child safety point of contact at the su
 - Child-safety reports are triaged as soon as they arrive and reviewed within 24 hours.
 - Offending content is removed and the account is permanently banned and blocked from re-registration.
 - Confirmed CSAM is reported to the National Center for Missing & Exploited Children (NCMEC) and, where required, to local law enforcement.
-- Related evidence is preserved as required by law.
+- Related evidence, including our internal activity records for the accounts involved, is preserved as required by law.
 
 ## 5. Prevention
 - 18+ age gate at sign-up; gender and date of birth cannot be silently changed.
