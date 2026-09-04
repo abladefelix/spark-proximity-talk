@@ -65,10 +65,6 @@ export function useInactivityTimeout(userId: string | null) {
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") touch();
     });
-    void supabase.auth.getSession().then(({ data }) => {
-      const signedInAt = Date.parse(data.session?.user?.last_sign_in_at ?? "");
-      if (Number.isFinite(signedInAt) && signedInAt > readLastActive()) touch();
-    });
 
 
     async function expire() {
