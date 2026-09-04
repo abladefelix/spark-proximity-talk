@@ -217,23 +217,13 @@ function ProfilePage() {
 
   return (
     <main className="px-5 pb-12 pt-8">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold">You</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            This is what people see when your signal lands.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0 gap-1.5"
-          onClick={signOut}
-          aria-label="Sign out"
-        >
-          <LogOut className="size-4" /> Sign out
-        </Button>
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold">You</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This is what people see when your signal lands.
+        </p>
       </div>
+
 
       <section className="mt-6 flex items-center gap-4">
         <div className="relative">
