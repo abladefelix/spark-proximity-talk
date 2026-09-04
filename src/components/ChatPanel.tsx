@@ -449,7 +449,7 @@ export function ChatPanel({
   const name = other?.display_name ?? other?.username ?? "Chat";
 
   return (
-    <div className={className ?? "flex h-full min-h-0 flex-col"}>
+    <div className={className ?? "mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
       {/* Scrollable area; the header is sticky so it stays pinned while messages scroll. */}
       <div
         ref={scrollRef}
@@ -460,7 +460,7 @@ export function ChatPanel({
       >
         {/* Header pinned at the top of the chat. */}
         <header
-          className="sticky top-0 z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background px-1.5 pb-2"
+          className="sticky top-0 z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background/90 px-1.5 pb-2 backdrop-blur-md"
           style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
         >
           <button
@@ -552,7 +552,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-1.5 bg-background/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5"
+        className="z-20 flex shrink-0 items-end gap-1.5 border-t border-border/40 bg-background/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md"
       >
         <input
           ref={fileRef}
