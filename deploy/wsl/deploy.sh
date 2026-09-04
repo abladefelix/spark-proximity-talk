@@ -100,6 +100,9 @@ set_env VITE_SUPABASE_PROJECT_ID "selfhosted"
 set_env SUPABASE_PROJECT_ID "selfhosted"
 echo "    backend -> $SUPA_URL"
 
+echo "==> Applying database migrations"
+bash "$APP_DIR/deploy/wsl/apply-migrations.sh" "$APP_DIR" /srv/supabase
+
 echo "==> Installing dependencies"
 npm ci --no-audit --no-fund
 
