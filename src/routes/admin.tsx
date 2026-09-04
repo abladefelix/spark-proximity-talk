@@ -890,6 +890,28 @@ export function AdminPage() {
           </p>
 
           <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Auto sign-out after inactivity
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              step={5}
+              value={idleDraft ?? String(idleMinutes ?? DEFAULT_INACTIVITY_MIN)}
+              onChange={(e) => setIdleDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">minutes</span>
+            <Button size="sm" onClick={() => void saveIdleTimeout()}>
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Members with no activity for this long are signed out. Use 0 to never sign them out.
+          </p>
+
+
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
             Chat history length
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
