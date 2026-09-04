@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Gift, Store } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { errorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 
 type Zone = {
@@ -38,7 +39,7 @@ export function ZonePerk() {
       qc.invalidateQueries({ queryKey: ["my-zone"] });
       toast.success("Perk claimed — show the code at the counter");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not claim"),
+    onError: (e) => toast.error(errorMessage(e, "Could not claim")),
   });
 
   if (!zone) return null;
