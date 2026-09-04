@@ -79,7 +79,7 @@ const GROUPS: TreeGroup[] = [
       {
         label: "Chats",
         path: "/chats",
-        children: [{ label: "Match chat", path: "/chat/$matchId", note: "One-to-one conversation" }],
+        children: [{ label: "Match chat", note: "One-to-one conversation per match" }],
       },
       { label: "Local", path: "/local", note: "Question broadcasts near you" },
       {
@@ -129,15 +129,9 @@ const GROUPS: TreeGroup[] = [
           { label: "Billing, Pro plans, backups, settings" },
         ],
       },
-      { label: "Pro & billing", icon: Crown, label2: undefined } as unknown as TreeNode,
-    ].filter(Boolean),
+    ],
   },
 ];
-
-// Drop the accidental placeholder node shape above if present.
-GROUPS[GROUPS.length - 1].nodes = GROUPS[GROUPS.length - 1].nodes.filter(
-  (n) => typeof n.label === "string",
-);
 
 function Node({ node, depth }: { node: TreeNode; depth: number }) {
   return (

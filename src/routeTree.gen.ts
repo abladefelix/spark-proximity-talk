@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BusinessRouteImport } from './routes/business'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as Console9f42x7RouteImport } from './routes/console-9f42x7'
 import { Route as CsaeRouteImport } from './routes/csae'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
@@ -21,6 +22,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TreeviewRouteImport } from './routes/treeview'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
@@ -56,6 +58,11 @@ const BusinessRoute = BusinessRouteImport.update({
   path: '/business',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Console9f42x7Route = Console9f42x7RouteImport.update({
   id: '/console-9f42x7',
   path: '/console-9f42x7',
@@ -89,6 +96,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreeviewRoute = TreeviewRouteImport.update({
+  id: '/treeview',
+  path: '/treeview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UpgradeRoute = UpgradeRouteImport.update({
@@ -150,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/business': typeof BusinessRoute
+  '/changelog': typeof ChangelogRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -157,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
@@ -173,6 +187,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/business': typeof BusinessRoute
+  '/changelog': typeof ChangelogRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -180,6 +195,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
@@ -198,6 +214,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/business': typeof BusinessRoute
+  '/changelog': typeof ChangelogRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -205,6 +222,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
@@ -223,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/business'
+    | '/changelog'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -230,6 +249,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/treeview'
     | '/upgrade'
     | '/verified'
     | '/chats'
@@ -246,6 +266,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/business'
+    | '/changelog'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -253,6 +274,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/treeview'
     | '/upgrade'
     | '/verified'
     | '/chats'
@@ -270,6 +292,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/business'
+    | '/changelog'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -277,6 +300,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/treeview'
     | '/upgrade'
     | '/verified'
     | '/_authenticated/chats'
@@ -295,6 +319,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   BusinessRoute: typeof BusinessRoute
+  ChangelogRoute: typeof ChangelogRoute
   Console9f42x7Route: typeof Console9f42x7Route
   CsaeRoute: typeof CsaeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
@@ -302,6 +327,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  TreeviewRoute: typeof TreeviewRoute
   UpgradeRoute: typeof UpgradeRoute
   VerifiedRoute: typeof VerifiedRoute
   ApiPublicUsernameSignInRoute: typeof ApiPublicUsernameSignInRoute
@@ -344,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/business'
       fullPath: '/business'
       preLoaderRoute: typeof BusinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/console-9f42x7': {
@@ -393,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/treeview': {
+      id: '/treeview'
+      path: '/treeview'
+      fullPath: '/treeview'
+      preLoaderRoute: typeof TreeviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upgrade': {
@@ -493,6 +533,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   BusinessRoute: BusinessRoute,
+  ChangelogRoute: ChangelogRoute,
   Console9f42x7Route: Console9f42x7Route,
   CsaeRoute: CsaeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
@@ -500,6 +541,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  TreeviewRoute: TreeviewRoute,
   UpgradeRoute: UpgradeRoute,
   VerifiedRoute: VerifiedRoute,
   ApiPublicUsernameSignInRoute: ApiPublicUsernameSignInRoute,
