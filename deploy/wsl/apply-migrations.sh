@@ -31,6 +31,32 @@ psql_run -q -c "create table if not exists public.repo_migrations (
   applied_at timestamptz not null default now()
 );"
 
+# Servers installed before repo_migrations already contain the mature core
+# schema. Replaying the early history against that schema is unsafe: old
+# CREATE OR REPLACE FUNCTION statements can have return signatures that were
+# deliberately replaced by later migrations. Mark only the legacy history as
+# the baseline, then run the idempotent reconciliation migration and everything
+# after it normally. A genuinely empty database still runs every migration.
+BASELINE_BEFORE="20260904042446_a1d0fb0d-5fef-47c6-b1be-80a00052653f.sql"
+ledger_count="$(psql_run -tAc "select count(*) from public.repo_migrations")"
+core_count="$(psql_run -tAc "
+  select count(*)
+  from (values ('profiles'), ('locations'), ('app_settings'), ('user_roles')) required(name)
+  where to_regclass('public.' || required.name) is not null;
+")"
+
+if [[ "$ledger_count" == "0" && "$core_count" == "4" ]]; then
+  echo "    existing core database detected — recording legacy migration baseline"
+  baselined=0
+  for file in "$MIG_DIR"/*.sql; do
+    name="$(basename "$file")"
+    [[ "$name" < "$BASELINE_BEFORE" ]] || continue
+    psql_run -q -c "insert into public.repo_migrations (name) values ('$name') on conflict do nothing;"
+    baselined=$((baselined + 1))
+  done
+  echo "    $baselined legacy migrations recorded; reconciliation will run next"
+fi
+
 applied=0
 skipped=0
 for file in "$MIG_DIR"/*.sql; do
@@ -71,8 +97,18 @@ sleep 3
 echo "==> Verifying the functions the app calls"
 MISSING="$(psql_run -tAc "
   with needed(name) as (
-    values ('set_my_intent'),('set_my_mood'),('drop_help_beacon'),
-           ('nearby_help_beacons'),('post_broadcast'),('nearby_people')
+    values
+      ('admin_activity_log'), ('admin_activity_log_summary'),
+      ('admin_activity_report'), ('admin_billing_stats'), ('admin_exists'),
+      ('admin_purge_stale_locations'), ('admin_review_reactivation'),
+      ('admin_set_ban'), ('admin_set_subscription'), ('admin_stats'),
+      ('admin_wipe_user_activity'), ('answer_broadcast'),
+      ('billing_public_info'), ('chat_retention'), ('claim_first_admin'),
+      ('claim_zone_perk'), ('drop_help_beacon'), ('my_profile_private'),
+      ('my_zone'), ('nearby_broadcasts'), ('nearby_help_beacons'),
+      ('nearby_people'), ('post_broadcast'), ('purge_expired_signals'),
+      ('purge_old_chats'), ('set_chat_vanish'), ('set_my_intent'),
+      ('set_my_mood'), ('signal_broadcast_author'), ('staff_profiles')
   )
   select string_agg(n.name, ', ')
   from needed n
