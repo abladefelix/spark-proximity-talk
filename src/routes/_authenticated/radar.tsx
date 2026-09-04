@@ -535,7 +535,7 @@ function RadarPage() {
     mutationFn: async (person: NearbyPerson) => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
-      const { error } = await withTimeout(
+      const result = await withTimeout<{ error: { message: string } | null }>(
         (supabase as any)
           .from("signals")
           .insert({
@@ -547,7 +547,7 @@ function RadarPage() {
         10_000,
         "Signal",
       );
-      if (error) throw error;
+      if (result.error) throw result.error;
       return person;
     },
     onSuccess: async (person) => {
