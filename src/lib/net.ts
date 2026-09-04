@@ -55,6 +55,28 @@ const OFFLINE_HINTS = [
   "err_internet_disconnected",
 ];
 
+/**
+ * True for a request the browser or server simply cancelled (navigation away,
+ * closed tab, HMR reload). Not a real fault — never show it to the user.
+ */
+export function isAbortError(error: unknown): boolean {
+  if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+    if (error.name === "AbortError") return true;
+  }
+  const name = (error as { name?: string } | null)?.name ?? "";
+  if (name === "AbortError" || name === "CanceledError") return true;
+  const message = (error instanceof Error ? error.message : String(error ?? ""))
+    .toLowerCase()
+    .trim();
+  return (
+    message === "aborted" ||
+    message === "error: aborted" ||
+    message.includes("the operation was aborted") ||
+    message.includes("request aborted") ||
+    message.includes("socket hang up")
+  );
+}
+
 /** True when an error looks like a connectivity problem rather than a real bug. */
 export function isNetworkError(error: unknown): boolean {
   if (!isOnline()) return true;
