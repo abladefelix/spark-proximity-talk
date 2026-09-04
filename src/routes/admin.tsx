@@ -1037,18 +1037,29 @@ export function AdminPage() {
 
 
         <TabsContent value="people" className="mt-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPeoplePage(0);
-              }}
-              placeholder="Search people"
-              className="h-9 pl-9"
-            />
-          </div>
+          <AdminSearch
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setPeoplePage(0);
+            }}
+            placeholder="Search people"
+          />
+          <FilterChips
+            className="mt-2"
+            value={peopleFilter}
+            onChange={(v) => {
+              setPeopleFilter(v);
+              setPeoplePage(0);
+            }}
+            options={[
+              { value: "all", label: "All", count: people.length },
+              { value: "verified", label: "Verified", count: people.filter((p) => p.verified).length },
+              { value: "unverified", label: "Unverified", count: people.filter((p) => !p.verified).length },
+              { value: "banned", label: "Suspended", count: people.filter((p) => p.banned).length },
+              { value: "staff", label: "Staff", count: people.filter((p) => p.roles.length > 0).length },
+            ]}
+          />
           <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
             {paginate(filtered, peoplePage, PER_PAGE).map((p) => (
               <li key={p.id} className="flex items-center gap-2.5 px-2.5 py-2">
