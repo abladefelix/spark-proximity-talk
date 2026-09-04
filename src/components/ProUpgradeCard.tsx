@@ -95,10 +95,18 @@ export function ProUpgradeCard() {
         const list = await withTimeout(listPackages(), storeName());
         if (cancelled) return;
         setPackages(list);
+        setDiag(getStoreDiagnostics());
         setReady(true);
       } catch (e) {
         if (cancelled) return;
-        setStoreError(e instanceof Error ? e.message : "Could not reach the store.");
+        const msg = e instanceof Error ? e.message : "Could not reach the store.";
+        const key =
+          (typeof navigator !== "undefined" && billing?.android_api_key) ||
+          billing?.ios_api_key ||
+          null;
+        recordStoreError(msg, Boolean(key), key ? key.slice(0, 5) : null);
+        setDiag(getStoreDiagnostics());
+        setStoreError(msg);
         setReady(true);
       }
     })();
