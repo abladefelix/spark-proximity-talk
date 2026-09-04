@@ -304,7 +304,7 @@ function AuthPage() {
             />
           </div>
         )}
-        {mode === "signin" ? (
+        {mode !== "signup" ? (
           <div className="space-y-2">
             <Label htmlFor="identifier">Username or email</Label>
             <Input
