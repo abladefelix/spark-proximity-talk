@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, LogOut, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -63,10 +63,24 @@ function ConsoleRoute() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
+      <div className="flex justify-end px-4 pt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            await supabase.auth.signOut();
+            toast.success("Signed out");
+          }}
+        >
+          <LogOut className="size-4" />
+          Sign out
+        </Button>
+      </div>
       <AdminPage />
     </div>
   );
 }
+
 
 function ConsoleSignIn() {
   const [identifier, setIdentifier] = useState("");
