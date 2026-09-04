@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { ChatPanel } from "@/components/ChatPanel";
 
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({
@@ -18,14 +17,13 @@ export const Route = createFileRoute("/_authenticated/chat/$matchId")({
 
 function ChatPage() {
   const { matchId } = Route.useParams();
-  return (
-    <ChatPanel
-      matchId={matchId}
-      leading={
-        <Link to="/chats" className="text-muted-foreground">
-          <ChevronLeft className="size-6" />
-        </Link>
-      }
-    />
-  );
+  const navigate = useNavigate();
+  const router = useRouter();
+
+  const goBack = () => {
+    if (router.history.canGoBack()) router.history.back();
+    else void navigate({ to: "/chats" });
+  };
+
+  return <ChatPanel matchId={matchId} onBack={goBack} />;
 }

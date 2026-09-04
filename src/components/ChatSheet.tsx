@@ -113,6 +113,27 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  // Android hardware back closes the chat instead of leaving the app.
+  useEffect(() => {
+    if (!matchId) return;
+    let remove: (() => void) | undefined;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("backButton", () => closeChat());
+        if (cancelled) void handle.remove();
+        else remove = () => void handle.remove();
+      } catch {
+        /* not running natively */
+      }
+    })();
+    return () => {
+      cancelled = true;
+      remove?.();
+    };
+  }, [matchId, closeChat]);
+
   return (
     <ChatSheetContext.Provider value={value}>
       {children}
@@ -122,7 +143,7 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           role="dialog"
           aria-modal="true"
           aria-label="Chat"
-          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-background animate-in fade-in slide-in-from-right-2 duration-200"
+          className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
           style={{ paddingBottom: keyboard }}
         >
           <ChatBackdrop />

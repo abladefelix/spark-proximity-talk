@@ -49,8 +49,10 @@ function applyLook(look: BootLook) {
   } catch {
     /* storage unavailable */
   }
+  // Light is the product default; the admin default no longer forces dark.
+  void adminTheme;
   const theme: "light" | "dark" =
-    userTheme === "light" || userTheme === "dark" ? userTheme : adminTheme;
+    userTheme === "light" || userTheme === "dark" ? userTheme : "light";
   root.classList.toggle("dark", theme === "dark");
 
   const hue = Number(look.accent_hue);

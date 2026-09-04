@@ -14,15 +14,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    const read = () => {
+    const read = (): Theme => {
       const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-      // Admin's default theme is cached so the pre-paint boot script and this
-      // hook agree — otherwise the app flashes the old theme on every launch.
-      const adminDefault = localStorage.getItem("skanaround-default-theme") as Theme | null;
-      return (
-        // Light is the product default; system preference does not override it.
-        stored ?? adminDefault ?? "light"
-      );
+      // Light is the product default everywhere (app and admin); only an
+      // explicit user choice switches to dark.
+      return stored === "dark" || stored === "light" ? stored : "light";
     };
     setThemeState(read());
     // The early boot fetch may land after mount with a newer admin default.

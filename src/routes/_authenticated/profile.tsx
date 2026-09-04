@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BadgeCheck, Bell, BookOpen, Camera, Ban, ShieldCheck, Trash2 } from "lucide-react";
+import { BadgeCheck, Bell, BookOpen, Camera, Ban, LogOut, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertDialog,
@@ -217,10 +217,23 @@ function ProfilePage() {
 
   return (
     <main className="px-5 pb-12 pt-8">
-      <h1 className="text-2xl font-semibold">You</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        This is what people see when your signal lands.
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">You</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This is what people see when your signal lands.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={signOut}
+          aria-label="Sign out"
+        >
+          <LogOut className="size-4" /> Sign out
+        </Button>
+      </div>
 
       <section className="mt-6 flex items-center gap-4">
         <div className="relative">
@@ -433,6 +446,8 @@ function ProfilePage() {
           <span className="text-muted-foreground">›</span>
         </Link>
 
+        <EmailSection />
+
         <div className="rounded-2xl border border-border p-4">
           <p className="text-sm font-semibold">Legal & support</p>
           <div className="mt-3 flex flex-col gap-2 text-sm">
@@ -465,8 +480,13 @@ function ProfilePage() {
           </div>
         </div>
 
-        <Button variant="ghost" className="w-full text-muted-foreground" onClick={signOut}>
-          Sign out
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full gap-2 border-border font-semibold"
+          onClick={signOut}
+        >
+          <LogOut className="size-4" /> Sign out
         </Button>
 
         <DeleteAccountSection />
@@ -479,6 +499,75 @@ function ProfilePage() {
  * Self-service, permanent account deletion. Required by Apple (5.1.1(v)) and
  * Google Play; the typed confirmation keeps it from being a one-tap accident.
  */
+function EmailSection() {
+  const [email, setEmail] = useState("");
+  const [current, setCurrent] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => {
+      setCurrent(data.user?.email ?? null);
+      setEmail(data.user?.email ?? "");
+    });
+  }, []);
+
+  async function changeEmail() {
+    const next = email.trim().toLowerCase();
+    if (!next || !next.includes("@")) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    if (next === (current ?? "").toLowerCase()) {
+      toast.info("That's already your email");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser(
+      { email: next },
+      { emailRedirectTo: `${window.location.origin}/profile` },
+    );
+    setBusy(false);
+    if (error) {
+      toast.error(error.message || "Could not change your email");
+      return;
+    }
+    toast.success("Check your new inbox to confirm the change");
+  }
+
+  return (
+    <div className="rounded-2xl border border-border p-4">
+      <p className="flex items-center gap-2 text-sm font-semibold">
+        <Mail className="size-4 text-primary" /> Email address
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Used to sign in and reset your password. We send a confirmation link to the new address.
+      </p>
+      <div className="mt-3 space-y-2">
+        <Label htmlFor="account-email" className="sr-only">
+          Email address
+        </Label>
+        <Input
+          id="account-email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
+        <Button
+          variant="soft"
+          className="w-full"
+          disabled={busy || !email.trim()}
+          onClick={() => void changeEmail()}
+        >
+          {busy ? "Sending…" : "Update email"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function DeleteAccountSection() {
   const navigate = useNavigate();
   const runDelete = useServerFn(deleteMyAccount);
