@@ -1227,10 +1227,11 @@ export type Database = {
       admin_activity_log: {
         Args: {
           _category?: string
-          _days?: number
+          _from?: string
           _limit?: number
           _offset?: number
           _search?: string
+          _to?: string
           _user?: string
         }
         Returns: {
@@ -1249,7 +1250,7 @@ export type Database = {
         }[]
       }
       admin_activity_log_summary: {
-        Args: { _days?: number }
+        Args: { _from?: string; _to?: string }
         Returns: {
           category: string
           events: number

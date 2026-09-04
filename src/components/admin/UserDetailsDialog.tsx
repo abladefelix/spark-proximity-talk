@@ -92,7 +92,8 @@ export function UserDetailsDialog({
     queryFn: async () => {
       const { data: rows, error: err } = await supabase.rpc("admin_activity_log", {
         _user: userId!,
-        _days: 365,
+        _from: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+        _to: new Date().toISOString(),
         _limit: 25,
         _offset: 0,
       });
