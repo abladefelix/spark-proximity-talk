@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithIdentifier } from "@/lib/username-auth.functions";
 import { signInWithIdentifierClient } from "@/lib/sign-in";
 
 import { Button } from "@/components/ui/button";
@@ -71,7 +69,6 @@ function ConsoleRoute() {
 }
 
 function ConsoleSignIn() {
-  const signIn = useServerFn(signInWithIdentifier);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -80,7 +77,7 @@ function ConsoleSignIn() {
     e.preventDefault();
     setBusy(true);
     try {
-      await signInWithIdentifierClient(identifier, password, signIn);
+      await signInWithIdentifierClient(identifier, password);
       toast.success("Signed in");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid login credentials");

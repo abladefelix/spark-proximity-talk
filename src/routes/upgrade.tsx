@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithIdentifier } from "@/lib/username-auth.functions";
 import { signInWithIdentifierClient } from "@/lib/sign-in";
 
 import {
@@ -106,7 +105,7 @@ function UpgradePage() {
 
   const signIn = useMutation({
     mutationFn: async () => {
-      await signInWithIdentifierClient(identifier, password, signInWithIdentifier);
+      await signInWithIdentifierClient(identifier, password);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not sign in"),
   });

@@ -1,10 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PasswordSignInResult } from "./username-auth.functions";
 
-type ServerSignIn = (args: {
-  data: { identifier: string; password: string };
-}) => Promise<PasswordSignInResult>;
-
 /**
  * Signs in with an email address or a username.
  *
@@ -15,7 +11,6 @@ type ServerSignIn = (args: {
 export async function signInWithIdentifierClient(
   identifier: string,
   password: string,
-  serverSignIn: ServerSignIn,
 ): Promise<void> {
   const id = identifier.trim();
   if (!id || !password) throw new Error("Enter your username or email and password");
@@ -26,9 +21,13 @@ export async function signInWithIdentifierClient(
     return;
   }
 
-  let tokens: PasswordSignInResult;
+  let response: Response;
   try {
-    tokens = await serverSignIn({ data: { identifier: id, password } });
+    response = await fetch("/api/public/username-sign-in", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ identifier: id, password }),
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (/load failed|failed to fetch|network/i.test(message)) {
@@ -37,9 +36,22 @@ export async function signInWithIdentifierClient(
     throw new Error(message);
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      response.status === 401
+        ? "Sign-in request was rejected. Restart the app service and try again."
+        : "The sign-in service returned an invalid response.",
+    );
+  }
+  const result = (await response.json()) as PasswordSignInResult & { error?: string };
+  if (!response.ok || !result.access_token || !result.refresh_token) {
+    throw new Error(result.error ?? "Invalid login credentials");
+  }
+
   const { error } = await supabase.auth.setSession({
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
+    access_token: result.access_token,
+    refresh_token: result.refresh_token,
   });
   if (error) throw new Error(error.message);
 }
