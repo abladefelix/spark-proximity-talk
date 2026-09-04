@@ -23,6 +23,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
+import { Route as AuthenticatedLocalRouteImport } from './routes/_authenticated/local'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
@@ -98,6 +99,11 @@ const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
   path: '/chats',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLocalRoute = AuthenticatedLocalRouteImport.update({
+  id: '/local',
+  path: '/local',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
+  '/local': typeof AuthenticatedLocalRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/chats': typeof AuthenticatedChatsRoute
+  '/local': typeof AuthenticatedLocalRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/upgrade': typeof UpgradeRoute
   '/verified': typeof VerifiedRoute
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
+  '/_authenticated/local': typeof AuthenticatedLocalRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/chats'
+    | '/local'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/chats'
+    | '/local'
     | '/profile'
     | '/radar'
     | '/chat/$matchId'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/verified'
     | '/_authenticated/chats'
+    | '/_authenticated/local'
     | '/_authenticated/profile'
     | '/_authenticated/radar'
     | '/_authenticated/chat/$matchId'
@@ -371,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/local': {
+      id: '/_authenticated/local'
+      path: '/local'
+      fullPath: '/local'
+      preLoaderRoute: typeof AuthenticatedLocalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -411,6 +430,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
+  AuthenticatedLocalRoute: typeof AuthenticatedLocalRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
   AuthenticatedChatMatchIdRoute: typeof AuthenticatedChatMatchIdRoute
@@ -418,6 +438,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsRoute: AuthenticatedChatsRoute,
+  AuthenticatedLocalRoute: AuthenticatedLocalRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRadarRoute: AuthenticatedRadarRoute,
   AuthenticatedChatMatchIdRoute: AuthenticatedChatMatchIdRoute,
