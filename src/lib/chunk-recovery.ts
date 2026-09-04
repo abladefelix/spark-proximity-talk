@@ -11,6 +11,29 @@
 import { isNetworkError, isOnline } from "./net";
 
 let armed = false;
+let reloadScheduled = false;
+
+const RELOAD_MARK = "skanaround-recovery-reload";
+const RELOAD_WINDOW_MS = 60_000;
+const MAX_RELOADS = 1;
+
+/** Allow at most one automatic repair reload per minute, per tab. */
+function mayReload(): boolean {
+  if (reloadScheduled) return false;
+  try {
+    const raw = sessionStorage.getItem(RELOAD_MARK);
+    const [countRaw, atRaw] = (raw ?? "").split(":");
+    const at = Number(atRaw);
+    const recent = Number.isFinite(at) && Date.now() - at < RELOAD_WINDOW_MS;
+    const count = recent ? Number(countRaw) || 0 : 0;
+    if (count >= MAX_RELOADS) return false;
+    sessionStorage.setItem(RELOAD_MARK, `${count + 1}:${Date.now()}`);
+  } catch {
+    /* storage unavailable — still allow a single reload this tab */
+  }
+  reloadScheduled = true;
+  return true;
+}
 
 function looksLikeLostConnection(value: unknown): boolean {
   if (!value) return false;
