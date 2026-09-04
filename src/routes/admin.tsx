@@ -131,7 +131,8 @@ function Stat({
   );
 }
 
-
+type PeopleFilter = "all" | "verified" | "unverified" | "banned" | "staff";
+type VerifyFilter = "all" | "selfie" | "pro";
 
 export function AdminPage() {
   const queryClient = useQueryClient();
