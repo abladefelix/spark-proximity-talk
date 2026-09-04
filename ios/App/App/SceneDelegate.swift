@@ -36,6 +36,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     deinit {
         splashTimer?.invalidate()
+        offlineTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
 
