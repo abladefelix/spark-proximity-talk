@@ -60,6 +60,12 @@ export function useInactivityTimeout(userId: string | null) {
     const touch = () => writeLastActive(Date.now());
     if (!localStorage.getItem(STORAGE_KEY)) touch();
 
+    // A fresh sign-in must never be voided by a stale timestamp left over from
+    // an earlier session on this device.
+    const authSub = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") touch();
+    });
+
     async function expire() {
       if (done) return;
       done = true;
