@@ -9,6 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
+
+const PER_PAGE = 20;
 
 type Row = {
   id: string;
@@ -26,6 +30,9 @@ export function NotificationsTab() {
   const [audience, setAudience] = useState<"all" | "user">("all");
   const [target, setTarget] = useState("");
   const [query, setQuery] = useState("");
+  const [sentQuery, setSentQuery] = useState("");
+  const [sentAudience, setSentAudience] = useState<"all" | "everyone" | "user">("all");
+  const [sentPage, setSentPage] = useState(0);
 
   const { data: sent = [], isLoading } = useQuery({
     queryKey: ["admin-notifications"],
@@ -34,7 +41,7 @@ export function NotificationsTab() {
         .from("notifications")
         .select("id,title,body,audience,user_id,created_at")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(500);
       if (error) throw error;
       return (data ?? []) as Row[];
     },
