@@ -230,13 +230,21 @@ function RootComponent() {
   // banner appears when things break and clears itself when they recover.
   useEffect(() => {
     const unsubQueries = queryClient.getQueryCache().subscribe((event) => {
-      if (event?.type === "updated" && event.query.state.status === "error") {
-        reportServiceProblem("query");
+      if (event?.type !== "updated") return;
+      const status = event.query.state.status;
+      if (status === "error") {
+        reportServiceProblem("query", event.query.state.error);
+      } else if (status === "success" && event.query.state.dataUpdatedAt > 0) {
+        reportServiceSuccess();
       }
     });
     const unsubMutations = queryClient.getMutationCache().subscribe((event) => {
-      if (event?.type === "updated" && event.mutation.state.status === "error") {
-        reportServiceProblem("mutation");
+      if (event?.type !== "updated") return;
+      const status = event.mutation.state.status;
+      if (status === "error") {
+        reportServiceProblem("mutation", event.mutation.state.error);
+      } else if (status === "success") {
+        reportServiceSuccess();
       }
     });
     return () => {
