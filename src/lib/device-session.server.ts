@@ -26,14 +26,33 @@ async function admin() {
   return supabaseAdmin as any;
 }
 
-/** Any device registered for this account other than the one signing in. */
+/**
+ * A device is only "in use" while its heartbeat keeps running. When someone
+ * closes the app without signing out the record stops being refreshed, so
+ * anything older than this window is treated as abandoned and cleared —
+ * otherwise a stale record locks the owner out of their own account.
+ */
+const STALE_AFTER_MS = 15 * 60 * 1000;
+
+/** Any device still actively holding this account, other than the one signing in. */
 export async function otherDevice(userId: string, deviceId: string): Promise<OtherDevice | null> {
   const db = await admin();
+  const cutoff = new Date(Date.now() - STALE_AFTER_MS).toISOString();
+
+  // Drop abandoned claims from earlier installs/sessions.
+  await db
+    .from("device_sessions")
+    .delete()
+    .eq("user_id", userId)
+    .neq("device_id", deviceId)
+    .lt("last_seen", cutoff);
+
   const { data } = await db
     .from("device_sessions")
     .select("device_label, last_seen")
     .eq("user_id", userId)
     .neq("device_id", deviceId)
+    .gte("last_seen", cutoff)
     .order("last_seen", { ascending: false })
     .limit(1)
     .maybeSingle();
