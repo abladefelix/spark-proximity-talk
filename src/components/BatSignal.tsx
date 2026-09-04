@@ -5,6 +5,8 @@ import { LifeBuoy, Radio } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { HELP_KINDS, helpKindFor } from "@/lib/intents";
+import { errorMessage } from "@/lib/errors";
+import { publishMyLocation } from "@/lib/publish-location";
 import { useChatSheet } from "@/components/ChatSheet";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { Button } from "@/components/ui/button";
@@ -52,6 +54,7 @@ export function BatSignalButton() {
 
   const drop = useMutation({
     mutationFn: async () => {
+      await publishMyLocation();
       const { error } = await (supabase as any).rpc("drop_help_beacon", {
         _kind: kind,
         _note: note.trim(),
@@ -66,7 +69,7 @@ export function BatSignalButton() {
         description: "Everyone within 200 m sees it for the next 3 minutes.",
       });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send"),
+    onError: (e) => toast.error(errorMessage(e, "Could not send")),
   });
 
   return (
@@ -147,7 +150,7 @@ export function HelpBeaconList() {
       if (b.match_id) openChat(b.match_id);
       else toast.success("They've been told you can help");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not respond"),
+    onError: (e) => toast.error(errorMessage(e, "Could not respond")),
   });
 
   if (beacons.length === 0) return null;

@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { MessageCircleQuestion, Plus, Zap } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { errorMessage } from "@/lib/errors";
+import { publishMyLocation } from "@/lib/publish-location";
 import { useChatSheet } from "@/components/ChatSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +57,7 @@ export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
   const post = useMutation({
     mutationFn: async () => {
       const opts = options.map((o) => o.trim()).filter(Boolean);
+      await publishMyLocation();
       const { error } = await (supabase as any).rpc("post_broadcast", {
         _question: question.trim(),
         _options: opts,
@@ -68,7 +71,7 @@ export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
       setOptions(["", ""]);
       toast.success("Asked the area", { description: "Answers are anonymous for 15 minutes." });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not post"),
+    onError: (e) => toast.error(errorMessage(e, "Could not post")),
   });
 
   const answer = useMutation({
@@ -80,7 +83,7 @@ export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["broadcasts"] }),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not answer"),
+    onError: (e) => toast.error(errorMessage(e, "Could not answer")),
   });
 
   const reachOut = useMutation({
@@ -96,7 +99,7 @@ export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
       if (matchId) openChat(matchId);
       else toast.success("Signal sent — they'll see it on their radar");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not signal"),
+    onError: (e) => toast.error(errorMessage(e, "Could not signal")),
   });
 
   return (

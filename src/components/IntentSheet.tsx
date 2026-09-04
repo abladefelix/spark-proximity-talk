@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Sparkles, X } from "lucide-react";
 
 import { INTENTS, intentFor } from "@/lib/intents";
+import { errorMessage } from "@/lib/errors";
 import { useMyIntent, useSetIntent, useSetMood } from "@/hooks/useIntent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export function IntentSheet({
       toast.success(def ? `You're set: ${def.label}` : "Intent cleared");
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save");
+      toast.error(errorMessage(e, "Could not save"));
     }
   }
 
