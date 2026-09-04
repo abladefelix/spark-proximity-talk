@@ -643,11 +643,46 @@ export function AdminPage() {
 
   const filtered = people.filter((p) => {
     const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
+    const matchesSearch =
+      !q ||
       p.username.toLowerCase().includes(q) ||
       (p.display_name ?? "").toLowerCase().includes(q) ||
-      p.id.includes(q)
+      p.id.includes(q);
+    if (!matchesSearch) return false;
+    if (peopleFilter === "verified") return p.verified;
+    if (peopleFilter === "unverified") return !p.verified;
+    if (peopleFilter === "banned") return p.banned;
+    if (peopleFilter === "staff") return p.roles.length > 0;
+    return true;
+  });
+
+  const verifyQuery = verifySearch.trim().toLowerCase();
+  const filteredVerifications = verifications.filter((v) => {
+    if (verifyFilter !== "all" && (v.source ?? "selfie") !== verifyFilter) return false;
+    if (!verifyQuery) return true;
+    return (
+      (v.person?.username ?? "").toLowerCase().includes(verifyQuery) ||
+      (v.person?.display_name ?? "").toLowerCase().includes(verifyQuery)
+    );
+  });
+
+  const reportsQuery = reportsSearch.trim().toLowerCase();
+  const filteredReports = reports.filter((r) => {
+    if (!reportsQuery) return true;
+    return (
+      (r.reportedProfile?.username ?? "").toLowerCase().includes(reportsQuery) ||
+      (r.reporterProfile?.username ?? "").toLowerCase().includes(reportsQuery) ||
+      (r.reason ?? "").toLowerCase().includes(reportsQuery)
+    );
+  });
+
+  const appealsQuery = appealsSearch.trim().toLowerCase();
+  const filteredAppeals = appeals.filter((a) => {
+    if (!appealsQuery) return true;
+    return (
+      (a.person?.username ?? "").toLowerCase().includes(appealsQuery) ||
+      (a.person?.display_name ?? "").toLowerCase().includes(appealsQuery) ||
+      (a.message ?? "").toLowerCase().includes(appealsQuery)
     );
   });
 
