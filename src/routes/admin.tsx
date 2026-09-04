@@ -35,6 +35,10 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
 import { useMaxRadius } from "@/hooks/useMaxRadius";
+import {
+  useInactivityTimeoutMinutes,
+  DEFAULT_INACTIVITY_MIN,
+} from "@/hooks/useInactivityTimeout";
 import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 
@@ -155,6 +159,27 @@ export function AdminPage() {
   const { data: chatTtl } = useChatTtlDays();
   const [chatTtlDraft, setChatTtlDraft] = useState<string | null>(null);
   const [maxRadiusDraft, setMaxRadiusDraft] = useState<string | null>(null);
+  const { data: idleMinutes } = useInactivityTimeoutMinutes();
+  const [idleDraft, setIdleDraft] = useState<string | null>(null);
+
+  async function saveIdleTimeout() {
+    const value = Math.round(Number(idleDraft ?? idleMinutes ?? DEFAULT_INACTIVITY_MIN));
+    if (!Number.isFinite(value) || value < 0) {
+      toast.error("Enter 0 or more minutes");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ inactivity_timeout_min: value })
+      .eq("id", "global");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["app-inactivity-timeout"] });
+    setIdleDraft(null);
+    toast.success(value === 0 ? "Auto sign-out turned off" : "Auto sign-out updated");
+  }
 
   async function saveChatTtl() {
     const value = Math.round(Number(chatTtlDraft ?? chatTtl ?? 30));
@@ -888,6 +913,28 @@ export function AdminPage() {
           <p className="mt-1 text-[11px] text-muted-foreground">
             Members can pick any range up to this cap on their radar.
           </p>
+
+          <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+            Auto sign-out after inactivity
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              step={5}
+              value={idleDraft ?? String(idleMinutes ?? DEFAULT_INACTIVITY_MIN)}
+              onChange={(e) => setIdleDraft(e.target.value)}
+              className="h-9 w-32"
+            />
+            <span className="text-xs text-muted-foreground">minutes</span>
+            <Button size="sm" onClick={() => void saveIdleTimeout()}>
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Members with no activity for this long are signed out. Use 0 to never sign them out.
+          </p>
+
 
           <p className="mt-4 text-[11px] uppercase tracking-wide text-muted-foreground">
             Chat history length

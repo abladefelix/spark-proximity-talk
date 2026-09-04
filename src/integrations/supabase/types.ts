@@ -74,6 +74,7 @@ export type Database = {
           empty_radar_text: string
           font_family: string
           id: string
+          inactivity_timeout_min: number
           location_sharing_enabled: boolean
           logo_url: string | null
           max_message_len: number
@@ -114,6 +115,7 @@ export type Database = {
           empty_radar_text?: string
           font_family?: string
           id?: string
+          inactivity_timeout_min?: number
           location_sharing_enabled?: boolean
           logo_url?: string | null
           max_message_len?: number
@@ -154,6 +156,7 @@ export type Database = {
           empty_radar_text?: string
           font_family?: string
           id?: string
+          inactivity_timeout_min?: number
           location_sharing_enabled?: boolean
           logo_url?: string | null
           max_message_len?: number

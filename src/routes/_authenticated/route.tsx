@@ -5,6 +5,7 @@ import { ChatSheetProvider } from "@/components/ChatSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useDeviceSessionGuard } from "@/hooks/useDeviceSessionGuard";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BiometricGate } from "@/components/BiometricGate";
 
@@ -31,6 +32,7 @@ function AuthedLayout() {
   const { user } = Route.useRouteContext();
   useNotifications(user?.id ?? null);
   useDeviceSessionGuard(user?.id ?? null);
+  useInactivityTimeout(user?.id ?? null);
 
 
   return (
