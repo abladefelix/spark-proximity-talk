@@ -13,7 +13,7 @@ const items = [
 export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-2 pb-[calc(0.5rem+var(--safe-bottom))]">
         {items.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}

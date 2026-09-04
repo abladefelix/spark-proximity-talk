@@ -109,7 +109,10 @@ export async function sendFcmNotification({
             token,
             notification: { title, body },
             data: data ?? {},
-            android: { priority: "HIGH", notification: { sound: "default" } },
+            android: {
+              priority: "HIGH",
+              notification: { sound: "default", icon: "ic_stat_skanaround" },
+            },
           },
         }),
       }
