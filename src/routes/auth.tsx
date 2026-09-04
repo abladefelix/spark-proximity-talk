@@ -71,6 +71,7 @@ function AuthPage() {
   // Sign-in accepts either an email address or a username.
   const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   // Set when the account is already signed in on another device.
   const [otherDevice, setOtherDevice] = useState<{ label: string; lastSeen: string } | null>(null);
   // Set when a sign-in is refused because the email is not confirmed yet —
