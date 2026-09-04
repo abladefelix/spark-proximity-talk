@@ -22,7 +22,10 @@ import {
   restore,
   storeName,
   isUserCancelled,
+  getStoreDiagnostics,
+  recordStoreError,
   type StorePackage,
+  type StoreDiagnostics,
 } from "@/lib/revenuecat";
 
 function featureList(
