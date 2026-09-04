@@ -14,23 +14,41 @@ git fetch --all --prune
 git reset --hard "origin/$BRANCH"
 
 echo "==> Installing dependencies"
-bun install --frozen-lockfile
+npm ci --no-audit --no-fund
 
 echo "==> Building"
-bun run build
+npm run build
 
 echo "==> Restarting service"
 sudo systemctl restart skanaround
 
-echo "==> Health check"
+echo "==> Health checks"
 for i in $(seq 1 30); do
   if curl -sf -o /dev/null http://127.0.0.1:3000/; then
-    echo "OK — app responding on 127.0.0.1:3000"
-    exit 0
+    break
   fi
   sleep 2
 done
 
-echo "Health check failed — recent logs:" >&2
-sudo journalctl -u skanaround -n 50 --no-pager >&2
-exit 1
+if ! curl -sf -o /dev/null http://127.0.0.1:3000/; then
+  echo "Homepage health check failed — recent logs:" >&2
+  sudo journalctl -u skanaround -n 50 --no-pager >&2
+  exit 1
+fi
+
+AUTH_HEADERS="$(mktemp)"
+AUTH_BODY="$(mktemp)"
+trap 'rm -f "$AUTH_HEADERS" "$AUTH_BODY"' EXIT
+AUTH_STATUS="$(curl -sS -D "$AUTH_HEADERS" -o "$AUTH_BODY" -w '%{http_code}' \
+  -X POST http://127.0.0.1:3000/api/public/username-sign-in \
+  -H 'content-type: application/json' \
+  --data '{"identifier":"__deployment_probe__","password":"not-a-real-password"}')"
+if [[ "$AUTH_STATUS" != "401" ]] || ! grep -qi '^content-type: application/json' "$AUTH_HEADERS" \
+  || ! grep -q 'Invalid login credentials' "$AUTH_BODY"; then
+  echo "Username sign-in check failed: HTTP $AUTH_STATUS (expected JSON HTTP 401)." >&2
+  echo "The service is stale or the sign-in route was not included in the build." >&2
+  sudo journalctl -u skanaround -n 50 --no-pager >&2
+  exit 1
+fi
+
+echo "OK — homepage and username sign-in endpoint passed"
