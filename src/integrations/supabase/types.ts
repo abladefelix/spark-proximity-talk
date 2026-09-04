@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_label: string | null
+          category: string
+          created_at: string
+          id: string
+          meta: Json
+          severity: string
+          summary: string
+          target_id: string | null
+          target_label: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_label?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          severity?: string
+          summary?: string
+          target_id?: string | null
+          target_label?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_label?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          severity?: string
+          summary?: string
+          target_id?: string | null
+          target_label?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           accent_hue: number
@@ -1182,6 +1224,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activity_log: {
+        Args: {
+          _category?: string
+          _days?: number
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _user?: string
+        }
+        Returns: {
+          action: string
+          actor_id: string
+          actor_label: string
+          category: string
+          created_at: string
+          id: string
+          meta: Json
+          severity: string
+          summary: string
+          target_id: string
+          target_label: string
+          total_count: number
+        }[]
+      }
+      admin_activity_log_summary: {
+        Args: { _days?: number }
+        Returns: {
+          category: string
+          events: number
+          last_at: string
+        }[]
+      }
       admin_activity_report: {
         Args: { _days?: number }
         Returns: {
@@ -1214,6 +1288,7 @@ export type Database = {
           stale_locations: number
         }[]
       }
+      admin_purge_activity_log: { Args: { _days?: number }; Returns: number }
       admin_purge_empty_matches: { Args: { _days?: number }; Returns: number }
       admin_purge_old_notifications: {
         Args: { _days?: number }
