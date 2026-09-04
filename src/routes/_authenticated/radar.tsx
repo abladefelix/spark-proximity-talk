@@ -1310,7 +1310,13 @@ function RadarPage() {
                     <Button
                       variant="heat"
                       className="w-full"
-                      onClick={() => openChat(selected.match_id as string)}
+                      onClick={() => {
+                        const id = selected.match_id as string;
+                        // Close the profile card first: its focus trap blocks
+                        // the chat screen rendered above it.
+                        setSelectedId(null);
+                        setTimeout(() => openChat(id), 0);
+                      }}
                     >
                       Chat
                     </Button>
