@@ -13,11 +13,69 @@ echo "==> Fetching $BRANCH"
 git fetch --all --prune
 git reset --hard "origin/$BRANCH"
 
+echo "==> Applying self-hosted backend values to .env"
+# The repo .env is version-controlled and holds the MANAGED (Lovable) backend
+# values, so `git reset --hard` above puts them back on every deploy. The
+# browser bundle bakes VITE_* in at build time, so without this overlay the
+# freshly deployed app talks to the old managed database.
+BACKEND_ENV="/etc/skanaround-backend.env"
+[[ -f "$BACKEND_ENV" ]] || BACKEND_ENV="/etc/skanaround.env"
+
+read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'"; }
+
+SUPA_URL="$(read_kv SUPABASE_URL "$BACKEND_ENV")"
+ANON="$(read_kv SUPABASE_PUBLISHABLE_KEY "$BACKEND_ENV")"
+[[ -n "$ANON" ]] || ANON="$(read_kv SUPABASE_ANON_KEY "$BACKEND_ENV")"
+
+if [[ -z "$SUPA_URL" || -z "$ANON" ]]; then
+  echo "Could not read SUPABASE_URL / key from $BACKEND_ENV." >&2
+  echo "Run: sudo bash deploy/wsl/use-selfhost-backend.sh api.skanaround.bytenetdigital.com" >&2
+  exit 1
+fi
+
+case "$SUPA_URL" in
+  *supabase.co*)
+    echo "Refusing to build: $BACKEND_ENV still points at the managed backend ($SUPA_URL)." >&2
+    echo "Run: sudo bash deploy/wsl/use-selfhost-backend.sh api.skanaround.bytenetdigital.com" >&2
+    exit 1;;
+esac
+
+set_env() { # key value
+  local k="$1" v="$2"
+  if grep -q "^$k=" .env 2>/dev/null; then
+    python3 - .env "$k" "$v" <<'PY'
+import sys, re
+f, k, v = sys.argv[1:4]
+lines = open(f).read().splitlines()
+open(f, "w").write("\n".join(f"{k}={v}" if re.match(rf"^{re.escape(k)}=", l) else l for l in lines) + "\n")
+PY
+  else
+    printf '%s=%s\n' "$k" "$v" >> .env
+  fi
+}
+
+touch .env
+set_env SUPABASE_URL "$SUPA_URL"
+set_env VITE_SUPABASE_URL "$SUPA_URL"
+set_env SUPABASE_PUBLISHABLE_KEY "$ANON"
+set_env SUPABASE_ANON_KEY "$ANON"
+set_env VITE_SUPABASE_PUBLISHABLE_KEY "$ANON"
+set_env VITE_SUPABASE_PROJECT_ID "selfhosted"
+set_env SUPABASE_PROJECT_ID "selfhosted"
+echo "    backend -> $SUPA_URL"
+
 echo "==> Installing dependencies"
 npm ci --no-audit --no-fund
 
 echo "==> Building"
 npm run build
+
+echo "==> Verifying the built bundle targets the self-hosted backend"
+if grep -rl "pxgxxlcchyxrilibecsc.supabase.co" dist .output 2>/dev/null | head -5 | grep -q .; then
+  echo "Build still contains the managed backend URL — aborting before restart." >&2
+  exit 1
+fi
+echo "    bundle clean"
 
 echo "==> Restarting service"
 sudo systemctl restart skanaround
