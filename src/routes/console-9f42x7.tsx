@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/lib/username-auth.functions";
+import { signInWithIdentifierClient } from "@/lib/sign-in";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BrandMark } from "@/components/Brand";
