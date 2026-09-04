@@ -94,7 +94,14 @@ export function ProUpgradeCard() {
         );
         if (cancelled) return;
         if (!ok) throw new Error("Store keys are missing. Please contact support.");
-        const list = await withTimeout(listPackages(), storeName());
+        const list = await withTimeout(
+          listPackages(
+            [billing.monthly_product_id, billing.yearly_product_id].filter(
+              (id): id is string => Boolean(id),
+            ),
+          ),
+          storeName(),
+        );
         if (cancelled) return;
         setPackages(list);
         setDiag(getStoreDiagnostics());
@@ -115,7 +122,15 @@ export function ProUpgradeCard() {
     return () => {
       cancelled = true;
     };
-  }, [native, billing?.enabled, billing?.ios_api_key, billing?.android_api_key, attempt]);
+  }, [
+    native,
+    billing?.enabled,
+    billing?.ios_api_key,
+    billing?.android_api_key,
+    billing?.monthly_product_id,
+    billing?.yearly_product_id,
+    attempt,
+  ]);
 
   const afterStoreChange = useCallback(
     async (managed: string | null) => {
