@@ -136,6 +136,11 @@ function Stat({
 export function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
+  const [verifySearch, setVerifySearch] = useState("");
+  const [verifyFilter, setVerifyFilter] = useState<VerifyFilter>("all");
+  const [reportsSearch, setReportsSearch] = useState("");
+  const [appealsSearch, setAppealsSearch] = useState("");
   const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
   const [statMetric, setStatMetric] = useState<StatMetric | null>(null);
   const [peoplePage, setPeoplePage] = useState(0);
