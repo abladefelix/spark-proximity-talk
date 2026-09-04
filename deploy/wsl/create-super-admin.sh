@@ -58,7 +58,12 @@ fi
 [[ -n "$ADMIN_USERNAME" ]] || read -r -p "Admin username [superadmin]: " ADMIN_USERNAME
 ADMIN_USERNAME=${ADMIN_USERNAME:-superadmin}
 if [[ -z "$ADMIN_PASSWORD" ]]; then
-  read -r -s -p "Admin password: " ADMIN_PASSWORD; echo
+  read -r -s -p "New admin password (use a new, unique password): " ADMIN_PASSWORD; echo
+  read -r -s -p "Confirm new admin password: " ADMIN_PASSWORD_CONFIRM; echo
+  [[ "$ADMIN_PASSWORD" == "$ADMIN_PASSWORD_CONFIRM" ]] || {
+    echo "Passwords do not match." >&2
+    exit 1
+  }
 fi
 [[ ${#ADMIN_PASSWORD} -ge 8 ]] || { echo "Password must be at least 8 characters." >&2; exit 1; }
 
@@ -109,6 +114,19 @@ psql_run "
   values ('$USER_ID', 'admin')
   on conflict (user_id, role) do nothing;
 " >/dev/null
+
+echo "==> Verifying the new credentials against this backend"
+LOGIN_RESP=$(curl -sS -X POST "$API_URL/auth/v1/token?grant_type=password" \
+  -H "apikey: $SERVICE_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -nc --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" \
+        '{email:$e, password:$p}')")
+if ! echo "$LOGIN_RESP" | jq -e '.access_token and .user.id' >/dev/null 2>&1; then
+  LOGIN_ERROR=$(echo "$LOGIN_RESP" | jq -r '.msg // .message // .error_description // .error // "unknown authentication error"')
+  echo "The account was updated, but sign-in verification failed: $LOGIN_ERROR" >&2
+  echo "Run this script again and choose a new password that you have never used elsewhere." >&2
+  exit 1
+fi
 
 echo
 echo "Super admin ready on this backend:"
