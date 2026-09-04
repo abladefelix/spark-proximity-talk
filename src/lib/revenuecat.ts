@@ -66,6 +66,40 @@ function periodOf(pkg: any): StorePackage["period"] {
   return "other";
 }
 
+/**
+ * Setup details captured on the last plan load. Surfaced in the app so an
+ * admin can see exactly which side of the store setup is incomplete.
+ */
+export type StoreDiagnostics = {
+  platform: string;
+  keyPresent: boolean;
+  keyPrefix: string | null;
+  offeringCount: number;
+  currentOffering: string | null;
+  productIds: string[];
+  error: string | null;
+  at: string;
+};
+
+let lastDiagnostics: StoreDiagnostics | null = null;
+
+export function getStoreDiagnostics() {
+  return lastDiagnostics;
+}
+
+export function recordStoreError(message: string, keyPresent: boolean, keyPrefix: string | null) {
+  lastDiagnostics = {
+    platform: Capacitor.getPlatform(),
+    keyPresent,
+    keyPrefix,
+    offeringCount: 0,
+    currentOffering: null,
+    productIds: [],
+    error: message,
+    at: new Date().toISOString(),
+  };
+}
+
 /** Products available for purchase, priced and localised by the store. */
 export async function listPackages(): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
@@ -77,7 +111,7 @@ export async function listPackages(): Promise<StorePackage[]> {
     const all = Object.values(offerings?.all ?? {}) as any[];
     packages = all.flatMap((o) => o?.availablePackages ?? []);
   }
-  return packages.map((p) => ({
+  const mapped = packages.map((p) => ({
     identifier: p.identifier,
     productId: p.product?.identifier ?? "",
     priceString: p.product?.priceString ?? "",
@@ -85,6 +119,22 @@ export async function listPackages(): Promise<StorePackage[]> {
     period: periodOf(p),
     raw: p,
   }));
+  lastDiagnostics = {
+    platform: Capacitor.getPlatform(),
+    keyPresent: true,
+    keyPrefix: null,
+    offeringCount: Object.keys(offerings?.all ?? {}).length,
+    currentOffering: offerings?.current?.identifier ?? null,
+    productIds: mapped.map((p) => p.productId).filter(Boolean),
+    error:
+      mapped.length === 0
+        ? Object.keys(offerings?.all ?? {}).length === 0
+          ? "The store returned no offerings. In RevenueCat, create an offering, add packages to it, and mark it Current."
+          : "Offerings exist but no products are available. The products are usually not active in the store, or this build/tester account is not on a testing track."
+        : null,
+    at: new Date().toISOString(),
+  };
+  return mapped;
 }
 
 function readEntitlement(customerInfo: any, entitlementId: string): StoreEntitlement {
