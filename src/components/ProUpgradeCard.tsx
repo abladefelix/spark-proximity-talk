@@ -226,7 +226,9 @@ export function ProUpgradeCard() {
           ) : packages.length === 0 ? (
             <div className="space-y-2">
               <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
-                {storeError ?? "No plans are available right now. Please check back soon."}
+                {storeError ??
+                  diag?.error ??
+                  "No plans are available right now. Please check back soon."}
               </p>
               <Button
                 variant="outline"
@@ -236,6 +238,36 @@ export function ProUpgradeCard() {
                 <RefreshCw className="mr-2 size-4" />
                 Try again
               </Button>
+              <button
+                type="button"
+                className="w-full text-center text-[11px] text-muted-foreground underline"
+                onClick={() => setShowDiag((v) => !v)}
+              >
+                {showDiag ? "Hide setup details" : "Show setup details"}
+              </button>
+              {showDiag ? (
+                <div className="space-y-2">
+                  <pre className="max-h-48 overflow-auto rounded-xl border border-border bg-secondary/30 p-3 text-[10px] leading-relaxed text-muted-foreground">
+{JSON.stringify(
+  diag ?? { note: "No details captured yet." },
+  null,
+  2,
+)}
+                  </pre>
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      navigator.clipboard
+                        ?.writeText(JSON.stringify(diag ?? {}, null, 2))
+                        .then(() => toast.success("Details copied"))
+                        .catch(() => toast.error("Could not copy"));
+                    }}
+                  >
+                    Copy details
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             packages.map((pkg, i) => (
