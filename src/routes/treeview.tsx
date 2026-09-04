@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, type LinkProps } from "@tanstack/react-router";
 import {
   ArrowLeft,
   FileText,
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/treeview")({
 
 interface TreeNode {
   label: string;
-  path?: string;
+  path?: LinkProps["to"];
   note?: string;
   children?: TreeNode[];
 }
@@ -150,7 +150,7 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
         <div className="min-w-0">
           {node.path ? (
             <Link
-              to={node.path as "/"}
+              to={node.path}
               className="text-sm font-medium text-foreground underline-offset-2 hover:underline"
             >
               {node.label}
