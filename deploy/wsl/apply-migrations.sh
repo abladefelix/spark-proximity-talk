@@ -21,6 +21,9 @@ MIG_DIR="$APP_DIR/supabase/migrations"
 cd "$STACK_DIR"
 
 psql_run() { docker compose exec -T db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
+# Tolerant variant: keeps executing after errors so we can fill in the gaps of
+# a partially-applied migration (each failing statement is inspected after).
+psql_fill() { docker compose exec -T db psql -U postgres -d postgres "$@"; }
 
 echo "==> Ensuring migration ledger"
 psql_run -q -c "create table if not exists public.repo_migrations (
