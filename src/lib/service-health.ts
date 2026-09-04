@@ -18,11 +18,21 @@ let degraded = false;
 let consecutiveFailures = 0;
 let timer: ReturnType<typeof setInterval> | null = null;
 let pinging = false;
+let firstFailureAt = 0;
+let mutedUntil = 0;
 
-/** How many failures in a row before we tell the user something is wrong. */
-const FAILURE_THRESHOLD = 2;
+/** How many genuine service failures in a row before we tell the user. */
+const FAILURE_THRESHOLD = 3;
+/** Failures must cluster inside this window to count as an outage. */
+const FAILURE_WINDOW_MS = 20_000;
 /** Re-check interval while degraded. */
 const RETRY_MS = 12_000;
+/**
+ * After a recovery, ignore new reports for this long. Prevents the flap loop
+ * where recovering re-fires a persistently-failing query and re-trips the
+ * banner instantly.
+ */
+const RECOVERY_MUTE_MS = 45_000;
 
 function healthUrl(): string | null {
   const base = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
