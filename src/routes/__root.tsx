@@ -167,9 +167,9 @@ function RootShell({ children }: { children: ReactNode }) {
           dangerouslySetInnerHTML={{
             __html:
               "try{var d=document.documentElement,ls=localStorage;"+
-              // Light is the product default; only an explicit user choice or
-              // an admin default may switch to dark.
-              "var t=ls.getItem('skanaround-theme')||ls.getItem('skanaround-default-theme')||'light';"+
+              // Light is the product default; only an explicit user choice
+              // switches to dark.
+              "var t=ls.getItem('skanaround-theme')||'light';"+
               "if(t==='dark')d.classList.add('dark');"+
               "var h=ls.getItem('skanaround-accent-hue');if(h){var p=t==='dark'?'oklch(0.74 0.135 '+h+')':'oklch(0.65 0.16 '+h+')';var f=t==='dark'?'oklch(0.17 0.02 '+h+')':'oklch(0.99 0.005 '+h+')';d.style.setProperty('--primary',p);d.style.setProperty('--primary-foreground',f);d.style.setProperty('--sidebar-primary',p);d.style.setProperty('--sidebar-primary-foreground',f);d.style.setProperty('--ring',p);}"+
               "var fam=ls.getItem('skanaround-font');if(fam){d.style.setProperty('--font-sans-active','\"'+fam+'\", ui-sans-serif, system-ui, sans-serif');}"+
