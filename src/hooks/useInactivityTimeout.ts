@@ -59,7 +59,9 @@ export function useInactivityTimeout(userId: string | null) {
 
     let done = false;
     const touch = () => writeLastActive(Date.now());
-    if (!localStorage.getItem(STORAGE_KEY)) touch();
+    // Launching or reopening the app is itself activity — reset the clock so a
+    // member who closed the app a while ago is never greeted by a sign-out.
+    touch();
 
     // A fresh sign-in must never be voided by a stale timestamp left over from
     // an earlier session on this device.
@@ -84,7 +86,9 @@ export function useInactivityTimeout(userId: string | null) {
     const events = ["pointerdown", "keydown", "touchstart", "wheel", "focus"] as const;
     events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
     const onVisible = () => {
-      if (document.visibilityState === "visible") check();
+      // Returning to the foreground counts as activity; the idle clock only
+      // runs while the app is open and untouched.
+      if (document.visibilityState === "visible") touch();
       else touch();
     };
     document.addEventListener("visibilitychange", onVisible);
