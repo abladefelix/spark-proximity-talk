@@ -1343,6 +1343,14 @@ export function AdminPage() {
                     {a.message}
                   </p>
                 </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`View details for @${a.person?.username ?? "member"}`}
+                  onClick={() => setDetailsUserId(a.user_id)}
+                >
+                  <Eye className="size-4" />
+                </Button>
                 <Button size="sm" variant="heat" onClick={() => void reviewAppeal(a.id, true)}>
                   Unban
                 </Button>
@@ -1351,13 +1359,13 @@ export function AdminPage() {
                 </Button>
               </li>
             ))}
-            {appeals.length === 0 && (
+            {filteredAppeals.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">
                 No reactivation requests.
               </li>
             )}
           </ul>
-          <Pager page={appealsPage} perPage={PER_PAGE} total={appeals.length} onPageChange={setAppealsPage} label="appeals" />
+          <Pager page={appealsPage} perPage={PER_PAGE} total={filteredAppeals.length} onPageChange={setAppealsPage} label="appeals" />
         </TabsContent>
       </Tabs>
     </div>
