@@ -9,21 +9,42 @@ import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BiometricGate } from "@/components/BiometricGate";
 
+/** Reads the session the auth client persisted, without any network call. */
+function storedSessionUser(): { id: string } | null {
+  try {
+    const url = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
+    const ref = url ? new URL(url).hostname.split(".")[0] : "";
+    const raw = ref ? localStorage.getItem(`sb-${ref}-auth-token`) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { refresh_token?: string; user?: { id?: string } };
+    return parsed.refresh_token && parsed.user?.id ? { id: parsed.user.id } : null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     // getSession() reads the locally cached session; getUser() hits the network
     // on every navigation and made cold app launches feel slow.
     // Offline, a token refresh inside getSession() can hang forever and the app
-    // never finishes booting — cap it and fall back to "no session".
-    const { data } = await withTimeoutFallback(
+    // never finishes booting — cap it and fall back to the stored session.
+    const { data, timedOut } = await withTimeoutFallback(
       supabase.auth.getSession(),
       { data: { session: null } } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
       5000,
       "Session check",
     );
-    if (!data.session?.user) throw redirect({ to: "/auth" });
-    return { user: data.session.user };
+    if (data.session?.user) return { user: data.session.user };
+    // The session check timed out (cold launch, slow or no network). A stored
+    // session means the member is still signed in — let them in and let the
+    // client's background refresh renew the token when the network allows.
+    if (timedOut) {
+      const stored = storedSessionUser();
+      if (stored) return { user: stored as never };
+    }
+    throw redirect({ to: "/auth" });
   },
   component: AuthedLayout,
 });
