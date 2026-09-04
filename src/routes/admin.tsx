@@ -35,6 +35,10 @@ import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Brand, useBranding } from "@/components/Brand";
 import { useMaxRadius } from "@/hooks/useMaxRadius";
+import {
+  useInactivityTimeoutMinutes,
+  DEFAULT_INACTIVITY_MIN,
+} from "@/hooks/useInactivityTimeout";
 import { useChatTtlDays } from "@/hooks/useChatTtl";
 
 
