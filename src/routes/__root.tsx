@@ -22,7 +22,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { ServiceStatusBanner } from "@/components/ServiceStatusBanner";
 import { WebGate } from "@/components/WebGate";
 import { ProUpgradeSheetProvider } from "@/components/ProUpgradeSheet";
-import { isNetworkError, errorMessage } from "@/lib/net";
+import { isNetworkError, isAbortError, errorMessage } from "@/lib/net";
 import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
 
@@ -81,15 +81,24 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
+  const aborted = isAbortError(error);
   const offline = isNetworkError(error);
   const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
+    if (aborted) {
+      // The request was cancelled (navigation away / reload). Nothing broke —
+      // quietly re-run the route instead of showing an error screen.
+      router.invalidate();
+      reset();
+      return;
+    }
+    console.error(error);
     reportAppError(error, { boundary: "tanstack_root_error_component" });
     reportServiceProblem("root_error_boundary");
-  }, [error]);
+  }, [error, aborted]);
+
 
   // A failed load leaves nothing to re-render, so a soft retry can silently do
   // nothing. Force a real reload as the fallback, and retry by itself the
