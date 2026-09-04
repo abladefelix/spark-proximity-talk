@@ -63,8 +63,17 @@ async function paystack(path: string, secret: string, init?: RequestInit) {
   });
   const json: any = await res.json().catch(() => null);
   if (!res.ok || json?.status === false) {
-    throw new Error(json?.message || "The payment service is not responding.");
+    const detail = String(json?.message ?? `HTTP ${res.status}`);
+    console.error("[web-billing] Paystack error", path, res.status, detail);
+    // Never surface the provider's raw wording (e.g. "Invalid key") to members.
+    const configProblem = res.status === 401 || /key|authoriz|merchant|account/i.test(detail);
+    throw new Error(
+      configProblem
+        ? "Payments are temporarily unavailable. Please try again later."
+        : "We couldn't reach the payment service. Please try again in a moment.",
+    );
   }
+
   return json?.data ?? null;
 }
 
