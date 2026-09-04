@@ -96,7 +96,14 @@ export async function deviceStillActive(userId: string, deviceId: string) {
     .eq("user_id", userId)
     .eq("device_id", deviceId)
     .maybeSingle();
-  if (!data) return false;
+  if (!data) {
+    // No record for this device: only sign out when another device is actually
+    // holding the account right now. Otherwise reclaim it silently — the row
+    // may have aged out while the app was closed.
+    if (await otherDevice(userId, deviceId)) return false;
+    await claimDevice(userId, deviceId, "This device");
+    return true;
+  }
   await db
     .from("device_sessions")
     .update({ last_seen: new Date().toISOString() })
