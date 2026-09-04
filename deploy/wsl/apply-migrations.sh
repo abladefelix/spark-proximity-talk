@@ -21,6 +21,9 @@ MIG_DIR="$APP_DIR/supabase/migrations"
 cd "$STACK_DIR"
 
 psql_run() { docker compose exec -T db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
+# Tolerant variant: keeps executing after errors so we can fill in the gaps of
+# a partially-applied migration (each failing statement is inspected after).
+psql_fill() { docker compose exec -T db psql -U postgres -d postgres "$@"; }
 
 echo "==> Ensuring migration ledger"
 psql_run -q -c "create table if not exists public.repo_migrations (
@@ -41,15 +44,15 @@ for file in "$MIG_DIR"/*.sql; do
   # Run each migration in a single transaction so a failure can never leave
   # the schema half-applied.
   if ! out="$(psql_run -q --single-transaction < "$file" 2>&1)"; then
-    # Databases installed before this ledger existed already contain the
-    # objects from the early migrations. If the migration failed purely
-    # because those objects already exist, it was effectively applied
-    # before — record it and move on instead of aborting the deploy.
-    if grep -qi 'already exists' <<<"$out" \
-      && ! grep -qiE 'syntax error|permission denied|does not exist|duplicate key' <<<"$out"; then
-      echo "    $name: objects already present (installed before the ledger) — recording as applied"
-    else
-      echo "$out" >&2
+    # Databases installed before this ledger existed may already contain part
+    # of a migration. Re-run it statement-by-statement: statements whose
+    # objects already exist are skipped, everything else is created, and any
+    # remaining genuine error still aborts the deploy.
+    echo "    $name: partly present from the pre-ledger install — filling in the gaps"
+    out2="$(psql_fill -q < "$file" 2>&1)" || true
+    bad="$(grep -i 'ERROR' <<<"$out2" | grep -viE 'already exists|duplicate key' || true)"
+    if [[ -n "$bad" ]]; then
+      echo "$out2" >&2
       echo "Migration $name failed — stopping before the app is rebuilt." >&2
       exit 1
     fi
