@@ -72,8 +72,42 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   // Set when the account is already signed in on another device.
   const [otherDevice, setOtherDevice] = useState<{ label: string; lastSeen: string } | null>(null);
+  // Set when a sign-in is refused because the email is not confirmed yet —
+  // shows the "resend activation email" card.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   // While a sign-up is completing we must not auto-redirect on a transient session.
   const signingUp = useRef(false);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown > 0]);
+
+  async function resendActivation(target: string) {
+    const addr = target.trim();
+    if (!addr.includes("@")) {
+      toast.error("Enter your email address (not your username) to resend the activation email");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: addr,
+        options: { emailRedirectTo: `${window.location.origin}/verified` },
+      });
+      if (error) throw error;
+      toast.success(`Activation email resent to ${addr}`);
+      setResendCooldown(60);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not resend the email — try again shortly");
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function takeOverDevice() {
     setBusy(true);
@@ -273,6 +307,13 @@ function AuthPage() {
 
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Something went wrong";
+      if (mode !== "signup" && /email not confirmed|not confirmed/i.test(raw)) {
+        // Offer to send a fresh activation link — the first one may have been
+        // delayed or landed in spam.
+        if (identifier.trim().includes("@")) setUnconfirmedEmail(identifier.trim());
+        toast.error("Confirm your email first — tap the link we sent you, then sign in.");
+        return;
+      }
       toast.error(
         /username_already_taken|username.*(already|taken)|duplicate key/i.test(raw)
           ? "That username is already taken — try another one."
@@ -281,9 +322,7 @@ function AuthPage() {
             // username check raced with another registration.
             mode === "signup" && /database error saving new user/i.test(raw)
             ? "That username is already taken — try another one."
-            : /email not confirmed|not confirmed/i.test(raw)
-              ? "Confirm your email first — tap the link we sent you, then sign in."
-              : raw,
+            : raw,
       );
     } finally {
       signingUp.current = false;
@@ -431,6 +470,43 @@ function AuthPage() {
             onClick={() => setMode("reset")}
           >
             Forgot your password?
+          </button>
+        )}
+        {mode === "signin" && unconfirmedEmail && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-center">
+            <p className="text-sm">
+              <span className="font-medium">{unconfirmedEmail}</span>{" "}
+              <span className="text-muted-foreground">isn’t activated yet.</span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Email slow to arrive? Check spam, or request a fresh link.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2 w-full"
+              disabled={resending || resendCooldown > 0}
+              onClick={() => resendActivation(unconfirmedEmail)}
+            >
+              {resending
+                ? "Sending…"
+                : resendCooldown > 0
+                  ? `Resend available in ${resendCooldown}s`
+                  : "Resend activation email"}
+            </Button>
+          </div>
+        )}
+        {mode === "signin" && !unconfirmedEmail && identifier.trim().includes("@") && (
+          <button
+            type="button"
+            className="w-full text-center text-xs text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+            disabled={resending || resendCooldown > 0}
+            onClick={() => resendActivation(identifier)}
+          >
+            {resendCooldown > 0
+              ? `Activation email resent — available again in ${resendCooldown}s`
+              : "Signed up but never got the activation email? Resend it"}
           </button>
         )}
       </form>
