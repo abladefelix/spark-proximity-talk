@@ -52,6 +52,7 @@ export function BatSignalButton() {
 
   const drop = useMutation({
     mutationFn: async () => {
+      await publishMyLocation();
       const { error } = await (supabase as any).rpc("drop_help_beacon", {
         _kind: kind,
         _note: note.trim(),
