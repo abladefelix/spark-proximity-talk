@@ -13,6 +13,7 @@ import { PersonAvatar, type Gender } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { Pager, paginate } from "@/components/admin/Pager";
+import { AdminSearch, FilterChips } from "@/components/admin/FilterBar";
 
 export type StatMetric = "people" | "online" | "verified" | "signals" | "matches" | "reports";
 
@@ -31,8 +32,11 @@ type Row = {
   secondary: string;
   avatar?: { path: string | null; name: string | null; username: string; gender: Gender };
   verified?: boolean;
+  banned?: boolean;
   userId?: string;
 };
+
+type PeopleFilter = "all" | "verified" | "unverified" | "banned";
 
 const PER_PAGE = 10;
 
@@ -46,7 +50,13 @@ export function StatDetailDialog({
   onViewUser?: (userId: string) => void;
 }) {
   const [page, setPage] = useState(0);
-  useEffect(() => setPage(0), [metric]);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<PeopleFilter>("all");
+  useEffect(() => {
+    setPage(0);
+    setQuery("");
+    setFilter("all");
+  }, [metric]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-stat-detail", metric],
@@ -55,6 +65,15 @@ export function StatDetailDialog({
   });
 
   const meta = metric ? TITLES[metric] : null;
+  const isPeople = metric === "people" || metric === "online" || metric === "verified";
+  const q = query.trim().toLowerCase();
+  const visible = rows.filter((r) => {
+    if (q && !`${r.primary} ${r.secondary}`.toLowerCase().includes(q)) return false;
+    if (!isPeople || filter === "all") return true;
+    if (filter === "verified") return Boolean(r.verified);
+    if (filter === "unverified") return !r.verified;
+    return Boolean(r.banned);
+  });
 
   return (
     <Dialog open={metric !== null} onOpenChange={onOpenChange}>
@@ -70,8 +89,33 @@ export function StatDetailDialog({
           </div>
         ) : (
           <>
+            <div className="space-y-2">
+              <AdminSearch
+                value={query}
+                onChange={(v) => {
+                  setQuery(v);
+                  setPage(0);
+                }}
+                placeholder="Search this list"
+              />
+              {isPeople && (
+                <FilterChips<PeopleFilter>
+                  value={filter}
+                  onChange={(v) => {
+                    setFilter(v);
+                    setPage(0);
+                  }}
+                  options={[
+                    { value: "all", label: "All", count: rows.length },
+                    { value: "verified", label: "Verified", count: rows.filter((r) => r.verified).length },
+                    { value: "unverified", label: "Unverified", count: rows.filter((r) => !r.verified).length },
+                    { value: "banned", label: "Suspended", count: rows.filter((r) => r.banned).length },
+                  ]}
+                />
+              )}
+            </div>
             <ul className="max-h-[55vh] divide-y divide-border overflow-y-auto rounded-xl border border-border">
-              {paginate(rows, page, PER_PAGE).map((r) => (
+              {paginate(visible, page, PER_PAGE).map((r) => (
                 <li key={r.key} className="flex items-center gap-2.5 px-2.5 py-2">
                   {r.avatar && (
                     <PersonAvatar
@@ -102,11 +146,11 @@ export function StatDetailDialog({
                   )}
                 </li>
               ))}
-              {rows.length === 0 && (
+              {visible.length === 0 && (
                 <li className="py-6 text-center text-sm text-muted-foreground">Nothing here yet.</li>
               )}
             </ul>
-            <Pager page={page} perPage={PER_PAGE} total={rows.length} onPageChange={setPage} />
+            <Pager page={page} perPage={PER_PAGE} total={visible.length} onPageChange={setPage} />
           </>
         )}
       </DialogContent>
@@ -134,6 +178,7 @@ async function loadRows(metric: StatMetric): Promise<Row[]> {
         gender: p.gender as Gender,
       },
       verified: p.verified,
+      banned: p.banned,
       userId: p.id,
     }));
   }
