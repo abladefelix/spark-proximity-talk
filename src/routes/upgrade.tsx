@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/lib/username-auth.functions";
+import { signInWithIdentifierClient } from "@/lib/sign-in";
+
 import {
   confirmWebPayment,
   getWebCheckoutInfo,
