@@ -85,12 +85,9 @@ export function useInactivityTimeout(userId: string | null) {
 
     const events = ["pointerdown", "keydown", "touchstart", "wheel", "focus"] as const;
     events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
-    const onVisible = () => {
-      // Returning to the foreground counts as activity; the idle clock only
-      // runs while the app is open and untouched.
-      if (document.visibilityState === "visible") touch();
-      else touch();
-    };
+    // Returning to the foreground counts as activity; the idle clock only
+    // runs while the app is open and untouched.
+    const onVisible = () => touch();
     document.addEventListener("visibilitychange", onVisible);
 
     // Wait for the current session before the first check: a sign-in that
