@@ -144,13 +144,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         splashTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] timer in
             guard let self else { timer.invalidate(); return }
             elapsed += 0.25
-            let ready = (self.bridgeWebView?.estimatedProgress ?? 0) >= 0.9
-            if ready || elapsed >= 8 {
+            let progress = self.bridgeWebView?.estimatedProgress ?? 0
+            if progress >= 0.9 {
                 timer.invalidate()
                 self.hideSplash()
+            } else if elapsed >= 8 {
+                timer.invalidate()
+                self.hideSplash()
+                // The first load produced nothing — rather than leaving a blank
+                // web view, show the branded offline screen and keep retrying.
+                if progress < 0.1 { self.showOffline() }
             }
         }
     }
+
 
     private func hideSplash() {
         splashTimer?.invalidate()
