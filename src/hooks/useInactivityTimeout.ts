@@ -60,6 +60,13 @@ export function useInactivityTimeout(userId: string | null) {
     const touch = () => writeLastActive(Date.now());
     if (!localStorage.getItem(STORAGE_KEY)) touch();
 
+    // A fresh sign-in must never be voided by a stale timestamp left over from
+    // an earlier session on this device.
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") touch();
+    });
+
+
     async function expire() {
       if (done) return;
       done = true;
@@ -81,10 +88,19 @@ export function useInactivityTimeout(userId: string | null) {
     };
     document.addEventListener("visibilitychange", onVisible);
 
-    check();
+    // Wait for the current session before the first check: a sign-in that
+    // happened after the stored timestamp counts as activity.
+    void supabase.auth.getSession().then(({ data }) => {
+      if (done) return;
+      const signedInAt = Date.parse(data.session?.user?.last_sign_in_at ?? "");
+      if (Number.isFinite(signedInAt) && signedInAt > readLastActive()) touch();
+      check();
+    });
+
     const timer = window.setInterval(check, CHECK_MS);
     return () => {
       window.clearInterval(timer);
+      authSub.subscription.unsubscribe();
       events.forEach((e) => window.removeEventListener(e, touch));
       document.removeEventListener("visibilitychange", onVisible);
     };

@@ -11,6 +11,29 @@
 import { isNetworkError, isOnline } from "./net";
 
 let armed = false;
+let reloadScheduled = false;
+
+const RELOAD_MARK = "skanaround-recovery-reload";
+const RELOAD_WINDOW_MS = 60_000;
+const MAX_RELOADS = 1;
+
+/** Allow at most one automatic repair reload per minute, per tab. */
+function mayReload(): boolean {
+  if (reloadScheduled) return false;
+  try {
+    const raw = sessionStorage.getItem(RELOAD_MARK);
+    const [countRaw, atRaw] = (raw ?? "").split(":");
+    const at = Number(atRaw);
+    const recent = Number.isFinite(at) && Date.now() - at < RELOAD_WINDOW_MS;
+    const count = recent ? Number(countRaw) || 0 : 0;
+    if (count >= MAX_RELOADS) return false;
+    sessionStorage.setItem(RELOAD_MARK, `${count + 1}:${Date.now()}`);
+  } catch {
+    /* storage unavailable — still allow a single reload this tab */
+  }
+  reloadScheduled = true;
+  return true;
+}
 
 function looksLikeLostConnection(value: unknown): boolean {
   if (!value) return false;
@@ -24,8 +47,24 @@ function looksLikeLostConnection(value: unknown): boolean {
   return isNetworkError(new Error(String(message)));
 }
 
+const CHUNK_HINTS = [
+  "dynamically imported module",
+  "importing a module script failed",
+  "module script failed",
+  "chunk",
+];
+
+/** True only for a failed code download — not for ordinary data requests. */
+function isMissingCode(value: unknown): boolean {
+  const message = (
+    value instanceof Error ? value.message : typeof value === "string" ? value : ""
+  ).toLowerCase();
+  return CHUNK_HINTS.some((hint) => message.includes(hint));
+}
+
 function reloadWhenBack() {
   if (typeof window === "undefined") return;
+  if (!mayReload()) return;
   const go = () => {
     window.removeEventListener("online", go);
     window.location.reload();
@@ -50,8 +89,10 @@ export function startChunkRecovery() {
 
   window.addEventListener("unhandledrejection", (event) => {
     if (!looksLikeLostConnection(event.reason)) return;
+    // Silence the raw browser error; only a missing piece of app code needs a
+    // reload — ordinary failed requests must never disturb what you're typing.
     event.preventDefault();
-    reloadWhenBack();
+    if (isMissingCode(event.reason)) reloadWhenBack();
   });
 
   window.addEventListener("error", (event) => {
