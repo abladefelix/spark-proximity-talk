@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BusinessRouteImport } from './routes/business'
 import { Route as Console9f42x7RouteImport } from './routes/console-9f42x7'
 import { Route as CsaeRouteImport } from './routes/csae'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
@@ -47,6 +48,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BusinessRoute = BusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Console9f42x7Route = Console9f42x7RouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/console-9f42x7': typeof Console9f42x7Route
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/auth'
+    | '/business'
     | '/console-9f42x7'
     | '/csae'
     | '/delete-account'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  BusinessRoute: typeof BusinessRoute
   Console9f42x7Route: typeof Console9f42x7Route
   CsaeRoute: typeof CsaeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business': {
+      id: '/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof BusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/console-9f42x7': {
@@ -452,6 +472,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  BusinessRoute: BusinessRoute,
   Console9f42x7Route: Console9f42x7Route,
   CsaeRoute: CsaeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
