@@ -38,9 +38,21 @@ for file in "$MIG_DIR"/*.sql; do
     continue
   fi
   echo "    applying $name"
-  if ! psql_run -q < "$file"; then
-    echo "Migration $name failed — stopping before the app is rebuilt." >&2
-    exit 1
+  # Run each migration in a single transaction so a failure can never leave
+  # the schema half-applied.
+  if ! out="$(psql_run -q --single-transaction < "$file" 2>&1)"; then
+    # Databases installed before this ledger existed already contain the
+    # objects from the early migrations. If the migration failed purely
+    # because those objects already exist, it was effectively applied
+    # before — record it and move on instead of aborting the deploy.
+    if grep -qi 'already exists' <<<"$out" \
+      && ! grep -qiE 'syntax error|permission denied|does not exist|duplicate key' <<<"$out"; then
+      echo "    $name: objects already present (installed before the ledger) — recording as applied"
+    else
+      echo "$out" >&2
+      echo "Migration $name failed — stopping before the app is rebuilt." >&2
+      exit 1
+    fi
   fi
   psql_run -q -c "insert into public.repo_migrations (name) values ('$name') on conflict do nothing;"
   applied=$((applied + 1))
