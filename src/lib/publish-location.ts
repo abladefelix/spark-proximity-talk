@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 
 import { supabase } from "@/integrations/supabase/client";
