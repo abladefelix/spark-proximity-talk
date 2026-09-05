@@ -267,8 +267,27 @@ function AuthPage() {
         return;
       } else {
         const id = identifier.trim();
-        let res: Awaited<ReturnType<typeof signInSingleDevice>> | null = null;
-        try {
+        if (id.includes("@")) {
+          // Email sign-in is checked straight with the auth service from the
+          // app, so it cannot be broken by the app server's own backend
+          // settings. The device claim happens afterwards with the session.
+          const { error } = await supabase.auth.signInWithPassword({ email: id, password });
+          if (error) throw error;
+          try {
+            const claim = await claimThisDevice({
+              data: { deviceId: getDeviceId(), deviceLabel: getDeviceLabel() },
+            });
+            if (claim.status === "other_device") {
+              setOtherDevice({ label: claim.device_label, lastSeen: claim.last_seen });
+              await supabase.auth.signOut();
+              return;
+            }
+          } catch {
+            // The device check is a safety net, not a gate — never block a
+            // person who just proved their password.
+          }
+        } else {
+          let res: Awaited<ReturnType<typeof signInSingleDevice>> | null = null;
           res = await signInSingleDevice({
             data: {
               identifier: id,
@@ -277,21 +296,6 @@ function AuthPage() {
               deviceLabel: getDeviceLabel(),
             },
           });
-        } catch (fnErr) {
-          // The server-function endpoint can be blocked by an upstream proxy
-          // (plain-text "Unauthorized" / non-JSON body). Fall back to a direct
-          // email + password sign-in so people are never locked out.
-          const msg = fnErr instanceof Error ? fnErr.message : "";
-          const proxyBlocked =
-            /unauthorized|not valid json|unexpected token|failed to fetch|<!doctype/i.test(msg);
-          if (!proxyBlocked || !id.includes("@")) throw fnErr;
-          const { error } = await supabase.auth.signInWithPassword({
-            email: id,
-            password,
-          });
-          if (error) throw error;
-        }
-        if (res) {
           if (res.status === "other_device") {
             setOtherDevice({ label: res.device_label, lastSeen: res.last_seen });
             return;
