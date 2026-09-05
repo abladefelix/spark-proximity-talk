@@ -291,6 +291,8 @@ export function useCompassHeading(enabled: boolean) {
     heading,
     needsPermission,
     request,
+    /** No reading at all after the sensor was given time to start. */
+    unavailable,
     /** True while the magnetometer settles right after the compass is enabled. */
     calibrating: enabled && listening && !settled,
   };
