@@ -45,8 +45,9 @@ async function ensureConfigured() {
   return initStore(lastOptions);
 }
 
-const LOOKUP_DEADLINE_MS = 15_000;
+const LOOKUP_DEADLINE_MS = 30_000;
 const PURCHASE_DEADLINE_MS = 120_000;
+const SDK_DEADLINE_MS = 20_000;
 
 function deadlineMessage(action: string) {
   return `${storeName()} did not respond while ${action}. Check your connection and Play Store or App Store account, then try again.`;
@@ -67,6 +68,8 @@ async function withStoreDeadline<T>(promise: Promise<T>, action: string, ms = LO
   }
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export function isNativeStore() {
   return Capacitor.isNativePlatform();
 }
@@ -75,10 +78,52 @@ export function storeName() {
   return Capacitor.getPlatform() === "ios" ? "App Store" : "Google Play";
 }
 
-async function sdk() {
-  const mod = await import("@revenuecat/purchases-capacitor");
-  return mod.Purchases;
+/**
+ * The billing SDK ships as its own lazily loaded chunk, and the app's web
+ * layer is served over the network, so a single slow request used to look
+ * like "the store didn't respond". Load it once, retry, and cache it.
+ */
+let sdkPromise: Promise<any> | null = null;
+
+async function loadSdk() {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const mod = await withStoreDeadline(
+        import("@revenuecat/purchases-capacitor"),
+        "opening billing",
+        SDK_DEADLINE_MS,
+      );
+      return mod.Purchases;
+    } catch (e) {
+      lastError = e;
+      await sleep(600 * (attempt + 1));
+    }
+  }
+  throw new Error(
+    `Could not load the payment component. Check your connection and try again. (${errText(lastError)})`,
+  );
 }
+
+async function sdk() {
+  if (!sdkPromise) {
+    sdkPromise = loadSdk().catch((e) => {
+      sdkPromise = null;
+      throw e;
+    });
+  }
+  return sdkPromise;
+}
+
+/** Warm the billing chunk on native launch so checkout never waits for it. */
+if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+  setTimeout(() => {
+    void sdk().catch(() => {
+      /* retried on demand */
+    });
+  }, 2_000);
+}
+
 
 /** Configures RevenueCat once per signed-in member. */
 export async function initStore(opts: {
@@ -232,18 +277,24 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
   // configured products even when no offering was marked Current or its
   // packages were never attached, so this is the reliable path.
   if (mapped.length === 0 && requestedProductIds.length > 0) {
-    try {
-      const direct: any = await withStoreDeadline(
-        Purchases.getProducts({ productIdentifiers: requestedProductIds }),
-        "loading plans",
-      );
-      mapped = packagesFromProducts(direct?.products ?? []);
-      if (mapped.length > 0) loadSource = "product";
-      else notes.push("The store returned no matching products.");
-    } catch (e) {
-      notes.push(`Product lookup failed: ${errText(e)}`);
+    // Google Play's billing service is often still connecting on first open,
+    // so a single empty answer is not proof the plans are missing.
+    for (let attempt = 0; attempt < 3 && mapped.length === 0; attempt += 1) {
+      if (attempt > 0) await sleep(1_500 * attempt);
+      try {
+        const direct: any = await withStoreDeadline(
+          Purchases.getProducts({ productIdentifiers: requestedProductIds }),
+          "loading plans",
+        );
+        mapped = packagesFromProducts(direct?.products ?? []);
+        if (mapped.length > 0) loadSource = "product";
+        else if (attempt === 2) notes.push("The store returned no matching products.");
+      } catch (e) {
+        if (attempt === 2) notes.push(`Product lookup failed: ${errText(e)}`);
+      }
     }
   }
+
 
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
@@ -258,8 +309,9 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
       mapped.length === 0
         ? requestedProductIds.length === 0
           ? "No store product IDs are set in admin. Add them under Billing."
-          : `${storeName()} could not return the plans (${requestedProductIds.join(", ")}). ${notes.join(" ")}`.trim()
+          : `${storeName()} has no plans for this app yet (${requestedProductIds.join(", ")}). This works only in a build installed from the store's testing track, signed in with an invited tester account, and with matching product IDs. ${notes.join(" ")}`.trim()
         : null,
+
     at: new Date().toISOString(),
   };
   return mapped;
