@@ -28,7 +28,10 @@ export async function publishMyLocation(): Promise<void> {
   } catch {
     // Fall back to the browser API (and, failing that, to whatever the radar
     // last published).
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
+    // Android routes the WebView's own location request through the same
+    // native permission flow; firing it as a fallback can take the app down.
+    const webFallbackOk = !Capacitor.isNativePlatform() || Capacitor.getPlatform() === "ios";
+    if (webFallbackOk && typeof navigator !== "undefined" && navigator.geolocation) {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
