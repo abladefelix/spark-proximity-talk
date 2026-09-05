@@ -134,19 +134,29 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
           : `${missing.length} thing${missing.length === 1 ? "" : "s"} still missing`}
       </p>
       <ul className="mt-2 space-y-1">
-        {checks.map((c) => (
-          <li key={c.label} className="flex items-start gap-2 text-[11px]">
-            {c.ok ? (
-              <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
-            ) : (
-              <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-            )}
-            <span className="min-w-0">
-              {c.label}
-              {c.ok ? null : <span className="text-muted-foreground"> — {c.hint}</span>}
-            </span>
-          </li>
-        ))}
+        {checks.map((c) => {
+          const pending = !c.ok;
+          const optionalPending = pending && c.optional;
+          return (
+            <li key={c.label} className="flex items-start gap-2 text-[11px]">
+              {c.ok ? (
+                <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              ) : optionalPending ? (
+                <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              ) : (
+                <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+              )}
+              <span className="min-w-0">
+                {c.label}
+                {c.ok ? null : (
+                  <span className={optionalPending ? "text-muted-foreground" : "text-destructive/80"}>
+                    {" "}— {c.hint}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
       </ul>
       {missing.length > 0 ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
