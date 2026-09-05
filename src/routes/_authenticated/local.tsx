@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { IntentChip } from "@/components/IntentSheet";
 import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
 import { ZonePerk } from "@/components/ZonePerk";
+import { BatSignalButton, HelpBeaconList } from "@/components/BatSignal";
 
 export const Route = createFileRoute("/_authenticated/local")({
   head: () => ({
@@ -44,6 +45,8 @@ function LocalPage() {
       <div className="mt-4 space-y-4">
         <IntentChip />
         <ZonePerk />
+        <BatSignalButton />
+        <HelpBeaconList />
         <QuestionBroadcasts />
       </div>
     </main>
