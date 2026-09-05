@@ -309,8 +309,9 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
       mapped.length === 0
         ? requestedProductIds.length === 0
           ? "No store product IDs are set in admin. Add them under Billing."
-          : `${storeName()} could not return the plans (${requestedProductIds.join(", ")}). ${notes.join(" ")}`.trim()
+          : `${storeName()} has no plans for this app yet (${requestedProductIds.join(", ")}). This works only in a build installed from the store's testing track, signed in with an invited tester account, and with matching product IDs. ${notes.join(" ")}`.trim()
         : null,
+
     at: new Date().toISOString(),
   };
   return mapped;
