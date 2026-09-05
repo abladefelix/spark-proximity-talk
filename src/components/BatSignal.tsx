@@ -80,7 +80,7 @@ export function BatSignalButton() {
         className="w-full justify-start gap-2 border-destructive/40 text-destructive"
         onClick={() => setOpen(true)}
       >
-        <LifeBuoy className="size-4" /> Bat-Signal — I need help now
+        <LifeBuoy className="size-3.5" /> Bat-Signal — I need help now
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
