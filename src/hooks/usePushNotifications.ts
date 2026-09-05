@@ -87,11 +87,14 @@ export function usePushNotifications(userId: string | null) {
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
 
-    PushNotifications.requestPermissions().then((res) => {
-      if (res.receive === "granted") {
-        PushNotifications.register();
-      }
-    });
+    PushNotifications.requestPermissions()
+      .then((res) => {
+        if (res.receive === "granted") {
+          return PushNotifications.register();
+        }
+        return undefined;
+      })
+      .catch((e) => console.error("[Push] register failed", e));
 
     listeners.push(
       PushNotifications.addListener("registration", async ({ value }) => {
@@ -110,16 +113,10 @@ export function usePushNotifications(userId: string | null) {
       })
     );
 
-    listeners.push(
-      PushNotifications.addListener("pushNotificationReceived", async () => {
-        // Foreground notification: Supabase realtime already updates the UI,
-        // so we don't need to show an extra alert here.
-      })
-    );
-
     return () => {
       unmounted = true;
-      listeners.forEach((l) => l.then((h) => h.remove()));
+      listeners.forEach((l) => void l.then((h) => h.remove()).catch(() => {}));
     };
   }, [userId, settings.push_enabled, register]);
+
 }
