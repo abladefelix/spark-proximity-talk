@@ -85,8 +85,7 @@ export async function initStore(opts: {
   userId: string;
 }) {
   if (!isNativeStore()) return false;
-  const apiKey =
-    Capacitor.getPlatform() === "ios" ? opts.iosApiKey : opts.androidApiKey;
+  const apiKey = Capacitor.getPlatform() === "ios" ? opts.iosApiKey : opts.androidApiKey;
   if (!apiKey) return false;
 
   const token = `${apiKey}:${opts.userId}`;
@@ -176,7 +175,9 @@ function packageFromProduct(product: any, option?: any): StorePackage {
     productId: product.identifier,
     priceString: fullPrice?.formatted ?? fullPrice?.formattedPrice ?? product.priceString ?? "",
     title: product.title ?? product.identifier,
-    period: option ? periodFromOption(option) : periodOf({ identifier: product.identifier, product }),
+    period: option
+      ? periodFromOption(option)
+      : periodOf({ identifier: product.identifier, product }),
     source: option ? "subscription-option" : "product",
     raw: option ?? product,
   };
@@ -246,7 +247,6 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
     }
   }
 
-
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
     keyPresent: true,
@@ -267,7 +267,6 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
   };
   return mapped;
 }
-
 
 function readEntitlement(customerInfo: any, entitlementId: string): StoreEntitlement {
   const ent =
@@ -306,7 +305,6 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
   const res: any = await withStoreDeadline(request, "opening checkout", PURCHASE_DEADLINE_MS);
   return readEntitlement(res?.customerInfo, entitlementId);
 }
-
 
 /** Required by App Store review: re-applies purchases on a new device. */
 export async function restore(entitlementId: string) {

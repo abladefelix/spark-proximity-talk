@@ -57,25 +57,24 @@ function AuthedLayout() {
   useDeviceSessionGuard(user?.id ?? null);
   useInactivityTimeout(user?.id ?? null);
 
-
   return (
     <BiometricGate>
-    <ChatSheetProvider>
-      <PushManager userId={user?.id ?? null} />
-      <StoreBillingManager userId={user?.id ?? null} />
-      <div
-        data-app-shell
-        className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
-      >
+      <ChatSheetProvider>
+        <PushManager userId={user?.id ?? null} />
+        <StoreBillingManager userId={user?.id ?? null} />
         <div
-          data-scrollable
-          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          data-app-shell
+          className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
         >
-          <Outlet />
+          <div
+            data-scrollable
+            className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          >
+            <Outlet />
+          </div>
+          <BottomNav />
         </div>
-        <BottomNav />
-      </div>
-    </ChatSheetProvider>
+      </ChatSheetProvider>
     </BiometricGate>
   );
 }
@@ -104,4 +103,3 @@ function StoreBillingManager({ userId }: { userId: string | null }) {
 
   return null;
 }
-
