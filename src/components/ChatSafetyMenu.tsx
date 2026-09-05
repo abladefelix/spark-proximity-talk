@@ -70,6 +70,12 @@ export function ChatSafetyMenu({
     return [...capped, { h: maxVanishHours, label: formatHours(maxVanishHours) }];
   })();
 
+  useEffect(() => {
+    if (maxVanishHours > 0) {
+      setVanishHours((h) => (h <= 0 || h > maxVanishHours ? maxVanishHours : h));
+    }
+  }, [maxVanishHours, vanishOpen]);
+
   async function saveVanish() {
     if (!matchId) return;
     setBusy(true);
