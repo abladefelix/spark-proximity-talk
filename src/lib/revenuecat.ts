@@ -296,6 +296,7 @@ export async function purchaseProductId(productId: string, entitlementId: string
 
 /** Required by App Store review: re-applies purchases on a new device. */
 export async function restore(entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
   const res: any = await Purchases.restorePurchases();
   return readEntitlement(res?.customerInfo, entitlementId);
