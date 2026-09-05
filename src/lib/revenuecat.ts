@@ -129,11 +129,28 @@ function packageFromProduct(product: any): StorePackage {
   };
 }
 
+function errText(e: unknown) {
+  const err = e as any;
+  const parts = [err?.message, err?.underlyingErrorMessage, err?.code ? `code ${err.code}` : null]
+    .filter(Boolean)
+    .map(String);
+  return parts.length > 0 ? [...new Set(parts)].join(" — ") : String(e);
+}
+
 /** Products available for purchase, priced and localised by the store. */
 export async function listPackages(productIds: string[] = []): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
   const Purchases = await sdk();
-  const offerings: any = await Purchases.getOfferings();
+  const notes: string[] = [];
+  const requestedProductIds = [...new Set(productIds.map((id) => id.trim()).filter(Boolean))];
+
+  // 1. Offerings. A failure here must never stop the direct product lookup.
+  let offerings: any = null;
+  try {
+    offerings = await Purchases.getOfferings();
+  } catch (e) {
+    notes.push(`Offerings failed: ${errText(e)}`);
+  }
   let packages: any[] = offerings?.current?.availablePackages ?? [];
   if (packages.length === 0) {
     // No "current" offering set in RevenueCat — fall back to any offering.
@@ -141,19 +158,41 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
     packages = all.flatMap((o) => o?.availablePackages ?? []);
   }
   let mapped = packages.map(packageFromOffering);
-  const requestedProductIds = [...new Set(productIds.map((id) => id.trim()).filter(Boolean))];
   let loadSource: StoreDiagnostics["loadSource"] = mapped.length > 0 ? "offering" : null;
 
-  // A RevenueCat offering is convenient but should not be a single point of
-  // failure. Google Play can return configured products directly even when an
-  // offering was not marked Current or its packages were not attached.
+  // 2. Direct product lookup. Google Play and the App Store can return the
+  // configured products even when no offering was marked Current or its
+  // packages were never attached, so this is the reliable path.
   if (mapped.length === 0 && requestedProductIds.length > 0) {
-    const direct: any = await Purchases.getProducts({
-      productIdentifiers: requestedProductIds,
-    });
-    mapped = (direct?.products ?? []).map(packageFromProduct);
-    if (mapped.length > 0) loadSource = "product";
+    try {
+      const direct: any = await Purchases.getProducts({
+        productIdentifiers: requestedProductIds,
+      });
+      mapped = (direct?.products ?? []).map(packageFromProduct);
+      if (mapped.length > 0) loadSource = "product";
+      else notes.push("The store returned no matching products.");
+    } catch (e) {
+      notes.push(`Product lookup failed: ${errText(e)}`);
+    }
   }
+
+  // 3. Android subscriptions are sometimes only resolvable with the base-plan
+  // suffix (product:baseplan). Try the common suffixes before giving up.
+  if (mapped.length === 0 && requestedProductIds.length > 0) {
+    const suffixed = requestedProductIds.flatMap((id) => [
+      `${id}:monthly`,
+      `${id}:yearly`,
+      `${id}:annual`,
+    ]);
+    try {
+      const direct: any = await Purchases.getProducts({ productIdentifiers: suffixed });
+      mapped = (direct?.products ?? []).map(packageFromProduct);
+      if (mapped.length > 0) loadSource = "product";
+    } catch (e) {
+      notes.push(`Base-plan lookup failed: ${errText(e)}`);
+    }
+  }
+
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
     keyPresent: true,
@@ -166,13 +205,14 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
     error:
       mapped.length === 0
         ? requestedProductIds.length === 0
-          ? "No store product IDs are configured. Please contact support."
-          : `Google Play could not find the configured products (${requestedProductIds.join(", ")}). Install the Play testing-track build with an invited tester account, and ensure each product has an active base plan.`
+          ? "No store product IDs are set in admin. Add them under Billing."
+          : `${storeName()} could not return the plans (${requestedProductIds.join(", ")}). ${notes.join(" ")}`.trim()
         : null,
     at: new Date().toISOString(),
   };
   return mapped;
 }
+
 
 function readEntitlement(customerInfo: any, entitlementId: string): StoreEntitlement {
   const ent =
