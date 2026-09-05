@@ -16,6 +16,7 @@ import {
 import { refreshEntitlement } from "@/lib/store-billing.functions";
 import {
   initStore,
+  setStoreOptions,
   isNativeStore,
   listPackages,
   purchase,
@@ -72,6 +73,14 @@ export function ProUpgradeCard() {
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth.user?.id;
         if (!uid) throw new Error("Sign in again to see the plans.");
+        // Plans from admin pricing show straight away; the store list only
+        // replaces them if it answers. Checkout still goes through the store.
+        setStoreOptions({
+          iosApiKey: billing.ios_api_key,
+          androidApiKey: billing.android_api_key,
+          userId: uid,
+        });
+        setReady(true);
         // Play Billing can stall indefinitely (no Play services, unsigned
         // build, account not a licensed tester). Never wait forever.
         const withTimeout = <T,>(p: Promise<T>, label: string) =>

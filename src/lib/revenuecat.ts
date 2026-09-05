@@ -26,6 +26,24 @@ export type StoreEntitlement = {
 };
 
 let configuredFor: string | null = null;
+let lastOptions: { iosApiKey: string | null; androidApiKey: string | null; userId: string } | null =
+  null;
+
+/** Remembers the store keys so a purchase can configure on demand. */
+export function setStoreOptions(opts: {
+  iosApiKey: string | null;
+  androidApiKey: string | null;
+  userId: string;
+}) {
+  lastOptions = opts;
+}
+
+/** Configures the store right before a purchase if startup never finished. */
+async function ensureConfigured() {
+  if (configuredFor) return true;
+  if (!lastOptions) return false;
+  return initStore(lastOptions);
+}
 
 export function isNativeStore() {
   return Capacitor.isNativePlatform();
@@ -239,6 +257,7 @@ export function isUserCancelled(error: unknown) {
 
 /** Runs the native purchase sheet. Throws on failure. */
 export async function purchase(pkg: StorePackage, entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
   const res: any =
     pkg.source === "product"
@@ -252,9 +271,19 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
  * could not be loaded up front, so a member can still subscribe.
  */
 export async function purchaseProductId(productId: string, entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
-  const direct: any = await Purchases.getProducts({ productIdentifiers: [productId] });
-  const product = direct?.products?.[0];
+  const ids = [productId, `${productId}:monthly`, `${productId}:yearly`, `${productId}:annual`];
+  let product: any = null;
+  for (const id of ids) {
+    try {
+      const direct: any = await Purchases.getProducts({ productIdentifiers: [id] });
+      product = direct?.products?.[0];
+      if (product) break;
+    } catch {
+      // Try the next identifier shape.
+    }
+  }
   if (!product) {
     throw new Error(
       `${storeName()} does not have "${productId}" available for your account yet.`,
@@ -267,6 +296,7 @@ export async function purchaseProductId(productId: string, entitlementId: string
 
 /** Required by App Store review: re-applies purchases on a new device. */
 export async function restore(entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
   const res: any = await Purchases.restorePurchases();
   return readEntitlement(res?.customerInfo, entitlementId);
