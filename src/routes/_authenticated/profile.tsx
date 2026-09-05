@@ -150,7 +150,7 @@ function ProfilePage() {
     const result = await requestNotificationPermission();
     setNotifState(result);
     if (result === "granted") toast.success("Notifications on");
-    else if (result === "denied") toast.error("Notifications blocked in your browser settings");
+    else if (result === "denied") toast.error("Notifications are turned off for SKANAROUND in your device settings");
   }
 
   // Once a gender has been stored it can never be edited again.
@@ -375,7 +375,7 @@ function ProfilePage() {
             {notifState === "granted"
               ? "You'll be alerted when someone signals you or replies."
               : notifState === "denied"
-                ? "Blocked in your browser settings."
+                ? "Turned off for SKANAROUND in your device settings."
                 : notifState === "unsupported"
                   ? "Not supported on this device — you'll still see in-app alerts."
                   : "Get alerted when someone signals you or replies."}
