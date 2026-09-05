@@ -26,6 +26,24 @@ export type StoreEntitlement = {
 };
 
 let configuredFor: string | null = null;
+let lastOptions: { iosApiKey: string | null; androidApiKey: string | null; userId: string } | null =
+  null;
+
+/** Remembers the store keys so a purchase can configure on demand. */
+export function setStoreOptions(opts: {
+  iosApiKey: string | null;
+  androidApiKey: string | null;
+  userId: string;
+}) {
+  lastOptions = opts;
+}
+
+/** Configures the store right before a purchase if startup never finished. */
+async function ensureConfigured() {
+  if (configuredFor) return true;
+  if (!lastOptions) return false;
+  return initStore(lastOptions);
+}
 
 export function isNativeStore() {
   return Capacitor.isNativePlatform();
