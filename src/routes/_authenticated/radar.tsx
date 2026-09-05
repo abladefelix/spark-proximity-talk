@@ -38,7 +38,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
 import { HelpBeaconList, useHelpBeacons } from "@/components/BatSignal";
-import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
+
 import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
 import { intentFor, helpKindFor } from "@/lib/intents";
@@ -920,9 +920,6 @@ function RadarPage() {
         <HelpBeaconList />
       </div>
 
-      <div className="mt-2.5 max-[360px]:mt-2">
-        <QuestionBroadcasts radiusM={radius} />
-      </div>
 
       <ActiveChats />
       <IncomingSignals />
