@@ -56,6 +56,20 @@ export function ChatSafetyMenu({
   const [vanishHours, setVanishHours] = useState(0);
   const [vanishOnLeave, setVanishOnLeave] = useState(false);
 
+  const maxVanishHours = Math.max(0, Number((settings as { max_vanish_hours?: number }).max_vanish_hours ?? 0));
+  const vanishOptions = (() => {
+    const base = [
+      { h: 0, label: "Off" },
+      { h: 1, label: "1 hour" },
+      { h: 6, label: "6 hours" },
+      { h: 24, label: "24 hours" },
+      { h: 168, label: "7 days" },
+    ];
+    if (maxVanishHours <= 0) return base;
+    const capped = base.filter((o) => o.h > 0 && o.h < maxVanishHours);
+    return [...capped, { h: maxVanishHours, label: formatHours(maxVanishHours) }];
+  })();
+
   async function saveVanish() {
     if (!matchId) return;
     setBusy(true);
