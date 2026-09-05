@@ -5,25 +5,13 @@
  * Play Billing, as required by App Store guideline 3.1.1 and Google Play's
  * Payments policy. Nothing here runs on the web build.
  */
-import { Capacitor, registerPlugin } from "@capacitor/core";
-
-/**
- * Register the native bridge through Capacitor itself instead of importing the
- * RevenueCat JavaScript entry. That package currently ships extensionless ESM
- * imports which Node SSR cannot resolve and can take down an otherwise healthy
- * page load. registerPlugin creates a harmless proxy; native code is contacted
- * only when one of its methods is called on an iOS or Android device.
- */
-const Purchases = registerPlugin<any>("Purchases");
-
-async function rc() {
-  return Purchases;
-}
+import { Capacitor } from "@capacitor/core";
+import { Purchases } from "@revenuecat/purchases-capacitor";
 
 /** Warms the plugin in the background once the native app starts. */
 export function preloadStore() {
-  // The proxy is registered synchronously above. Native billing still connects
-  // in initStore once a signed-in user and the correct platform key are known.
+  // The official SDK import above registers the native plugin synchronously.
+  // Native billing connects in initStore once the member and platform key exist.
 }
 
 export type StorePackage = {
@@ -112,7 +100,7 @@ export async function initStore(opts: {
   if (configuring?.token === token) return configuring.promise;
 
   const promise = withStoreDeadline(
-    (await rc()).configure({ apiKey, appUserID: opts.userId }),
+    Purchases.configure({ apiKey, appUserID: opts.userId }),
     "connecting to billing",
   )
     .then(() => {
@@ -240,7 +228,7 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
   // 1. Offerings. A failure here must never stop the direct product lookup.
   let offerings: any = null;
   try {
-    offerings = await withStoreDeadline((await rc()).getOfferings(), "loading plans");
+    offerings = await withStoreDeadline(Purchases.getOfferings(), "loading plans");
   } catch (e) {
     notes.push(`Offerings failed: ${errText(e)}`);
   }
@@ -263,7 +251,7 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
       if (attempt > 0) await sleep(1_500 * attempt);
       try {
         const direct: any = await withStoreDeadline(
-          (await rc()).getProducts({ productIdentifiers: requestedProductIds }),
+          Purchases.getProducts({ productIdentifiers: requestedProductIds }),
           "loading plans",
         );
         mapped = packagesFromProducts(direct?.products ?? []);
@@ -324,7 +312,6 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
   clearStoreDiagnostics();
   const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
   if (!configured) throw new Error("Store billing is not configured. Please contact support.");
-  const Purchases = await rc();
   const request =
     pkg.source === "subscription-option"
       ? Purchases.purchaseSubscriptionOption({ subscriptionOption: pkg.raw as any })
@@ -341,7 +328,7 @@ export async function restore(entitlementId: string) {
   const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
   if (!configured) throw new Error("Store billing is not configured. Please contact support.");
   const res: any = await withStoreDeadline(
-    (await rc()).restorePurchases(),
+    Purchases.restorePurchases(),
     "restoring purchases",
     PURCHASE_DEADLINE_MS,
   );
@@ -350,6 +337,6 @@ export async function restore(entitlementId: string) {
 
 export async function currentEntitlement(entitlementId: string) {
   if (!isNativeStore()) return null;
-  const res: any = await withStoreDeadline((await rc()).getCustomerInfo(), "checking membership");
+  const res: any = await withStoreDeadline(Purchases.getCustomerInfo(), "checking membership");
   return readEntitlement(res?.customerInfo, entitlementId);
 }
