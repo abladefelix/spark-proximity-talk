@@ -557,10 +557,10 @@ function AuthPage() {
       )}
 
       <Dialog open={otherDevice !== null} onOpenChange={(open) => !open && setOtherDevice(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Already signed in elsewhere</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[calc(100vw-1.5rem)] min-w-0 max-w-sm gap-5 rounded-2xl p-5">
+          <DialogHeader className="min-w-0 pr-7 text-left">
+            <DialogTitle className="leading-snug">Already signed in elsewhere</DialogTitle>
+            <DialogDescription className="break-words leading-relaxed">
               Your account is active on {otherDevice?.label ?? "another device"}
               {otherDevice?.lastSeen
                 ? ` (last used ${new Date(otherDevice.lastSeen).toLocaleString()})`
@@ -573,7 +573,7 @@ function AuthPage() {
             <Button
               variant="heat"
               size="lg"
-              className="w-full"
+              className="h-auto min-h-11 w-full whitespace-normal px-4 py-3 text-center leading-snug"
               disabled={busy}
               onClick={takeOverDevice}
             >
@@ -582,7 +582,7 @@ function AuthPage() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full"
+              className="h-auto min-h-11 w-full whitespace-normal px-4 py-3 text-center leading-snug"
               disabled={busy}
               onClick={resetFromDeviceBlock}
             >
