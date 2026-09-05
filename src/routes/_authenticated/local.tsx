@@ -4,7 +4,6 @@ import { Brand } from "@/components/Brand";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { IntentChip } from "@/components/IntentSheet";
-import { BatSignalButton, HelpBeaconList } from "@/components/BatSignal";
 import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
 import { ZonePerk } from "@/components/ZonePerk";
 
