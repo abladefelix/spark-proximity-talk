@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, CircleAlert, Crown, Loader2, Save, Search } from "lucide-react";
+import { Check, CircleAlert, Crown, Info, Loader2, Save, Search } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -75,21 +75,22 @@ function Toggle({
  */
 function StoreSetupChecklist({ d }: { d: Billing }) {
   const val = (k: string) => String(d[k] ?? "").trim();
-  const checks: { label: string; ok: boolean; hint: string }[] = [
+  const checks: { label: string; ok: boolean; optional?: boolean; hint: string }[] = [
     {
       label: "Memberships switched on",
       ok: Boolean(d['enabled']),
       hint: "Turn on 'Memberships active' below.",
     },
     {
-      label: "iPhone key",
-      ok: val("rc_ios_api_key").startsWith("appl_"),
-      hint: "Paste the RevenueCat iOS public key (starts with appl_).",
-    },
-    {
       label: "Android key",
       ok: val("rc_android_api_key").startsWith("goog_"),
       hint: "Paste the RevenueCat Android public key (starts with goog_).",
+    },
+    {
+      label: "iPhone key",
+      ok: val("rc_ios_api_key").startsWith("appl_"),
+      optional: true,
+      hint: "Optional while you focus on Android. Paste the RevenueCat iOS public key (starts with appl_) when ready.",
     },
     {
       label: "Entitlement name",
@@ -117,7 +118,7 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
       hint: "Needed so purchases update memberships automatically.",
     },
   ];
-  const missing = checks.filter((c) => !c.ok);
+  const missing = checks.filter((c) => !c.ok && !c.optional);
 
   return (
     <div
@@ -133,19 +134,29 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
           : `${missing.length} thing${missing.length === 1 ? "" : "s"} still missing`}
       </p>
       <ul className="mt-2 space-y-1">
-        {checks.map((c) => (
-          <li key={c.label} className="flex items-start gap-2 text-[11px]">
-            {c.ok ? (
-              <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
-            ) : (
-              <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-            )}
-            <span className="min-w-0">
-              {c.label}
-              {c.ok ? null : <span className="text-muted-foreground"> — {c.hint}</span>}
-            </span>
-          </li>
-        ))}
+        {checks.map((c) => {
+          const pending = !c.ok;
+          const optionalPending = pending && c.optional;
+          return (
+            <li key={c.label} className="flex items-start gap-2 text-[11px]">
+              {c.ok ? (
+                <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              ) : optionalPending ? (
+                <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              ) : (
+                <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+              )}
+              <span className="min-w-0">
+                {c.label}
+                {c.ok ? null : (
+                  <span className={optionalPending ? "text-muted-foreground" : "text-destructive/80"}>
+                    {" "}— {c.hint}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
       </ul>
       {missing.length > 0 ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
