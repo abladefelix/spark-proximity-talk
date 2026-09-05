@@ -23,7 +23,13 @@ export function BottomNav() {
       <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">
         {items.map(({ to, label, icon: Icon }) => {
           const badgeCount =
-            to === "/local" ? localCount : to === "/chats" ? chatCount : 0;
+            to === "/local"
+              ? localCount
+              : to === "/chats"
+                ? chatCount
+                : to === "/radar"
+                  ? radarCount
+                  : 0;
 
           return (
             <Link
