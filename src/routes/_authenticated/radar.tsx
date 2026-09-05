@@ -440,7 +440,7 @@ function RadarPage() {
           } catch {
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if ("geolocation" in navigator && browserWatch === undefined) {
+            if (webFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
