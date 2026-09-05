@@ -27,6 +27,7 @@ export type StoreEntitlement = {
 };
 
 let configuredFor: string | null = null;
+let configuring: { token: string; promise: Promise<boolean> } | null = null;
 let lastOptions: { iosApiKey: string | null; androidApiKey: string | null; userId: string } | null =
   null;
 
@@ -90,12 +91,21 @@ export async function initStore(opts: {
 
   const token = `${apiKey}:${opts.userId}`;
   if (configuredFor === token) return true;
-  await withStoreDeadline(
+  if (configuring?.token === token) return configuring.promise;
+
+  const promise = withStoreDeadline(
     Purchases.configure({ apiKey, appUserID: opts.userId }),
     "connecting to billing",
-  );
-  configuredFor = token;
-  return true;
+  )
+    .then(() => {
+      configuredFor = token;
+      return true;
+    })
+    .finally(() => {
+      if (configuring?.token === token) configuring = null;
+    });
+  configuring = { token, promise };
+  return promise;
 }
 
 function periodOf(pkg: any): StorePackage["period"] {
