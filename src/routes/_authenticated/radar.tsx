@@ -37,7 +37,7 @@ import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
-import { HelpBeaconList, useHelpBeacons } from "@/components/BatSignal";
+import { useHelpBeacons } from "@/components/BatSignal";
 
 import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
