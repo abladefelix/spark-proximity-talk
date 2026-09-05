@@ -88,11 +88,13 @@ export function useMySubscription() {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
       if (!uid) return { status: "none", plan: "free", expiresAt: null, isPro: false };
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("subscriptions")
         .select("status, plan, expires_at")
         .eq("user_id", uid)
         .maybeSingle();
+      if (error) throw new Error(error.message ?? "Could not load your membership.");
+
       const active =
         data?.status === "active" &&
         (!data.expires_at || new Date(data.expires_at) > new Date());
