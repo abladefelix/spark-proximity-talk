@@ -66,7 +66,7 @@ function AuthedLayout() {
       >
         <div
           data-scrollable
-          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain pt-[var(--safe-top)] pb-[calc(3.5rem+var(--safe-bottom))]"
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
           <Outlet />
         </div>

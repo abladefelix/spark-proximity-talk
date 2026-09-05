@@ -38,13 +38,13 @@ export function GoProButton({ variant = "icon", className }: Props) {
             type="button"
             aria-label={isPro ? billing.pro_label : "Go Pro"}
             className={cn(
-              "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs transition-colors",
+              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none transition-colors",
               isPro ? "text-primary" : "text-muted-foreground",
               className,
             )}
           >
-            <Crown className={cn("size-5", isPro && "fill-current")} />
-            {isPro ? "Pro" : "Go Pro"}
+            <Crown className={cn("size-5 shrink-0", isPro && "fill-current")} />
+            <span className="max-w-full truncate">{isPro ? "Pro" : "Go Pro"}</span>
           </button>
         ) : variant === "icon" ? (
           <button

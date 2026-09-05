@@ -216,7 +216,7 @@ function ProfilePage() {
 
 
   return (
-    <main className="px-5 pb-12 pt-8">
+    <main className="px-[var(--app-gutter)] pb-6 pt-5 min-h-[700px]:pt-8">
       <div className="min-w-0">
         <h1 className="text-2xl font-semibold">You</h1>
         <p className="mt-1 text-sm text-muted-foreground">
