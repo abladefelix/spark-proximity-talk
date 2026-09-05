@@ -95,11 +95,12 @@ export function Brand({ className, size = 28 }: { className?: string; size?: num
     <p
       className={
         className ??
-        "flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-muted-foreground"
+        "flex min-w-0 items-center gap-2 text-sm font-semibold tracking-[0.18em] text-muted-foreground min-[380px]:tracking-[0.28em]"
       }
     >
-      <BrandMark size={size} />
-      {name}
+      <BrandMark size={size} className="shrink-0" />
+      <span className="min-w-0 truncate">{name}</span>
     </p>
   );
+
 }
