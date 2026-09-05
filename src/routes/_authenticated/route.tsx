@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeoutFallback } from "@/lib/net";
 import { ChatSheetProvider } from "@/components/ChatSheet";
@@ -7,7 +8,9 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useDeviceSessionGuard } from "@/hooks/useDeviceSessionGuard";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useBillingInfo } from "@/hooks/useBilling";
 import { BiometricGate } from "@/components/BiometricGate";
+import { initStore, isNativeStore, setStoreOptions } from "@/lib/revenuecat";
 
 /** Reads the session the auth client persisted, without any network call. */
 function storedSessionUser(): { id: string } | null {
@@ -55,24 +58,24 @@ function AuthedLayout() {
   useDeviceSessionGuard(user?.id ?? null);
   useInactivityTimeout(user?.id ?? null);
 
-
   return (
     <BiometricGate>
-    <ChatSheetProvider>
-      <PushManager userId={user?.id ?? null} />
-      <div
-        data-app-shell
-        className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
-      >
+      <ChatSheetProvider>
+        <PushManager userId={user?.id ?? null} />
+        <StoreBillingManager userId={user?.id ?? null} />
         <div
-          data-scrollable
-          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          data-app-shell
+          className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
         >
-          <Outlet />
+          <div
+            data-scrollable
+            className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          >
+            <Outlet />
+          </div>
+          <BottomNav />
         </div>
-        <BottomNav />
-      </div>
-    </ChatSheetProvider>
+      </ChatSheetProvider>
     </BiometricGate>
   );
 }
@@ -82,3 +85,22 @@ function PushManager({ userId }: { userId: string | null }) {
   return null;
 }
 
+/** Connects the native store as soon as the signed-in app starts. */
+function StoreBillingManager({ userId }: { userId: string | null }) {
+  const { data: billing } = useBillingInfo();
+
+  useEffect(() => {
+    if (!userId || !billing?.enabled || !isNativeStore()) return;
+    const options = {
+      iosApiKey: billing.ios_api_key,
+      androidApiKey: billing.android_api_key,
+      userId,
+    };
+    setStoreOptions(options);
+    void initStore(options).catch(() => {
+      // The Pro screen retries and presents a user-friendly store error.
+    });
+  }, [billing?.android_api_key, billing?.enabled, billing?.ios_api_key, userId]);
+
+  return null;
+}
