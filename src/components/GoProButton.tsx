@@ -22,9 +22,37 @@ type Props = {
 
 /** Opens the membership sheet so anyone can go Pro after signing up. */
 export function GoProButton({ variant = "icon", className }: Props) {
-  const { data: billing } = useBillingInfo();
+  const { data: billing, isLoading, isError, refetch } = useBillingInfo();
   const { data: sub } = useMySubscription();
   const [open, setOpen] = useState(false);
+
+  // Keep the navigation slot stable while auth restores on a cold launch. If
+  // settings fail once, leave a visible retry control instead of making the
+  // subscription entry disappear completely.
+  if (isLoading) {
+    return <div aria-hidden className={cn(variant === "nav" ? "min-w-0" : "size-9", className)} />;
+  }
+
+  if (isError && !billing) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size={variant === "nav" ? "sm" : "icon"}
+        aria-label="Reload Pro membership"
+        className={cn(
+          variant === "nav"
+            ? "flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[11px] leading-none text-muted-foreground"
+            : "size-9 rounded-full",
+          className,
+        )}
+        onClick={() => void refetch()}
+      >
+        <Crown className="size-5 shrink-0" />
+        {variant === "nav" ? <span className="max-w-full truncate">Go Pro</span> : null}
+      </Button>
+    );
+  }
 
   if (!billing?.enabled) return null;
 

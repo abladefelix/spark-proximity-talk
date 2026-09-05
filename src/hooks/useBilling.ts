@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type BillingInfo = {
@@ -56,12 +57,29 @@ export const BILLING_DEFAULTS: BillingInfo = {
 
 /** Public, safe billing configuration (never includes the secret key). */
 export function useBillingInfo() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        void queryClient.invalidateQueries({ queryKey: BILLING_INFO_KEY });
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, [queryClient]);
+
   return useQuery({
     queryKey: BILLING_INFO_KEY,
     staleTime: 60_000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     queryFn: async (): Promise<BillingInfo> => {
+      // billing_public_info is intentionally restricted to signed-in members.
+      // Waiting for getSession also gives the auth client a chance to restore or
+      // refresh its token on a native cold launch before the RPC is sent.
+      const { data: auth, error: authError } = await supabase.auth.getSession();
+      if (authError) throw new Error(authError.message);
+      if (!auth.session) throw new Error("Sign in to load membership settings.");
       const { data, error } = await (supabase as any).rpc("billing_public_info");
       // Never swallow this: a silent failure hides the whole membership card.
       if (error) throw new Error(error.message ?? "Could not load membership settings.");
