@@ -69,12 +69,14 @@ export function GoProButton({ variant = "icon", className }: Props) {
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[calc(100vw-1rem)] max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0">
+        <DialogHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 pr-12 text-left">
           <DialogTitle>{billing.pro_label}</DialogTitle>
           <DialogDescription>{billing.pro_pitch}</DialogDescription>
         </DialogHeader>
-        <ProUpgradeCard />
+        <div data-scrollable className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-[max(1rem,var(--safe-bottom))]">
+          <ProUpgradeCard />
+        </div>
       </DialogContent>
     </Dialog>
   );
