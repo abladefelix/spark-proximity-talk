@@ -146,20 +146,17 @@ export function ChatSafetyMenu({
 
       <Dialog open={vanishOpen} onOpenChange={setVanishOpen}>
         <DialogContent>
-          <DialogHeader>
+           <DialogHeader>
             <DialogTitle>Vanishing messages</DialogTitle>
             <DialogDescription>
               Messages in this chat delete themselves. Either side can change this.
+              {maxVanishHours > 0
+                ? ` Chats can last at most ${formatHours(maxVanishHours)}.`
+                : null}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap gap-2">
-            {[
-              { h: 0, label: "Off" },
-              { h: 1, label: "1 hour" },
-              { h: 6, label: "6 hours" },
-              { h: 24, label: "24 hours" },
-              { h: 168, label: "7 days" },
-            ].map((o) => (
+            {vanishOptions.map((o) => (
               <button
                 key={o.h}
                 type="button"
