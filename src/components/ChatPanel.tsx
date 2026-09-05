@@ -552,7 +552,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-1.5 border-t border-border/40 bg-background/95 px-2 pb-[var(--safe-bottom)] pt-1.5 backdrop-blur-md"
+        className="z-20 flex shrink-0 items-end gap-1.5 border-t border-border/40 bg-background/95 px-2 pb-[calc(var(--safe-bottom)+0.5rem)] pt-1.5 backdrop-blur-md"
       >
         <input
           ref={fileRef}
