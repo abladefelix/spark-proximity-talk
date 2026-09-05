@@ -45,7 +45,13 @@ function featureList(
  * App Store guideline 3.1.1 and Google Play's Payments policy.
  */
 export function ProUpgradeCard() {
-  const { data: billing } = useBillingInfo();
+  const {
+    data: billing,
+    isError: billingFailed,
+    isFetching: billingLoading,
+    refetch: refetchBilling,
+  } = useBillingInfo();
+
   const { data: sub } = useMySubscription();
   const { data: catalog = [] } = useProFeatures();
   const { data: packageCatalog = [] } = useProPackages();
