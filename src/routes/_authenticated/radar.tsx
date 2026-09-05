@@ -1251,6 +1251,46 @@ function RadarPage() {
       </div>
     </div>
 
+    <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
+      <DialogContent className="max-w-xs rounded-3xl text-center">
+        <DialogHeader className="items-center">
+          <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
+            <MapPin className="size-7 text-primary" />
+          </span>
+          <DialogTitle>Turn on location</DialogTitle>
+          <DialogDescription>
+            {permDenied
+              ? Capacitor.isNativePlatform()
+                ? "Location is turned off for SKANAROUND. Open your phone Settings, find SKANAROUND, allow Location, then tap Try again."
+                : "Location is blocked for SKANAROUND. Allow location in your device settings, then tap Try again."
+              : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
+          </DialogDescription>
+          <Link
+            to="/privacy"
+            className="text-xs text-muted-foreground underline underline-offset-4"
+          >
+            How we use your location
+          </Link>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button
+            variant="heat"
+            className="w-full"
+            onClick={() => {
+              setPermDenied(false);
+              setAskLocation(false);
+              setRetryKey((k) => k + 1);
+            }}
+          >
+            {permDenied ? "Try again" : "Allow location"}
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => setAskLocation(false)}>
+            Not now
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <Dialog
         open={Boolean(selected)}
         onOpenChange={(o) => {
