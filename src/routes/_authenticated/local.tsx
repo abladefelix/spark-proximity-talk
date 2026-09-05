@@ -44,8 +44,6 @@ function LocalPage() {
       <div className="mt-4 space-y-4">
         <IntentChip />
         <ZonePerk />
-        <HelpBeaconList />
-        <BatSignalButton />
         <QuestionBroadcasts />
       </div>
     </main>
