@@ -251,6 +251,8 @@ export function BillingTab() {
         title="App Store & Google Play billing"
         hint="Memberships are sold through Apple and Google only, as their stores require. Paste the keys from your RevenueCat project."
       >
+        <StoreSetupChecklist d={d} />
+
         <Toggle
           label="Memberships active"
           hint="Turns the upgrade card on for members."
