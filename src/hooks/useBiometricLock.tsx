@@ -1,7 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
-import { BiometricAuth, type CheckBiometryResult } from "@aparajita/capacitor-biometric-auth";
+import {
+  BiometricAuth,
+  BiometryType,
+  type CheckBiometryResult,
+} from "@aparajita/capacitor-biometric-auth";
+import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
 
 const PREF_KEY = "skanaround:biometric-lock";
 /** Re-lock only after the app has been away long enough to change hands. */
@@ -24,9 +29,59 @@ export function isBiometricPlatform() {
 export async function checkBiometry(): Promise<CheckBiometryResult | null> {
   if (!isBiometricPlatform()) return null;
   try {
-    return await BiometricAuth.checkBiometry();
-  } catch {
+    const res = await BiometricAuth.checkBiometry();
+    nativeDebug("biometry:check", {
+      isAvailable: res.isAvailable,
+      deviceIsSecure: res.deviceIsSecure,
+      biometryType: res.biometryType,
+      reason: res.reason,
+      code: res.code,
+    });
+    return res;
+  } catch (err) {
+    nativeDebugError("biometry:check", err);
     return null;
+  }
+}
+
+/** Friendly name for what the device offers (Android reports numeric types). */
+export function biometryLabel(res: CheckBiometryResult | null): string {
+  const type = res?.biometryType;
+  switch (type) {
+    case BiometryType.faceId:
+    case BiometryType.faceAuthentication:
+      return "Face unlock";
+    case BiometryType.touchId:
+    case BiometryType.fingerprintAuthentication:
+      return "Fingerprint unlock";
+    case BiometryType.irisAuthentication:
+      return "Iris unlock";
+    default:
+      return res?.deviceIsSecure ? "Screen lock" : "Biometric unlock";
+  }
+}
+
+/** Turns a plugin failure into something a member can act on. */
+export function describeBiometryError(err: unknown): string {
+  const code = (err as { code?: string } | null)?.code ?? "";
+  switch (code) {
+    case "userCancel":
+    case "systemCancel":
+    case "appCancel":
+      return "Unlock cancelled. Tap Unlock to try again.";
+    case "authenticationFailed":
+      return "Not recognised. Try again.";
+    case "biometryNotEnrolled":
+      return "No fingerprint or face is set up on this phone. Add one in your phone's settings.";
+    case "biometryNotAvailable":
+      return "This phone's fingerprint or face sensor is unavailable right now.";
+    case "biometryLockout":
+      return "Too many attempts. Unlock your phone with its PIN or pattern, then try again.";
+    case "noDeviceCredential":
+    case "passcodeNotSet":
+      return "Set a screen lock (PIN, pattern or password) on your phone first.";
+    default:
+      return (err as { message?: string } | null)?.message || "Verification failed. Try again.";
   }
 }
 
@@ -38,6 +93,9 @@ export async function runBiometricPrompt(reason: string) {
     iosFallbackTitle: "Use passcode",
     androidTitle: "Unlock SKANAROUND",
     androidSubtitle: reason,
+    // Weak biometry (most Android face unlock) otherwise adds a second
+    // "Confirm" tap that many people never notice, so unlock looks stuck.
+    androidConfirmationRequired: false,
   });
 }
 
@@ -62,27 +120,44 @@ export function BiometricLockProvider({ children }: { children: React.ReactNode 
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const backgroundedAt = useRef<number | null>(null);
+  const prompting = useRef(false);
 
   const unlock = useCallback(async () => {
     if (!isBiometricPlatform()) {
       setLocked(false);
       return;
     }
+    // Android fires the app-state listener while the prompt is on screen; a
+    // second authenticate() call cancels the first one and nothing happens.
+    if (prompting.current) return;
+    prompting.current = true;
     setUnlocking(true);
     setError(null);
     try {
+      nativeDebug("biometry:prompt");
       await runBiometricPrompt("Unlock SKANAROUND");
       setLocked(false);
-    } catch {
-      setError("Not recognised. Try again.");
+    } catch (err) {
+      nativeDebugError("biometry:prompt", err);
+      setError(describeBiometryError(err));
     } finally {
+      prompting.current = false;
       setUnlocking(false);
     }
   }, []);
 
-  // Prompt as soon as the lock screen appears on a cold start.
+  // Prompt as soon as the lock screen appears on a cold start. If this phone
+  // can't do biometry at all, never trap the member behind the lock screen.
   useEffect(() => {
-    if (locked) void unlock();
+    if (!locked) return;
+    void (async () => {
+      const res = await checkBiometry();
+      if (res && !res.isAvailable && !res.deviceIsSecure) {
+        setLocked(false);
+        return;
+      }
+      await unlock();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,6 +167,8 @@ export function BiometricLockProvider({ children }: { children: React.ReactNode 
     let remove: (() => void) | undefined;
     void CapApp.addListener("appStateChange", ({ isActive }) => {
       if (!isBiometricPrefEnabled()) return;
+      // The system prompt itself backgrounds the app on Android — ignore that.
+      if (prompting.current) return;
       if (!isActive) {
         backgroundedAt.current = Date.now();
         return;
