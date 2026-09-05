@@ -5,30 +5,25 @@
  * Play Billing, as required by App Store guideline 3.1.1 and Google Play's
  * Payments policy. Nothing here runs on the web build.
  */
-import { Capacitor } from "@capacitor/core";
-import type { Purchases as PurchasesType } from "@revenuecat/purchases-capacitor";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 /**
- * The RevenueCat plugin ships ESM without file extensions, which the server
- * renderer cannot resolve. It is only ever needed on a real device, so load it
- * on demand there and never during server rendering.
+ * Register the native bridge through Capacitor itself instead of importing the
+ * RevenueCat JavaScript entry. That package currently ships extensionless ESM
+ * imports which Node SSR cannot resolve and can take down an otherwise healthy
+ * page load. registerPlugin creates a harmless proxy; native code is contacted
+ * only when one of its methods is called on an iOS or Android device.
  */
-let purchasesPromise: Promise<typeof PurchasesType> | null = null;
-async function rc(): Promise<typeof PurchasesType> {
-  if (!purchasesPromise) {
-    purchasesPromise = import("@revenuecat/purchases-capacitor")
-      .then((m) => m.Purchases)
-      .catch((e) => {
-        purchasesPromise = null;
-        throw e;
-      });
-  }
-  return purchasesPromise;
+const Purchases = registerPlugin<any>("Purchases");
+
+async function rc() {
+  return Purchases;
 }
 
 /** Warms the plugin in the background once the native app starts. */
 export function preloadStore() {
-  if (Capacitor.isNativePlatform()) void rc().catch(() => {});
+  // The proxy is registered synchronously above. Native billing still connects
+  // in initStore once a signed-in user and the correct platform key are known.
 }
 
 export type StorePackage = {
