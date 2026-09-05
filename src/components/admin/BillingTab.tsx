@@ -75,21 +75,22 @@ function Toggle({
  */
 function StoreSetupChecklist({ d }: { d: Billing }) {
   const val = (k: string) => String(d[k] ?? "").trim();
-  const checks: { label: string; ok: boolean; hint: string }[] = [
+  const checks: { label: string; ok: boolean; optional?: boolean; hint: string }[] = [
     {
       label: "Memberships switched on",
       ok: Boolean(d['enabled']),
       hint: "Turn on 'Memberships active' below.",
     },
     {
-      label: "iPhone key",
-      ok: val("rc_ios_api_key").startsWith("appl_"),
-      hint: "Paste the RevenueCat iOS public key (starts with appl_).",
-    },
-    {
       label: "Android key",
       ok: val("rc_android_api_key").startsWith("goog_"),
       hint: "Paste the RevenueCat Android public key (starts with goog_).",
+    },
+    {
+      label: "iPhone key",
+      ok: val("rc_ios_api_key").startsWith("appl_"),
+      optional: true,
+      hint: "Optional while you focus on Android. Paste the RevenueCat iOS public key (starts with appl_) when ready.",
     },
     {
       label: "Entitlement name",
@@ -117,7 +118,7 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
       hint: "Needed so purchases update memberships automatically.",
     },
   ];
-  const missing = checks.filter((c) => !c.ok);
+  const missing = checks.filter((c) => !c.ok && !c.optional);
 
   return (
     <div
