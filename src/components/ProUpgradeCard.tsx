@@ -240,11 +240,33 @@ export function ProUpgradeCard() {
             </p>
           ) : packages.length === 0 ? (
             <div className="space-y-2">
+              {fallbackPlans.length > 0 ? (
+                <>
+                  {fallbackPlans.map((plan, i) => (
+                    <Button
+                      key={plan.productId}
+                      variant={i === 0 ? "default" : "outline"}
+                      className="w-full"
+                      disabled={busy !== null}
+                      onClick={() => buyProduct(plan.productId)}
+                    >
+                      {busy === plan.productId ? (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                      ) : null}
+                      {plan.label}
+                    </Button>
+                  ))}
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Final price is confirmed by {storeName()} at checkout.
+                  </p>
+                </>
+              ) : null}
               <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
                 {storeError ??
                   diag?.error ??
                   "No plans are available right now. Please check back soon."}
               </p>
+
               <Button
                 variant="outline"
                 className="w-full"
