@@ -257,6 +257,7 @@ export function isUserCancelled(error: unknown) {
 
 /** Runs the native purchase sheet. Throws on failure. */
 export async function purchase(pkg: StorePackage, entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
   const res: any =
     pkg.source === "product"
