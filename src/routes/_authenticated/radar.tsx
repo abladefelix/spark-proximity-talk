@@ -359,7 +359,7 @@ function RadarPage() {
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
-            if ("geolocation" in navigator) {
+            if (webFallbackOk && "geolocation" in navigator) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
