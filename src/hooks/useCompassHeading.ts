@@ -232,6 +232,24 @@ export function useCompassHeading(enabled: boolean) {
     return () => window.clearTimeout(id);
   }, [listening, settled]);
 
+  // Give up gracefully instead of spinning forever: if no reading at all has
+  // arrived a few seconds after switching the compass on, report it as
+  // unavailable so the UI can say so and offer a retry.
+  const [unavailable, setUnavailable] = useState(false);
+  useEffect(() => {
+    if (!enabled) {
+      setUnavailable(false);
+      return;
+    }
+    if (heading != null) {
+      setUnavailable(false);
+      return;
+    }
+    const id = window.setTimeout(() => setUnavailable(true), 8000);
+    return () => window.clearTimeout(id);
+  }, [enabled, heading]);
+
+
   const request = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
       const iosOrientation = requestIosOrientation.current;
