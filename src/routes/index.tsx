@@ -39,19 +39,68 @@ function Landing() {
   // Inside the installed app there is no "marketing" moment: go straight to the
   // radar when signed in, or to sign-in when not, behind a branded splash.
   const [isNative] = useState(() => Capacitor.isNativePlatform());
+  const [stuck, setStuck] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (!isNative) return;
+    let cancelled = false;
+    // getSession() can hang forever on a stalled token refresh (weak signal at
+    // launch). Bound it, and if it stalls, show a retry/continue escape hatch.
+    const timer = window.setTimeout(() => {
+      if (!cancelled) setStuck(true);
+    }, 6000);
+    withTimeoutFallback(supabase.auth.getSession(), null, 5000, "Session check")
+      .then((result) => {
+        if (cancelled) return;
+        window.clearTimeout(timer);
+        if (result?.data.session) navigate({ to: "/radar" });
+        else if (!result) setStuck(true);
+        else navigate({ to: "/auth" });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          window.clearTimeout(timer);
+          setStuck(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [navigate, isNative, attempt]);
+
+  useEffect(() => {
+    // Web landing keeps its old behaviour: hop signed-in visitors to the radar.
+    if (isNative) return;
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/radar" });
-      else if (isNative) navigate({ to: "/auth" });
     });
   }, [navigate, isNative]);
+
+  const retry = useCallback(() => {
+    setStuck(false);
+    setAttempt((n) => n + 1);
+  }, []);
 
   if (isNative) {
     return (
       <main className="flex h-full w-full flex-col items-center justify-center gap-4 px-6">
         <BrandMark size={72} />
         <p className="text-xs font-semibold tracking-[0.32em] text-muted-foreground">SKANAROUND</p>
+        {stuck ? (
+          <div className="mt-4 flex w-full max-w-xs flex-col items-center gap-3">
+            <p className="text-center text-sm text-muted-foreground">
+              It's taking longer than usual to check your sign-in.
+            </p>
+            <Button variant="heat" className="w-full" onClick={retry}>
+              Try again
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/auth">Go to sign in</Link>
+            </Button>
+          </div>
+        ) : null}
       </main>
     );
   }
