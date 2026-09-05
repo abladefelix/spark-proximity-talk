@@ -19,6 +19,7 @@ import {
   isNativeStore,
   listPackages,
   purchase,
+  purchaseProductId,
   restore,
   storeName,
   isUserCancelled,
@@ -152,6 +153,28 @@ export function ProUpgradeCard() {
   const features = featureList(catalog, primary ? primary.features : null);
   const entitlement = billing.entitlement_id || "pro";
 
+  // Shown when the store list could not be loaded, so members always see what
+  // they can buy. Prices come from admin settings; the store confirms at checkout.
+  const money = (amount: number) => {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: billing.currency || "USD",
+        maximumFractionDigits: 2,
+      }).format(amount / 100);
+    } catch {
+      return `${billing.currency || "USD"} ${(amount / 100).toFixed(2)}`;
+    }
+  };
+  const fallbackPlans = [
+    billing.monthly_product_id && billing.monthly_amount > 0
+      ? { productId: billing.monthly_product_id, label: `${money(billing.monthly_amount)} / month` }
+      : null,
+    billing.yearly_product_id && billing.yearly_amount > 0
+      ? { productId: billing.yearly_product_id, label: `${money(billing.yearly_amount)} / year` }
+      : null,
+  ].filter((p): p is { productId: string; label: string } => p !== null);
+
   async function buy(pkg: StorePackage) {
     setBusy(pkg.identifier);
     try {
@@ -165,6 +188,21 @@ export function ProUpgradeCard() {
       setBusy(null);
     }
   }
+
+  async function buyProduct(productId: string) {
+    setBusy(productId);
+    try {
+      const ent = await purchaseProductId(productId, entitlement);
+      await afterStoreChange(ent.managementUrl);
+      toast.success("You're Pro now. Enjoy!");
+    } catch (e) {
+      if (isUserCancelled(e)) toast.message("Purchase cancelled");
+      else toast.error(e instanceof Error ? e.message : "The purchase didn't go through.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   async function restorePurchases() {
     setBusy("restore");
@@ -240,11 +278,33 @@ export function ProUpgradeCard() {
             </p>
           ) : packages.length === 0 ? (
             <div className="space-y-2">
+              {fallbackPlans.length > 0 ? (
+                <>
+                  {fallbackPlans.map((plan, i) => (
+                    <Button
+                      key={plan.productId}
+                      variant={i === 0 ? "default" : "outline"}
+                      className="w-full"
+                      disabled={busy !== null}
+                      onClick={() => buyProduct(plan.productId)}
+                    >
+                      {busy === plan.productId ? (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                      ) : null}
+                      {plan.label}
+                    </Button>
+                  ))}
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Final price is confirmed by {storeName()} at checkout.
+                  </p>
+                </>
+              ) : null}
               <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
                 {storeError ??
                   diag?.error ??
                   "No plans are available right now. Please check back soon."}
               </p>
+
               <Button
                 variant="outline"
                 className="w-full"
