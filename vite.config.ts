@@ -8,11 +8,13 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   // RevenueCat must stay bundled so its official client can register the
   // native Capacitor plugin without Node trying to resolve its ESM internals.
-  ssr: {
-    noExternal: [
-      "@revenuecat/purchases-capacitor",
-      "@revenuecat/purchases-typescript-internal-esm",
-    ],
+  vite: {
+    ssr: {
+      noExternal: [
+        "@revenuecat/purchases-capacitor",
+        "@revenuecat/purchases-typescript-internal-esm",
+      ],
+    },
   },
   // Self-hosting: build a plain Node server (works on a Windows VPS).
   // Inside Lovable, LOVABLE_NITRO_PRESET overrides this automatically.
