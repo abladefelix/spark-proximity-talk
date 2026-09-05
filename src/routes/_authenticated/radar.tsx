@@ -843,9 +843,11 @@ function RadarPage() {
 
   return (
     <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-5 pt-3">
-      <div className="flex items-center justify-between">
-        <Brand />
-        <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+        <div className="flex min-w-0 items-center">
+          <Brand />
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
           <NotificationBell />
           <ThemeToggle />
 
@@ -864,7 +866,9 @@ function RadarPage() {
             }}
             aria-label="Visible on radar"
           />
-          <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
+          <span className="hidden text-xs text-muted-foreground min-[380px]:inline">
+            {visible ? "Visible" : "Hidden"}
+          </span>
         </div>
       </div>
 
