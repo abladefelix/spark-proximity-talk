@@ -247,6 +247,24 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
   return readEntitlement(res?.customerInfo, entitlementId);
 }
 
+/**
+ * Buys a plan straight from its store product id. Used when the plan list
+ * could not be loaded up front, so a member can still subscribe.
+ */
+export async function purchaseProductId(productId: string, entitlementId: string) {
+  const Purchases = await sdk();
+  const direct: any = await Purchases.getProducts({ productIdentifiers: [productId] });
+  const product = direct?.products?.[0];
+  if (!product) {
+    throw new Error(
+      `${storeName()} does not have "${productId}" available for your account yet.`,
+    );
+  }
+  const res: any = await Purchases.purchaseStoreProduct({ product });
+  return readEntitlement(res?.customerInfo, entitlementId);
+}
+
+
 /** Required by App Store review: re-applies purchases on a new device. */
 export async function restore(entitlementId: string) {
   const Purchases = await sdk();
