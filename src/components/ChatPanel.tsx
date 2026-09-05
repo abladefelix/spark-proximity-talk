@@ -15,6 +15,8 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 import { TranscriptSkeleton } from "@/components/Skeletons";
+import { markChatRead } from "@/lib/chat-reads";
+
 
 type Message = {
   id: string;
@@ -282,6 +284,13 @@ export function ChatPanel({
   // Keep the newest message in view, but don't yank the view when older
   // history is prepended.
   const newestId = messages[messages.length - 1]?.id;
+
+  // Opening (or staying in) the thread clears its unread badge.
+  const newestAt = messages[messages.length - 1]?.created_at;
+  useEffect(() => {
+    if (newestAt) markChatRead(matchId, newestAt);
+  }, [matchId, newestAt]);
+
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
