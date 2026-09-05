@@ -950,7 +950,7 @@ function RadarPage() {
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 py-2 min-h-[700px]:gap-3 min-h-[700px]:py-3">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pt-6 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pt-8 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -962,7 +962,7 @@ function RadarPage() {
           touchAction: zoom > 1.001 ? "none" : "pan-y",
           cursor: zoom > 1.001 ? "grab" : "default",
         }}
-        className="relative mt-20 aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative mt-28 aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
