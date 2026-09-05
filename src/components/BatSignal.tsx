@@ -28,12 +28,13 @@ type Beacon = {
   kind: string;
   note: string | null;
   distance_m: number;
+  bearing_deg?: number | null;
   expires_at: string;
   mine: boolean;
   match_id: string | null;
 };
 
-function useHelpBeacons() {
+export function useHelpBeacons() {
   return useQuery({
     queryKey: ["help-beacons"],
     refetchInterval: 15_000,
@@ -156,7 +157,7 @@ export function HelpBeaconList() {
   if (beacons.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div id="help-beacons" className="scroll-mt-24 space-y-2">
       <p className="px-1 text-xs font-medium uppercase tracking-wide text-destructive">
         Someone needs help
       </p>

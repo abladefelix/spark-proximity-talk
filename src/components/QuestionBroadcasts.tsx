@@ -35,7 +35,13 @@ function minutesLeft(iso: string) {
   return m > 0 ? `${m}m left` : "expiring";
 }
 
-export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
+export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
+  const savedRadius = (() => {
+    if (radiusM) return radiusM;
+    if (typeof window === "undefined") return 1000;
+    const saved = Number(window.localStorage.getItem("skan-radius") ?? "");
+    return Number.isFinite(saved) && saved > 0 ? saved : 1000;
+  })();
   const qc = useQueryClient();
   const { openChat } = useChatSheet();
   const [composing, setComposing] = useState(false);
@@ -43,11 +49,11 @@ export function QuestionBroadcasts({ radiusM = 500 }: { radiusM?: number }) {
   const [options, setOptions] = useState<string[]>(["", ""]);
 
   const { data: items = [] } = useQuery({
-    queryKey: ["broadcasts", radiusM],
+    queryKey: ["broadcasts", savedRadius],
     refetchInterval: 20_000,
     queryFn: async (): Promise<Broadcast[]> => {
       const { data, error } = await (supabase as any).rpc("nearby_broadcasts", {
-        radius_m: radiusM,
+        radius_m: savedRadius,
       });
       if (error) return [];
       return (data ?? []) as Broadcast[];
