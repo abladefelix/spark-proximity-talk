@@ -271,9 +271,19 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
  * could not be loaded up front, so a member can still subscribe.
  */
 export async function purchaseProductId(productId: string, entitlementId: string) {
+  await ensureConfigured();
   const Purchases = await sdk();
-  const direct: any = await Purchases.getProducts({ productIdentifiers: [productId] });
-  const product = direct?.products?.[0];
+  const ids = [productId, `${productId}:monthly`, `${productId}:yearly`, `${productId}:annual`];
+  let product: any = null;
+  for (const id of ids) {
+    try {
+      const direct: any = await Purchases.getProducts({ productIdentifiers: [id] });
+      product = direct?.products?.[0];
+      if (product) break;
+    } catch {
+      // Try the next identifier shape.
+    }
+  }
   if (!product) {
     throw new Error(
       `${storeName()} does not have "${productId}" available for your account yet.`,
