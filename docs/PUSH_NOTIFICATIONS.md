@@ -41,7 +41,9 @@ Files:
 4. Add backend secret `FCM_SERVICE_ACCOUNT` — the entire service-account JSON as
    one string.
 
-Without these secrets pushes are skipped gracefully with reason
+If `google-services.json` is absent or invalid, the Android app now skips native
+push registration safely instead of crashing; in-app notifications still work.
+Without the backend secrets, remote pushes are skipped gracefully with reason
 `apns-not-configured` / `fcm-not-configured`; in-app realtime alerts keep working.
 
 ## Testing

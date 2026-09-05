@@ -1,10 +1,29 @@
 import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { useServerFn } from "@tanstack/react-start";
 import { useChatSheet } from "@/components/ChatSheet";
 import { registerPushToken } from "@/lib/push-notifications.functions";
 import { useSettings } from "@/hooks/useAppSettings";
+import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
+
+type FirebaseStatusPlugin = {
+  getStatus: () => Promise<{ configured: boolean }>;
+};
+
+const FirebaseStatus = registerPlugin<FirebaseStatusPlugin>("FirebaseStatus");
+
+async function canRegisterForPush() {
+  if (Capacitor.getPlatform() !== "android") return true;
+  try {
+    const status = await FirebaseStatus.getStatus();
+    nativeDebug("android Firebase status checked", { configured: status.configured });
+    return status.configured;
+  } catch (error) {
+    nativeDebugError("android Firebase status check failed", error);
+    return false;
+  }
+}
 
 export function usePushNotifications(userId: string | null) {
   const { openChat } = useChatSheet();
@@ -74,28 +93,22 @@ export function usePushNotifications(userId: string | null) {
   useEffect(() => {
     if (!userId || !settings.push_enabled || !Capacitor.isNativePlatform()) return;
 
-    // Android push needs a google-services.json in the native project. Without
-    // it FirebaseApp never initialises and PushNotifications.register() throws
-    // a FATAL native exception that kills the app. Registration is therefore
-    // opt-in: set VITE_FIREBASE_CONFIGURED=true once the file is in place.
-    if (
-      Capacitor.getPlatform() === "android" &&
-      import.meta.env['VITE_FIREBASE_CONFIGURED'] !== "true"
-    ) {
-      return;
-    }
-
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
 
-    PushNotifications.requestPermissions()
+    canRegisterForPush()
+      .then((configured) => {
+        if (!configured || unmounted) return undefined;
+        return PushNotifications.requestPermissions();
+      })
       .then((res) => {
-        if (res.receive === "granted") {
+        if (res?.receive === "granted" && !unmounted) {
+          nativeDebug("registering Android push notifications");
           return PushNotifications.register();
         }
         return undefined;
       })
-      .catch((e) => console.error("[Push] register failed", e));
+      .catch((error) => nativeDebugError("push registration failed", error));
 
     listeners.push(
       PushNotifications.addListener("registration", async ({ value }) => {
