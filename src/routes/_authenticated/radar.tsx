@@ -912,93 +912,46 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="mt-2.5 max-[360px]:mt-2">
-        <IntentChip />
-      </div>
-
-      <ActiveChats />
-      <IncomingSignals />
-
-
-
-      <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
-        <DialogContent className="max-w-xs rounded-3xl text-center">
-          <DialogHeader className="items-center">
-            <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
-              <MapPin className="size-7 text-primary" />
-            </span>
-            <DialogTitle>Turn on location</DialogTitle>
-            <DialogDescription>
-              {permDenied
-                ? Capacitor.isNativePlatform()
-                  ? "Location is turned off for SKANAROUND. Open your phone Settings, find SKANAROUND, allow Location, then tap Try again."
-                  : "Location is blocked for SKANAROUND. Allow location in your device settings, then tap Try again."
-                : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
-            </DialogDescription>
-            <Link
-              to="/privacy"
-              className="text-xs text-muted-foreground underline underline-offset-4"
-            >
-              How we use your location
-            </Link>
-          </DialogHeader>
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button
-              variant="heat"
-              className="w-full"
-              onClick={() => {
-                setPermDenied(false);
-                setAskLocation(false);
-                setRetryKey((k) => k + 1);
-              }}
-            >
-              {permDenied ? "Try again" : "Allow location"}
-            </Button>
-            <Button variant="ghost" className="w-full" onClick={() => setAskLocation(false)}>
-              Not now
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-
-
-
-
-
-
-
-      {geoError && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
-          <span>{geoError}</span>
-          <button
-            type="button"
-            onClick={() => setRetryKey((k) => k + 1)}
-            className="shrink-0 rounded-full border border-border px-3 py-1 font-medium text-foreground"
-          >
-            Retry
-          </button>
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Status overlays float above the radar so the scope keeps its full size. */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-30 px-[var(--app-gutter)] pt-2">
+          <div className="pointer-events-auto">
+            {geoError && (
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
+                <span>{geoError}</span>
+                <button
+                  type="button"
+                  onClick={() => setRetryKey((k) => k + 1)}
+                  className="shrink-0 rounded-full border border-border px-3 py-1 font-medium text-foreground"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            {!geoError && nearby.isError && (
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+                <span>Radar could not refresh. Check your connection and try again.</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => void nearby.refetch()}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+            {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                {settings.empty_radar_text} Widen your scan range in your profile.
+              </p>
+            )}
+          </div>
         </div>
-      )}
-      {!geoError && nearby.isError && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
-          <span>Radar could not refresh. Check your connection and try again.</span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={() => void nearby.refetch()}
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-      {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          {settings.empty_radar_text} Widen your scan range in your profile.
-        </p>
-      )}
+
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 py-2 min-h-[700px]:gap-3 min-h-[700px]:py-3">
+
 
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 py-2 min-h-[700px]:gap-3 min-h-[700px]:py-3">
