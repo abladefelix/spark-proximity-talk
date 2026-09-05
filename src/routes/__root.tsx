@@ -26,6 +26,7 @@ import { isNetworkError, isAbortError, errorMessage } from "@/lib/net";
 import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health";
 import { startCachePersistence } from "@/lib/query-persist";
 import { getAppLook, type AppLook } from "@/lib/app-look.functions";
+import { Button } from "@/components/ui/button";
 
 
 function useNativeViewportLock() {
@@ -62,7 +63,7 @@ function useNativeViewportLock() {
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div data-scrollable className="flex min-h-dvh items-center justify-center overflow-y-auto bg-background px-4 pb-[var(--safe-bottom)] pt-[var(--safe-top)]">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -70,12 +71,7 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+          <Button asChild><Link to="/">Go home</Link></Button>
         </div>
       </div>
     </div>
@@ -126,7 +122,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+    <div data-scrollable className="flex min-h-dvh flex-col items-center justify-center overflow-y-auto bg-background px-4 pb-[var(--safe-bottom)] pt-[var(--safe-top)]">
       <div className="max-w-md text-center">
         <img
           src={logoUrl}
@@ -146,23 +142,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
+          <Button
             type="button"
             onClick={retry}
             disabled={retrying}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
             {retrying ? "Trying…" : "Try again"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={() => {
               if (typeof window !== "undefined") window.location.href = "/";
             }}
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -184,7 +179,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "viewport",
         content:
-          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+          "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       { title: "SKANAROUND — Proximity chat" },
       {
@@ -264,6 +259,40 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useNativeViewportLock();
+
+  // One native back handler keeps Android navigation aligned with the app.
+  // Escape closes the top Radix overlay; otherwise Router history handles the
+  // current screen (including the chat sheet's pushed history entry).
+  useEffect(() => {
+    let remove: (() => void) | undefined;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (Capacitor.getPlatform() !== "android") return;
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("backButton", ({ canGoBack }) => {
+          const overlay = document.querySelector<HTMLElement>(
+            '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+          );
+          if (overlay) {
+            overlay.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            return;
+          }
+          if (router.history.canGoBack() || canGoBack) router.history.back();
+          else void App.minimizeApp();
+        });
+        if (cancelled) void handle.remove();
+        else remove = () => void handle.remove();
+      } catch {
+        /* browser preview */
+      }
+    })();
+    return () => {
+      cancelled = true;
+      remove?.();
+    };
+  }, [router]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

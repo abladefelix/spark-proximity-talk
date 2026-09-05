@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "5 September 2026",
+    title: "Store checkout & phone reliability",
+    changes: [
+      { kind: "fixed", text: "Pro checkout can no longer spin forever when Google Play or the App Store is unavailable; every store action now finishes or gives a clear retry message." },
+      { kind: "fixed", text: "Google Play monthly and yearly base plans are now selected from the plans returned by Google instead of guessed product names." },
+      { kind: "improved", text: "The Pro membership screen now stays fitted, scrollable and responsive on small iPhone and Android screens." },
+      { kind: "fixed", text: "Android's back button now closes open dialogs first and otherwise follows the app's navigation instead of leaving a stuck overlay." },
+      { kind: "fixed", text: "Error, missing-page and app-download screens now respect phone safe areas and remain scrollable on short displays." },
+    ],
+  },
+  {
     date: "4 September 2026",
     title: "Reliability, logs & status updates",
     changes: [

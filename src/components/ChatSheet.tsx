@@ -113,27 +113,6 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // Android hardware back closes the chat instead of leaving the app.
-  useEffect(() => {
-    if (!matchId) return;
-    let remove: (() => void) | undefined;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const { App } = await import("@capacitor/app");
-        const handle = await App.addListener("backButton", () => closeChat());
-        if (cancelled) void handle.remove();
-        else remove = () => void handle.remove();
-      } catch {
-        /* not running natively */
-      }
-    })();
-    return () => {
-      cancelled = true;
-      remove?.();
-    };
-  }, [matchId, closeChat]);
-
   return (
     <ChatSheetContext.Provider value={value}>
       {children}
