@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ban, Flag, MoreVertical, Timer } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +30,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+function formatHours(h: number) {
+  if (h % 24 === 0) {
+    const d = h / 24;
+    return `${d} ${d === 1 ? "day" : "days"}`;
+  }
+  return `${h} ${h === 1 ? "hour" : "hours"}`;
+}
+
 /**
  * Report/block from inside a conversation. Both stores require these actions
  * to be reachable wherever user-generated content is shown — not only on the
@@ -55,6 +63,26 @@ export function ChatSafetyMenu({
   const [vanishOpen, setVanishOpen] = useState(false);
   const [vanishHours, setVanishHours] = useState(0);
   const [vanishOnLeave, setVanishOnLeave] = useState(false);
+
+  const maxVanishHours = Math.max(0, Number((settings as { max_vanish_hours?: number }).max_vanish_hours ?? 0));
+  const vanishOptions = (() => {
+    const base = [
+      { h: 0, label: "Off" },
+      { h: 1, label: "1 hour" },
+      { h: 6, label: "6 hours" },
+      { h: 24, label: "24 hours" },
+      { h: 168, label: "7 days" },
+    ];
+    if (maxVanishHours <= 0) return base;
+    const capped = base.filter((o) => o.h > 0 && o.h < maxVanishHours);
+    return [...capped, { h: maxVanishHours, label: formatHours(maxVanishHours) }];
+  })();
+
+  useEffect(() => {
+    if (maxVanishHours > 0) {
+      setVanishHours((h) => (h <= 0 || h > maxVanishHours ? maxVanishHours : h));
+    }
+  }, [maxVanishHours, vanishOpen]);
 
   async function saveVanish() {
     if (!matchId) return;
@@ -146,20 +174,17 @@ export function ChatSafetyMenu({
 
       <Dialog open={vanishOpen} onOpenChange={setVanishOpen}>
         <DialogContent>
-          <DialogHeader>
+           <DialogHeader>
             <DialogTitle>Vanishing messages</DialogTitle>
             <DialogDescription>
               Messages in this chat delete themselves. Either side can change this.
+              {maxVanishHours > 0
+                ? ` Chats can last at most ${formatHours(maxVanishHours)}.`
+                : null}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap gap-2">
-            {[
-              { h: 0, label: "Off" },
-              { h: 1, label: "1 hour" },
-              { h: 6, label: "6 hours" },
-              { h: 24, label: "24 hours" },
-              { h: 168, label: "7 days" },
-            ].map((o) => (
+            {vanishOptions.map((o) => (
               <button
                 key={o.h}
                 type="button"

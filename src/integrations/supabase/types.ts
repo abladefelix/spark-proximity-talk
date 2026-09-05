@@ -79,6 +79,7 @@ export type Database = {
           logo_url: string | null
           max_message_len: number
           max_radius_m: number
+          max_vanish_hours: number
           min_age: number
           presence_timeout_min: number
           privacy_text: string
@@ -120,6 +121,7 @@ export type Database = {
           logo_url?: string | null
           max_message_len?: number
           max_radius_m?: number
+          max_vanish_hours?: number
           min_age?: number
           presence_timeout_min?: number
           privacy_text?: string
@@ -161,6 +163,7 @@ export type Database = {
           logo_url?: string | null
           max_message_len?: number
           max_radius_m?: number
+          max_vanish_hours?: number
           min_age?: number
           presence_timeout_min?: number
           privacy_text?: string

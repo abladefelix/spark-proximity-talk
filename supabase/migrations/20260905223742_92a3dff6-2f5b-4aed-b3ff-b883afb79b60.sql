@@ -1,0 +1,1 @@
+revoke execute on function public.apply_match_vanish_default() from anon, authenticated, public;
