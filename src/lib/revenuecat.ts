@@ -277,18 +277,24 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
   // configured products even when no offering was marked Current or its
   // packages were never attached, so this is the reliable path.
   if (mapped.length === 0 && requestedProductIds.length > 0) {
-    try {
-      const direct: any = await withStoreDeadline(
-        Purchases.getProducts({ productIdentifiers: requestedProductIds }),
-        "loading plans",
-      );
-      mapped = packagesFromProducts(direct?.products ?? []);
-      if (mapped.length > 0) loadSource = "product";
-      else notes.push("The store returned no matching products.");
-    } catch (e) {
-      notes.push(`Product lookup failed: ${errText(e)}`);
+    // Google Play's billing service is often still connecting on first open,
+    // so a single empty answer is not proof the plans are missing.
+    for (let attempt = 0; attempt < 3 && mapped.length === 0; attempt += 1) {
+      if (attempt > 0) await sleep(1_500 * attempt);
+      try {
+        const direct: any = await withStoreDeadline(
+          Purchases.getProducts({ productIdentifiers: requestedProductIds }),
+          "loading plans",
+        );
+        mapped = packagesFromProducts(direct?.products ?? []);
+        if (mapped.length > 0) loadSource = "product";
+        else if (attempt === 2) notes.push("The store returned no matching products.");
+      } catch (e) {
+        if (attempt === 2) notes.push(`Product lookup failed: ${errText(e)}`);
+      }
     }
   }
+
 
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
