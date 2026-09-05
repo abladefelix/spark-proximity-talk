@@ -3,7 +3,9 @@ import { Fingerprint } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
+  biometryLabel,
   checkBiometry,
+  describeBiometryError,
   isBiometricPlatform,
   isBiometricPrefEnabled,
   runBiometricPrompt,
@@ -14,6 +16,7 @@ import {
 export function BiometricSetting() {
   const [available, setAvailable] = useState(false);
   const [label, setLabel] = useState("Biometric unlock");
+  const [reason, setReason] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -21,13 +24,10 @@ export function BiometricSetting() {
     setEnabled(isBiometricPrefEnabled());
     void checkBiometry().then((res) => {
       if (!res) return;
-      setAvailable(res.isAvailable || res.deviceIsSecure);
-      if (res.biometryTypes?.length) {
-        const name = String(res.biometryTypes[0]);
-        if (name.toLowerCase().includes("face")) setLabel("Face unlock");
-        else if (name.toLowerCase().includes("finger") || name.toLowerCase().includes("touch"))
-          setLabel("Fingerprint unlock");
-      }
+      const ok = res.isAvailable || res.deviceIsSecure;
+      setAvailable(ok);
+      setLabel(biometryLabel(res));
+      setReason(ok ? null : (res.reason ?? null));
     });
   }, []);
 
@@ -48,8 +48,8 @@ export function BiometricSetting() {
         setEnabled(false);
         toast.success("App lock off");
       }
-    } catch {
-      toast.error("Verification failed");
+    } catch (err) {
+      toast.error(describeBiometryError(err));
     } finally {
       setBusy(false);
     }
@@ -65,7 +65,8 @@ export function BiometricSetting() {
           <p className="mt-1 text-xs text-muted-foreground">
             {available
               ? `Require ${label.toLowerCase()} each time you open SKANAROUND.`
-              : "Set up Face ID, fingerprint or a device passcode to use app lock."}
+              : (reason ??
+                "Set up Face ID, fingerprint or a device passcode to use app lock.")}
           </p>
         </div>
         <Switch
