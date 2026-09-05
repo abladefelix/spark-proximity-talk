@@ -19,6 +19,7 @@ import {
   isNativeStore,
   listPackages,
   purchase,
+  purchaseProductId,
   restore,
   storeName,
   isUserCancelled,
