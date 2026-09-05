@@ -63,6 +63,12 @@ public class MainActivity extends BridgeActivity {
         Log.i(DEBUG_TAG, "MainActivity onCreate: starting Capacitor bridge");
         registerPlugin(FirebaseStatusPlugin.class);
         super.onCreate(savedInstanceState);
+        // PluginManager registers Capacitor's stock push plugin during
+        // super.onCreate(). Replace it only after the bridge exists; otherwise
+        // the stock implementation wins and can still throw when FCM is absent.
+        if (getBridge() != null) {
+            getBridge().registerPlugin(SafePushNotificationsPlugin.class);
+        }
         android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         Log.i(DEBUG_TAG, "MainActivity onCreate: bridge ready, WebView debugging enabled");
 
