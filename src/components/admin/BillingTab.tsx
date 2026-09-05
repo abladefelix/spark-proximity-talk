@@ -73,7 +73,7 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
   const checks: { label: string; ok: boolean; hint: string }[] = [
     {
       label: "Memberships switched on",
-      ok: Boolean(d.enabled),
+      ok: Boolean(d['enabled']),
       hint: "Turn on 'Memberships active' below.",
     },
     {
@@ -103,7 +103,7 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
     },
     {
       label: "Prices set",
-      ok: Number(d.monthly_amount ?? 0) > 0 && Number(d.yearly_amount ?? 0) > 0,
+      ok: Number(d['monthly_amount'] ?? 0) > 0 && Number(d['yearly_amount'] ?? 0) > 0,
       hint: "Set both the monthly and yearly amounts.",
     },
     {
