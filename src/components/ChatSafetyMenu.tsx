@@ -30,6 +30,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+function formatHours(h: number) {
+  if (h % 24 === 0) {
+    const d = h / 24;
+    return `${d} ${d === 1 ? "day" : "days"}`;
+  }
+  return `${h} ${h === 1 ? "hour" : "hours"}`;
+}
+
 /**
  * Report/block from inside a conversation. Both stores require these actions
  * to be reachable wherever user-generated content is shown — not only on the
