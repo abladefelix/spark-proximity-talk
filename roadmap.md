@@ -14,3 +14,4 @@
 - [x] Harden Google Play subscription setup and guidance
 - [x] Verify build and mobile-facing behavior
 - [x] Make the app shell adapt to Android status bars, gesture navigation, 3-button navigation, and short screens
+- [x] Lift the Android app surface slightly and contain the device-session warning on narrow screens

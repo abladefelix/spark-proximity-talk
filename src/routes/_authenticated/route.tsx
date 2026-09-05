@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeoutFallback } from "@/lib/net";
 import { ChatSheetProvider } from "@/components/ChatSheet";
@@ -62,7 +63,9 @@ function AuthedLayout() {
       <PushManager userId={user?.id ?? null} />
       <div
         data-app-shell
-        className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
+        className={`mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none ${
+          Capacitor.getPlatform() === "android" ? "-translate-y-1.5" : ""
+        }`}
       >
         <div
           data-scrollable
