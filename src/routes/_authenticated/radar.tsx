@@ -696,9 +696,10 @@ function RadarPage() {
     needsPermission,
     request: requestCompass,
     calibrating,
+    unavailable: compassUnavailable,
   } = useCompassHeading(headingUp);
   const compassActive = headingUp && heading != null;
-  const compassCalibrating = headingUp && calibrating;
+  const compassCalibrating = headingUp && calibrating && !compassUnavailable;
   const rot = compassActive ? -(heading as number) : 0;
 
 
@@ -1191,7 +1192,8 @@ function RadarPage() {
         }}
         className="mb-1 flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
-        {compassCalibrating || (headingUp && heading == null && !needsPermission) ? (
+        {compassCalibrating ||
+        (headingUp && heading == null && !needsPermission && !compassUnavailable) ? (
           <LoaderCircle className="size-3.5 animate-spin text-primary" />
         ) : (
           <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
@@ -1203,7 +1205,9 @@ function RadarPage() {
               ? "Calibrating…"
               : `Facing ${compassPoint(heading as number)}`
             : headingUp
-              ? "Finding north…"
+              ? compassUnavailable
+                ? "No compass signal — tap to retry"
+                : "Finding north…"
               : "North up"}
 
       </button>
@@ -1216,7 +1220,15 @@ function RadarPage() {
         </div>
       )}
 
+      {headingUp && compassUnavailable && (
+        <div className="max-w-[18rem] rounded-2xl border border-border bg-background/90 px-3 py-2 text-center text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+          Your phone isn’t sending a compass reading. Move away from metal or magnets, wave the
+          phone in a figure 8, then tap the compass button to try again.
+        </div>
+      )}
+
       </div>
+
 
 
 
