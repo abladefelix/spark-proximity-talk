@@ -391,7 +391,7 @@ function RadarPage() {
         // Start the WKWebView provider in parallel. Capacitor's permission or
         // position promise can remain pending after an iOS resume; waiting for
         // it used to prevent both presence updates and nearby queries.
-        if ("geolocation" in navigator) {
+        if (webFallbackOk && "geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(
             (position) => void push(position.coords),
             () => {},
