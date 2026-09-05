@@ -13,6 +13,7 @@ import {
   signInSingleDevice,
   revokeOtherDeviceAndSignIn,
   requestPasswordResetFor,
+  claimThisDevice,
 } from "@/lib/device-session.functions";
 import { getDeviceId, getDeviceLabel } from "@/lib/device-id";
 import {
@@ -114,19 +115,28 @@ function AuthPage() {
   async function takeOverDevice() {
     setBusy(true);
     try {
-      const res = await revokeOtherDeviceAndSignIn({
-        data: {
-          identifier: identifier.trim(),
-          password,
-          deviceId: getDeviceId(),
-          deviceLabel: getDeviceLabel(),
-        },
-      });
-      const { error } = await supabase.auth.setSession({
-        access_token: res.access_token,
-        refresh_token: res.refresh_token,
-      });
-      if (error) throw error;
+      const id = identifier.trim();
+      if (id.includes("@")) {
+        const { error } = await supabase.auth.signInWithPassword({ email: id, password });
+        if (error) throw error;
+        await claimThisDevice({
+          data: { deviceId: getDeviceId(), deviceLabel: getDeviceLabel(), force: true },
+        });
+      } else {
+        const res = await revokeOtherDeviceAndSignIn({
+          data: {
+            identifier: id,
+            password,
+            deviceId: getDeviceId(),
+            deviceLabel: getDeviceLabel(),
+          },
+        });
+        const { error } = await supabase.auth.setSession({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token,
+        });
+        if (error) throw error;
+      }
       setOtherDevice(null);
       navigate({ to: "/radar" });
     } catch (err) {
@@ -135,6 +145,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   async function resetFromDeviceBlock() {
     setBusy(true);
