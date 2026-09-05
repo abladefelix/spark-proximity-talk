@@ -15,6 +15,8 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 import { TranscriptSkeleton } from "@/components/Skeletons";
+import { markChatRead } from "@/lib/chat-reads";
+
 
 type Message = {
   id: string;
