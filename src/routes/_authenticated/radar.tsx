@@ -920,9 +920,6 @@ function RadarPage() {
         <HelpBeaconList />
       </div>
 
-      <div className="mt-2.5 max-[360px]:mt-2">
-        <QuestionBroadcasts radiusM={radius} />
-      </div>
 
       <ActiveChats />
       <IncomingSignals />
