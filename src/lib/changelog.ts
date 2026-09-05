@@ -15,6 +15,16 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "5 September 2026",
+    title: "Data access & small-screen fixes",
+    changes: [
+      { kind: "fixed", text: "Restored account data permissions — profiles, chats, signals, notifications and settings load again instead of failing silently or freezing the screen." },
+      { kind: "fixed", text: "The radar top bar no longer overlaps the bell and visibility switch on narrow phones." },
+      { kind: "fixed", text: "The radar circle now stays round and fits the screen on short phones instead of overlapping the text above it." },
+    ],
+  },
+  {
+
+    date: "5 September 2026",
     title: "Store checkout & phone reliability",
     changes: [
       { kind: "fixed", text: "Pro checkout can no longer spin forever when Google Play or the App Store is unavailable; every store action now finishes or gives a clear retry message." },
