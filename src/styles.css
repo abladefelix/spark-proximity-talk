@@ -61,10 +61,13 @@
 
 :root {
   --radius: 0.9rem;
-  /* Status-bar clearance. Some native webviews report a 0 inset, so keep a floor. */
-  --safe-top: max(env(safe-area-inset-top, 0px), 2.75rem);
-  /* Android WebView may report a zero bottom inset above gesture navigation. */
-  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 0.875rem);
+  /* Use the viewport's real system-bar insets. Android WebViews that already
+     stop below/above the system bars correctly report zero; artificial floors
+     double-counted those bars and displaced the whole interface. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-gutter: clamp(0.875rem, 4vw, 1.25rem);
+  --nav-height: 4.25rem;
   color-scheme: light;
   --background: oklch(0.985 0.004 80);
   --foreground: oklch(0.22 0.012 60);
@@ -256,10 +259,21 @@
     overflow: hidden;
     overscroll-behavior: none;
     touch-action: none;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
   }
 
   [data-app-shell] > [data-scrollable] {
     touch-action: pan-y;
+  }
+
+  /* Short Android screens need denser vertical rhythm so controls never press
+     against the system navigation area. */
+  @media (max-height: 720px) {
+    :root {
+      --app-gutter: 0.875rem;
+      --nav-height: 3.9rem;
+    }
   }
 
   /* Browser-only surfaces (admin console) scroll like a normal web page. */

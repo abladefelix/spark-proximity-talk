@@ -13,3 +13,4 @@
 - [x] Prevent Android notification crashes
 - [x] Harden Google Play subscription setup and guidance
 - [x] Verify build and mobile-facing behavior
+- [x] Make the app shell adapt to Android status bars, gesture navigation, 3-button navigation, and short screens

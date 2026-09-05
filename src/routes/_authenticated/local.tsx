@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/local")({
 
 function LocalPage() {
   return (
-    <main className="mx-auto w-full max-w-lg px-5 pb-28 pt-3">
+    <main className="mx-auto w-full max-w-lg px-[var(--app-gutter)] pb-6 pt-3">
       <div className="flex items-center justify-between">
         <Brand />
         <div className="flex items-center gap-2">

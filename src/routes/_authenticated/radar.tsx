@@ -872,7 +872,7 @@ function RadarPage() {
 
 
   return (
-    <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-5 pt-3">
+    <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-[var(--app-gutter)] pt-2 min-[390px]:pt-3">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
         <div className="flex min-w-0 items-center">
           <Brand />
@@ -902,11 +902,11 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-2.5 max-[360px]:mt-2">
         <IntentChip />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-2.5 max-[360px]:mt-2">
         <HelpBeaconList />
       </div>
 
@@ -995,7 +995,7 @@ function RadarPage() {
       )}
 
 
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-4">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 py-2 min-h-[700px]:gap-3 min-h-[700px]:py-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -1007,7 +1007,7 @@ function RadarPage() {
           touchAction: zoom > 1.001 ? "none" : "pan-y",
           cursor: zoom > 1.001 ? "grab" : "default",
         }}
-        className="relative aspect-square h-full max-h-[min(24rem,100%)] w-auto max-w-full overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
@@ -1209,7 +1209,7 @@ function RadarPage() {
           }
           toggleHeadingUp();
         }}
-        className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+        className="mb-1 flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
       >
         {compassCalibrating || (headingUp && heading == null && !needsPermission) ? (
           <LoaderCircle className="size-3.5 animate-spin text-primary" />

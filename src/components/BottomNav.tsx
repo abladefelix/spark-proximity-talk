@@ -12,17 +12,17 @@ const items = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-2 pb-[calc(0.5rem+var(--safe-bottom))]">
+    <nav className="relative z-40 h-[var(--nav-height)] shrink-0 border-t border-border bg-card/95 backdrop-blur">
+      <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">
         {items.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
-            className="flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs text-muted-foreground transition-colors"
+            className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none text-muted-foreground transition-colors"
             activeProps={{ className: "text-primary" }}
           >
-            <Icon className="size-5" />
-            {label}
+            <Icon className="size-5 shrink-0" />
+            <span className="max-w-full truncate">{label}</span>
           </Link>
         ))}
         <GoProButton variant="nav" />
