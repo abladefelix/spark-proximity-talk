@@ -1242,12 +1242,14 @@ function RadarPage() {
       </div>
 
       {/* Scrollable card strip that overlaps the top of the radar. */}
-      <div className="absolute inset-x-0 top-0 z-20 max-h-[45%] overflow-y-auto bg-gradient-to-b from-background via-background/95 to-transparent px-[var(--app-gutter)] pt-2 pb-10">
-        <div className="mt-2.5 max-[360px]:mt-2">
-          <IntentChip />
+      <div className="absolute inset-x-0 top-0 z-20 max-h-[45%] overflow-y-auto bg-gradient-to-b from-background via-background/95 to-transparent px-[var(--app-gutter)] pt-4 pb-10">
+        <div className="mx-auto max-w-[min(24rem,100%)]">
+          <div className="mt-2.5 max-[360px]:mt-2">
+            <IntentChip />
+          </div>
+          <ActiveChats />
+          <IncomingSignals />
         </div>
-        <ActiveChats />
-        <IncomingSignals />
       </div>
     </div>
 
