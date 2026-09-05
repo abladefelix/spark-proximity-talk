@@ -55,6 +55,7 @@ import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
 import { withTimeout } from "@/lib/net";
+import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
 
 
 
@@ -180,6 +181,7 @@ function RadarPage() {
   useEffect(() => {
     if (askLocation) return;
     const isNative = Capacitor.isNativePlatform();
+    nativeDebug("radar location effect started", { platform: Capacitor.getPlatform() });
     // On Android the WebView's own location provider goes through the same
     // native permission flow as the plugin. Running both at once while the
     // system permission dialog is open kills the app process, so the WebView
@@ -291,6 +293,7 @@ function RadarPage() {
       if (!me) return;
       publishInFlight = true;
       try {
+        nativeDebug("location publish started", { accuracyBucket: accuracy <= COARSE_FIX_LIMIT_M ? "precise" : "coarse" });
         const publishedAt = Date.now();
         const { error } = await supabase.from("locations").upsert(
           {
@@ -304,9 +307,11 @@ function RadarPage() {
           { onConflict: "user_id" },
         );
         if (error) {
+          nativeDebugError("location publish failed", error);
           setGeoError(error.message);
           return;
         }
+        nativeDebug("location publish succeeded");
         lastPublished = {
           lat: coords.latitude,
           lng: coords.longitude,
@@ -349,13 +354,18 @@ function RadarPage() {
     }
     const refreshFix = () => {
       if (isNative) {
+        nativeDebug("requesting one-off native location refresh");
         void Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
           maximumAge: 0,
           timeout: 15000,
         })
-          .then((position) => push(position.coords))
-          .catch(() => {
+          .then((position) => {
+            nativeDebug("one-off native location received", { accuracy: position.coords.accuracy });
+            return push(position.coords);
+          })
+          .catch((error) => {
+            nativeDebugError("one-off native location failed", error);
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
@@ -404,9 +414,13 @@ function RadarPage() {
           );
         }
         try {
+          nativeDebug("checking native location permission");
           let permission = await Geolocation.checkPermissions();
+          nativeDebug("native location permission checked", { location: permission.location });
           if (permission.location === "prompt" || permission.location === "prompt-with-rationale") {
+            nativeDebug("showing native location permission prompt");
             permission = await Geolocation.requestPermissions();
+            nativeDebug("native location permission prompt returned", { location: permission.location });
           }
           if (permission.location !== "granted") {
             fail(true);
@@ -415,29 +429,38 @@ function RadarPage() {
 
           setAskLocation(false);
           setPermDenied(false);
+          nativeDebug("starting native location watcher");
           nativeWatch = await Geolocation.watchPosition(
              { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
             (position, error) => {
-              if (position) void push(position.coords);
+              if (position) {
+                nativeDebug("native location watcher update", { accuracy: position.coords.accuracy });
+                void push(position.coords);
+              }
               else if (error) {
+                nativeDebugError("native location watcher failed", error);
                 const denied = error.code === "OS-PLUG-GLOC-0003";
                 const unavailable = error.code === "OS-PLUG-GLOC-0007";
                 fail(denied, unavailable);
               }
             },
           );
+          nativeDebug("native location watcher started", { hasWatchId: Boolean(nativeWatch) });
           if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
 
           // A cached fix makes startup instant when available. A timeout here is
           // not an error: the watcher above remains active until iOS gets a fix.
           try {
+            nativeDebug("requesting initial native location fix");
             const position = await Geolocation.getCurrentPosition({
               enableHighAccuracy: true,
               maximumAge: 0,
               timeout: 15000,
             });
+            nativeDebug("initial native location fix received", { accuracy: position.coords.accuracy });
             await push(position.coords);
-          } catch {
+          } catch (error) {
+            nativeDebugError("initial native location fix failed", error);
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
             if (webFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
@@ -454,6 +477,7 @@ function RadarPage() {
             }
           }
         } catch (error) {
+          nativeDebugError("native location startup failed", error);
           const message = error instanceof Error ? error.message.toLowerCase() : "";
           fail(
             message.includes("permission") || message.includes("denied"),

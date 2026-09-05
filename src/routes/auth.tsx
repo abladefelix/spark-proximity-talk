@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,6 +191,7 @@ function AuthPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    nativeDebug("sign-in submit", { mode, identifierType: identifier.includes("@") ? "email" : "username" });
     try {
       if (mode === "reset") {
         // Accepts a username or an email — the server resolves it to the
@@ -284,11 +286,13 @@ function AuthPage() {
           // settings. The device claim happens afterwards with the session.
           const { error } = await supabase.auth.signInWithPassword({ email: id, password });
           if (error) throw error;
+          nativeDebug("email authentication succeeded");
           try {
             const claim = await claimThisDevice({
               data: { deviceId: getDeviceId(), deviceLabel: getDeviceLabel() },
             });
             if (claim.status === "other_device") {
+              nativeDebug("device claim blocked by another device");
               setOtherDevice({ label: claim.device_label, lastSeen: claim.last_seen });
               await supabase.auth.signOut();
               return;
@@ -316,13 +320,16 @@ function AuthPage() {
             refresh_token: res.refresh_token,
           });
           if (error) throw error;
+          nativeDebug("username authentication session stored");
         }
       }
 
+      nativeDebug("navigating to radar");
       navigate({ to: "/radar" });
 
 
     } catch (err) {
+      nativeDebugError("sign-in flow failed", err);
       const raw = err instanceof Error ? err.message : "Something went wrong";
       if (mode !== "signup" && /email not confirmed|not confirmed/i.test(raw)) {
         // Offer to send a fresh activation link — the first one may have been

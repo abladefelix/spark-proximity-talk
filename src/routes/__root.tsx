@@ -27,6 +27,7 @@ import { reportServiceProblem, reportServiceSuccess } from "@/lib/service-health
 import { startCachePersistence } from "@/lib/query-persist";
 import { getAppLook, type AppLook } from "@/lib/app-look.functions";
 import { Button } from "@/components/ui/button";
+import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
 
 
 function useNativeViewportLock() {
@@ -259,6 +260,30 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useNativeViewportLock();
+
+  useEffect(() => {
+    nativeDebug("web app mounted", {
+      path: window.location.pathname,
+      visibility: document.visibilityState,
+    });
+    const onError = (event: ErrorEvent) => {
+      nativeDebugError("window.onerror", event.error ?? event.message);
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      nativeDebugError("unhandled promise rejection", event.reason);
+    };
+    const onVisibility = () => {
+      nativeDebug("visibility changed", { visibility: document.visibilityState });
+    };
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   // One native back handler keeps Android navigation aligned with the app.
   // Escape closes the top Radix overlay; otherwise Router history handles the
