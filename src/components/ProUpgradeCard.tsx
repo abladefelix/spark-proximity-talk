@@ -16,6 +16,7 @@ import {
 import { refreshEntitlement } from "@/lib/store-billing.functions";
 import {
   initStore,
+  setStoreOptions,
   isNativeStore,
   listPackages,
   purchase,
