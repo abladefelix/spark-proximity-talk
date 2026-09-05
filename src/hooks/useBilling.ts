@@ -59,13 +59,18 @@ export function useBillingInfo() {
   return useQuery({
     queryKey: BILLING_INFO_KEY,
     staleTime: 60_000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     queryFn: async (): Promise<BillingInfo> => {
-      const { data } = await (supabase as any).rpc("billing_public_info");
+      const { data, error } = await (supabase as any).rpc("billing_public_info");
+      // Never swallow this: a silent failure hides the whole membership card.
+      if (error) throw new Error(error.message ?? "Could not load membership settings.");
       const row = Array.isArray(data) ? data[0] : data;
       return { ...BILLING_DEFAULTS, ...(row ?? {}) } as BillingInfo;
     },
   });
 }
+
 
 export type MySubscription = {
   status: string;
@@ -83,11 +88,13 @@ export function useMySubscription() {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
       if (!uid) return { status: "none", plan: "free", expiresAt: null, isPro: false };
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("subscriptions")
         .select("status, plan, expires_at")
         .eq("user_id", uid)
         .maybeSingle();
+      if (error) throw new Error(error.message ?? "Could not load your membership.");
+
       const active =
         data?.status === "active" &&
         (!data.expires_at || new Date(data.expires_at) > new Date());

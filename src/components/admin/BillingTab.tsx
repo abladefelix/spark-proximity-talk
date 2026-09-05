@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Crown, Loader2, Save, Search } from "lucide-react";
+import { Check, CircleAlert, Crown, Loader2, Save, Search } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,96 @@ function Toggle({
   );
 }
 
+/**
+ * Shows, in plain language, exactly which store settings are still missing or
+ * malformed — the usual reason plans never appear in the app.
+ */
+function StoreSetupChecklist({ d }: { d: Billing }) {
+  const val = (k: string) => String(d[k] ?? "").trim();
+  const checks: { label: string; ok: boolean; hint: string }[] = [
+    {
+      label: "Memberships switched on",
+      ok: Boolean(d['enabled']),
+      hint: "Turn on 'Memberships active' below.",
+    },
+    {
+      label: "iPhone key",
+      ok: val("rc_ios_api_key").startsWith("appl_"),
+      hint: "Paste the RevenueCat iOS public key (starts with appl_).",
+    },
+    {
+      label: "Android key",
+      ok: val("rc_android_api_key").startsWith("goog_"),
+      hint: "Paste the RevenueCat Android public key (starts with goog_).",
+    },
+    {
+      label: "Entitlement name",
+      ok: val("rc_entitlement_id").length > 0,
+      hint: "Must match the entitlement name in RevenueCat exactly.",
+    },
+    {
+      label: "Monthly plan id",
+      ok: val("rc_monthly_product_id").length > 0,
+      hint: "Must match the product id in Google Play / App Store Connect.",
+    },
+    {
+      label: "Yearly plan id",
+      ok: val("rc_yearly_product_id").length > 0,
+      hint: "Must match the product id in Google Play / App Store Connect.",
+    },
+    {
+      label: "Prices set",
+      ok: Number(d['monthly_amount'] ?? 0) > 0 && Number(d['yearly_amount'] ?? 0) > 0,
+      hint: "Set both the monthly and yearly amounts.",
+    },
+    {
+      label: "Webhook secret",
+      ok: val("rc_webhook_secret").length >= 16,
+      hint: "Needed so purchases update memberships automatically.",
+    },
+  ];
+  const missing = checks.filter((c) => !c.ok);
+
+  return (
+    <div
+      className={`rounded-lg border p-3 ${
+        missing.length === 0
+          ? "border-primary/40 bg-primary/5"
+          : "border-destructive/40 bg-destructive/5"
+      }`}
+    >
+      <p className="text-xs font-semibold">
+        {missing.length === 0
+          ? "Store setup looks complete"
+          : `${missing.length} thing${missing.length === 1 ? "" : "s"} still missing`}
+      </p>
+      <ul className="mt-2 space-y-1">
+        {checks.map((c) => (
+          <li key={c.label} className="flex items-start gap-2 text-[11px]">
+            {c.ok ? (
+              <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+            ) : (
+              <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+            )}
+            <span className="min-w-0">
+              {c.label}
+              {c.ok ? null : <span className="text-muted-foreground"> — {c.hint}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {missing.length > 0 ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Until these are filled in and saved, the app cannot load any plans from the
+          store and members see no prices.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /** Payments, plan pricing, free-tier caps and Pro feature switches. */
+
 export function BillingTab() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Billing>({});
@@ -251,6 +340,8 @@ export function BillingTab() {
         title="App Store & Google Play billing"
         hint="Memberships are sold through Apple and Google only, as their stores require. Paste the keys from your RevenueCat project."
       >
+        <StoreSetupChecklist d={d} />
+
         <Toggle
           label="Memberships active"
           hint="Turns the upgrade card on for members."

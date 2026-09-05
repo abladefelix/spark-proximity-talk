@@ -15,6 +15,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "5 September 2026",
+    title: "Membership reliability",
+    changes: [
+      { kind: "fixed", text: "Membership settings that failed to load no longer make the upgrade card disappear silently — it retries and offers a Try again button." },
+      { kind: "new", text: "Admin now shows a store setup checklist that names exactly which billing keys, plan ids or prices are missing." },
+    ],
+  },
+  {
+
+    date: "5 September 2026",
     title: "Data access & small-screen fixes",
     changes: [
       { kind: "fixed", text: "Restored account data permissions — profiles, chats, signals, notifications and settings load again instead of failing silently or freezing the screen." },

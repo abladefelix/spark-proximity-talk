@@ -45,7 +45,13 @@ function featureList(
  * App Store guideline 3.1.1 and Google Play's Payments policy.
  */
 export function ProUpgradeCard() {
-  const { data: billing } = useBillingInfo();
+  const {
+    data: billing,
+    isError: billingFailed,
+    isFetching: billingLoading,
+    refetch: refetchBilling,
+  } = useBillingInfo();
+
   const { data: sub } = useMySubscription();
   const { data: catalog = [] } = useProFeatures();
   const { data: packageCatalog = [] } = useProPackages();
@@ -135,7 +141,34 @@ export function ProUpgradeCard() {
     [queryClient, sync],
   );
 
+  if (billingFailed && !billing) {
+    return (
+      <div className="min-w-0 rounded-2xl border border-border bg-secondary/30 p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold">
+          <Crown className="size-4 text-primary" /> Membership
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          We couldn't load the membership details just now.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-3 w-full"
+          disabled={billingLoading}
+          onClick={() => void refetchBilling()}
+        >
+          {billingLoading ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
   if (!billing?.enabled) return null;
+
 
   const isPro = Boolean(sub?.isPro);
   const primary = packageCatalog[0] ?? null;
