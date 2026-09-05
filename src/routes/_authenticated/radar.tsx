@@ -696,9 +696,10 @@ function RadarPage() {
     needsPermission,
     request: requestCompass,
     calibrating,
+    unavailable: compassUnavailable,
   } = useCompassHeading(headingUp);
   const compassActive = headingUp && heading != null;
-  const compassCalibrating = headingUp && calibrating;
+  const compassCalibrating = headingUp && calibrating && !compassUnavailable;
   const rot = compassActive ? -(heading as number) : 0;
 
 
