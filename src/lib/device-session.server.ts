@@ -82,6 +82,16 @@ export async function revokeOtherDevices(userId: string, deviceId: string) {
   }
 }
 
+/**
+ * Drops other devices' claims without touching refresh tokens. The other
+ * device's heartbeat finds no record and signs itself out. Used when the
+ * current device already holds a live session that must survive.
+ */
+export async function revokeOtherDeviceRows(userId: string, deviceId: string) {
+  const db = await admin();
+  await db.from("device_sessions").delete().eq("user_id", userId).neq("device_id", deviceId);
+}
+
 export async function releaseDevice(userId: string, deviceId: string) {
   const db = await admin();
   await db.from("device_sessions").delete().eq("user_id", userId).eq("device_id", deviceId);
