@@ -41,6 +41,38 @@ export const signInSingleDevice = createServerFn({ method: "POST" })
     return { status: "ok", ...tokens };
   });
 
+/**
+ * Claims this device for an already-signed-in session. Used by the email
+ * sign-in path, where the browser authenticates directly with the auth
+ * service — so sign-in keeps working even if the server's own backend
+ * credentials are misconfigured.
+ */
+export const claimThisDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { deviceId: string; deviceLabel: string; force?: boolean }) => {
+    const deviceId = (input?.deviceId ?? "").trim();
+    if (!deviceId) throw new Error("Could not identify this device");
+    return {
+      deviceId,
+      deviceLabel: (input?.deviceLabel ?? "").trim().slice(0, 80) || "Unknown device",
+      force: Boolean(input?.force),
+    };
+  })
+  .handler(async ({ data, context }): Promise<SignInOutcome | { status: "ok" }> => {
+    const { otherDevice, claimDevice, revokeOtherDeviceRows } = await import("./device-session.server");
+    if (data.force) {
+      await revokeOtherDeviceRows(context.userId, data.deviceId);
+      await claimDevice(context.userId, data.deviceId, data.deviceLabel);
+      return { status: "ok" };
+    }
+    const existing = await otherDevice(context.userId, data.deviceId);
+    if (existing) {
+      return { status: "other_device", device_label: existing.device_label, last_seen: existing.last_seen };
+    }
+    await claimDevice(context.userId, data.deviceId, data.deviceLabel);
+    return { status: "ok" };
+  });
+
 /** Signs the other device out (password re-checked) and signs this one in. */
 export const revokeOtherDeviceAndSignIn = createServerFn({ method: "POST" })
   .inputValidator((input: { identifier: string; password: string; deviceId: string; deviceLabel: string }) => {
