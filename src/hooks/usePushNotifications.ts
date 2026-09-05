@@ -39,8 +39,9 @@ export function usePushNotifications(userId: string | null) {
       ({ notification }) => {
         try {
           const raw = (notification?.data ?? {}) as Record<string, unknown>;
-          const kind = typeof raw.kind === "string" ? raw.kind : "";
-          const relatedId = typeof raw.relatedId === "string" ? raw.relatedId.trim() : "";
+          const kind = typeof raw['kind'] === "string" ? raw['kind'] : "";
+          const relatedId = typeof raw['relatedId'] === "string" ? raw['relatedId'].trim() : "";
+
           if ((kind === "match" || kind === "message") && relatedId) {
             openChat(relatedId);
           }
