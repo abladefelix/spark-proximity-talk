@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserPosition } from "@/hooks/useUserPosition";
 
 const DEFAULT_RADIUS_M = 1000;
 
