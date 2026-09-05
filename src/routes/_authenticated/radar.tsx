@@ -977,7 +977,7 @@ function RadarPage() {
           touchAction: zoom > 1.001 ? "none" : "pan-y",
           cursor: zoom > 1.001 ? "grab" : "default",
         }}
-        className="relative aspect-square size-[min(100%,24rem)] shrink-0 overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative aspect-square size-[min(100%,24rem,55vh)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
