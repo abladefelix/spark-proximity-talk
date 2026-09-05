@@ -894,7 +894,9 @@ function RadarPage() {
             <DialogTitle>Turn on location</DialogTitle>
             <DialogDescription>
               {permDenied
-                ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
+                ? Capacitor.isNativePlatform()
+                  ? "Location is turned off for SKANAROUND. Open your phone Settings, find SKANAROUND, allow Location, then tap Try again."
+                  : "Location is blocked for SKANAROUND. Allow location in your device settings, then tap Try again."
                 : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
             </DialogDescription>
             <Link
