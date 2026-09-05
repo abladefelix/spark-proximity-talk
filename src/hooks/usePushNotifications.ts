@@ -18,26 +18,58 @@ export function usePushNotifications(userId: string | null) {
     let cancelled = false;
     let remove: (() => void) | undefined;
 
-    void PushNotifications.addListener(
+    const handles: Promise<{ remove: () => void }>[] = [];
+
+    // Android 8+ drops (and in some OEM builds crashes on) a notification whose
+    // channel does not exist. Create ours before any message can arrive.
+    if (Capacitor.getPlatform() === "android") {
+      void PushNotifications.createChannel({
+        id: "skanaround_default",
+        name: "SKANAROUND",
+        description: "Signals, matches and messages",
+        importance: 5,
+        visibility: 1,
+        sound: "default",
+        vibration: true,
+      }).catch((e) => console.error("[Push] channel setup failed", e));
+    }
+
+    const tap = PushNotifications.addListener(
       "pushNotificationActionPerformed",
       ({ notification }) => {
-        const raw = notification.data;
-        const kind = typeof raw?.kind === "string" ? raw.kind : "";
-        const relatedId = typeof raw?.relatedId === "string" ? raw.relatedId : "";
-        if ((kind === "match" || kind === "message") && relatedId) {
-          openChat(relatedId);
+        try {
+          const raw = (notification?.data ?? {}) as Record<string, unknown>;
+          const kind = typeof raw['kind'] === "string" ? raw['kind'] : "";
+          const relatedId = typeof raw['relatedId'] === "string" ? raw['relatedId'].trim() : "";
+
+          if ((kind === "match" || kind === "message") && relatedId) {
+            openChat(relatedId);
+          }
+        } catch (e) {
+          console.error("[Push] tap handling failed", e);
         }
       },
-    ).then((handle) => {
+    );
+    handles.push(tap);
+    void tap.then((handle) => {
       if (cancelled) void handle.remove();
       else remove = () => void handle.remove();
-    });
+    }).catch((e) => console.error("[Push] tap listener failed", e));
+
+    // A foreground push must never bubble as an unhandled error.
+    handles.push(
+      PushNotifications.addListener("pushNotificationReceived", () => {
+        // Realtime already refreshes the UI; nothing extra to show.
+      }),
+    );
 
     return () => {
       cancelled = true;
       remove?.();
+      handles.forEach((h) => void h.then((x) => x.remove()).catch(() => {}));
     };
   }, [openChat]);
+
 
   useEffect(() => {
     if (!userId || !settings.push_enabled || !Capacitor.isNativePlatform()) return;
@@ -56,11 +88,14 @@ export function usePushNotifications(userId: string | null) {
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
 
-    PushNotifications.requestPermissions().then((res) => {
-      if (res.receive === "granted") {
-        PushNotifications.register();
-      }
-    });
+    PushNotifications.requestPermissions()
+      .then((res) => {
+        if (res.receive === "granted") {
+          return PushNotifications.register();
+        }
+        return undefined;
+      })
+      .catch((e) => console.error("[Push] register failed", e));
 
     listeners.push(
       PushNotifications.addListener("registration", async ({ value }) => {
@@ -79,16 +114,10 @@ export function usePushNotifications(userId: string | null) {
       })
     );
 
-    listeners.push(
-      PushNotifications.addListener("pushNotificationReceived", async () => {
-        // Foreground notification: Supabase realtime already updates the UI,
-        // so we don't need to show an extra alert here.
-      })
-    );
-
     return () => {
       unmounted = true;
-      listeners.forEach((l) => l.then((h) => h.remove()));
+      listeners.forEach((l) => void l.then((h) => h.remove()).catch(() => {}));
     };
   }, [userId, settings.push_enabled, register]);
+
 }

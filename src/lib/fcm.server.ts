@@ -111,7 +111,11 @@ export async function sendFcmNotification({
             data: data ?? {},
             android: {
               priority: "HIGH",
-              notification: { sound: "default", icon: "ic_stat_skanaround" },
+              notification: {
+                sound: "default",
+                icon: "ic_stat_skanaround",
+                channel_id: "skanaround_default",
+              },
             },
           },
         }),
