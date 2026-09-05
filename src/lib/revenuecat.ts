@@ -6,6 +6,7 @@
  * Payments policy. Nothing here runs on the web build.
  */
 import { Capacitor } from "@capacitor/core";
+import { Purchases } from "@revenuecat/purchases-capacitor";
 
 export type StorePackage = {
   identifier: string;
@@ -47,7 +48,6 @@ async function ensureConfigured() {
 
 const LOOKUP_DEADLINE_MS = 30_000;
 const PURCHASE_DEADLINE_MS = 120_000;
-const SDK_DEADLINE_MS = 20_000;
 
 function deadlineMessage(action: string) {
   return `${storeName()} did not respond while ${action}. Check your connection and Play Store or App Store account, then try again.`;
@@ -78,53 +78,6 @@ export function storeName() {
   return Capacitor.getPlatform() === "ios" ? "App Store" : "Google Play";
 }
 
-/**
- * The billing SDK ships as its own lazily loaded chunk, and the app's web
- * layer is served over the network, so a single slow request used to look
- * like "the store didn't respond". Load it once, retry, and cache it.
- */
-let sdkPromise: Promise<any> | null = null;
-
-async function loadSdk() {
-  let lastError: unknown = null;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      const mod = await withStoreDeadline(
-        import("@revenuecat/purchases-capacitor"),
-        "opening billing",
-        SDK_DEADLINE_MS,
-      );
-      return mod.Purchases;
-    } catch (e) {
-      lastError = e;
-      await sleep(600 * (attempt + 1));
-    }
-  }
-  throw new Error(
-    `Could not load the payment component. Check your connection and try again. (${errText(lastError)})`,
-  );
-}
-
-async function sdk() {
-  if (!sdkPromise) {
-    sdkPromise = loadSdk().catch((e) => {
-      sdkPromise = null;
-      throw e;
-    });
-  }
-  return sdkPromise;
-}
-
-/** Warm the billing chunk on native launch so checkout never waits for it. */
-if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-  setTimeout(() => {
-    void sdk().catch(() => {
-      /* retried on demand */
-    });
-  }, 2_000);
-}
-
-
 /** Configures RevenueCat once per signed-in member. */
 export async function initStore(opts: {
   iosApiKey: string | null;
@@ -137,7 +90,6 @@ export async function initStore(opts: {
   if (!apiKey) return false;
 
   const token = `${apiKey}:${opts.userId}`;
-  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   if (configuredFor === token) return true;
   await withStoreDeadline(
     Purchases.configure({ apiKey, appUserID: opts.userId }),
@@ -253,7 +205,6 @@ function errText(e: unknown) {
 export async function listPackages(productIds: string[] = []): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
   clearStoreDiagnostics();
-  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   const notes: string[] = [];
   const requestedProductIds = [...new Set(productIds.map((id) => id.trim()).filter(Boolean))];
 
@@ -346,7 +297,6 @@ export async function purchase(pkg: StorePackage, entitlementId: string) {
   clearStoreDiagnostics();
   const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
   if (!configured) throw new Error("Store billing is not configured. Please contact support.");
-  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   const request =
     pkg.source === "subscription-option"
       ? Purchases.purchaseSubscriptionOption({ subscriptionOption: pkg.raw as any })
@@ -363,7 +313,6 @@ export async function restore(entitlementId: string) {
   clearStoreDiagnostics();
   const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
   if (!configured) throw new Error("Store billing is not configured. Please contact support.");
-  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   const res: any = await withStoreDeadline(
     Purchases.restorePurchases(),
     "restoring purchases",
@@ -374,7 +323,6 @@ export async function restore(entitlementId: string) {
 
 export async function currentEntitlement(entitlementId: string) {
   if (!isNativeStore()) return null;
-  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   const res: any = await withStoreDeadline(Purchases.getCustomerInfo(), "checking membership");
   return readEntitlement(res?.customerInfo, entitlementId);
 }

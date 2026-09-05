@@ -7,7 +7,9 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useDeviceSessionGuard } from "@/hooks/useDeviceSessionGuard";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useBillingInfo } from "@/hooks/useBilling";
 import { BiometricGate } from "@/components/BiometricGate";
+import { initStore, isNativeStore, setStoreOptions } from "@/lib/revenuecat";
 
 /** Reads the session the auth client persisted, without any network call. */
 function storedSessionUser(): { id: string } | null {
@@ -60,6 +62,7 @@ function AuthedLayout() {
     <BiometricGate>
     <ChatSheetProvider>
       <PushManager userId={user?.id ?? null} />
+      <StoreBillingManager userId={user?.id ?? null} />
       <div
         data-app-shell
         className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden overscroll-none"
@@ -79,6 +82,26 @@ function AuthedLayout() {
 
 function PushManager({ userId }: { userId: string | null }) {
   usePushNotifications(userId);
+  return null;
+}
+
+/** Connects the native store as soon as the signed-in app starts. */
+function StoreBillingManager({ userId }: { userId: string | null }) {
+  const { data: billing } = useBillingInfo();
+
+  useEffect(() => {
+    if (!userId || !billing?.enabled || !isNativeStore()) return;
+    const options = {
+      iosApiKey: billing.ios_api_key,
+      androidApiKey: billing.android_api_key,
+      userId,
+    };
+    setStoreOptions(options);
+    void initStore(options).catch(() => {
+      // The Pro screen retries and presents a user-friendly store error.
+    });
+  }, [billing?.android_api_key, billing?.enabled, billing?.ios_api_key, userId]);
+
   return null;
 }
 
