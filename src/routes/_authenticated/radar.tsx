@@ -180,6 +180,12 @@ function RadarPage() {
   useEffect(() => {
     if (askLocation) return;
     const isNative = Capacitor.isNativePlatform();
+    // On Android the WebView's own location provider goes through the same
+    // native permission flow as the plugin. Running both at once while the
+    // system permission dialog is open kills the app process, so the WebView
+    // fallback is kept for iPhone only (where it rescues lost plugin
+    // callbacks after the app resumes).
+    const webFallbackOk = !isNative || Capacitor.getPlatform() === "ios";
     if (!isNative && !("geolocation" in navigator)) {
       setGeoError("This device can't share location.");
       return;
