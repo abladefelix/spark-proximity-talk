@@ -21,7 +21,6 @@ type NearbyRow = {
 /** Count of nearby people who signaled you but aren't a match yet. */
 export function useRadarNotificationsCount() {
   const { user } = useAuth();
-  const { coords } = useUserPosition();
   const queryClient = useQueryClient();
   const radius = savedRadiusM();
 
