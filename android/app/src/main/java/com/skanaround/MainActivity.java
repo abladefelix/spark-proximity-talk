@@ -9,6 +9,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -28,6 +29,8 @@ import com.getcapacitor.BridgeActivity;
  */
 public class MainActivity extends BridgeActivity {
 
+    private static final String DEBUG_TAG = "SKAN_DEBUG";
+    private static final String CRASH_TAG = "SKAN_CRASH";
     private static final int ACCENT = Color.parseColor("#FAC259");
     private static final int BACKDROP = Color.parseColor("#0E0C0B");
 
@@ -40,6 +43,7 @@ public class MainActivity extends BridgeActivity {
     private Button retryButton;
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
+    private Thread.UncaughtExceptionHandler previousExceptionHandler;
     private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     private final java.util.concurrent.ExecutorService probeExecutor =
@@ -55,7 +59,11 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        installCrashLogger();
+        Log.i(DEBUG_TAG, "MainActivity onCreate: starting Capacitor bridge");
         super.onCreate(savedInstanceState);
+        android.webkit.WebView.setWebContentsDebuggingEnabled(true);
+        Log.i(DEBUG_TAG, "MainActivity onCreate: bridge ready, WebView debugging enabled");
 
         connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         networkCallback = new ConnectivityManager.NetworkCallback() {
@@ -122,6 +130,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void applyConnectivity(boolean online) {
+        Log.i(DEBUG_TAG, "Connectivity result: " + (online ? "online" : "offline"));
         if (online) {
             hideOffline(overlay != null);
         } else {
@@ -235,11 +244,32 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        Log.i(DEBUG_TAG, "MainActivity onResume");
         evaluateConnectivity();
     }
 
     @Override
+    public void onPause() {
+        Log.i(DEBUG_TAG, "MainActivity onPause");
+        super.onPause();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < permissions.length; i++) {
+            if (i > 0) result.append(", ");
+            result.append(permissions[i]).append("=");
+            result.append(i < grantResults.length && grantResults[i] == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    ? "granted" : "denied");
+        }
+        Log.i(DEBUG_TAG, "Permission result request=" + requestCode + " [" + result + "]");
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
     public void onDestroy() {
+        Log.i(DEBUG_TAG, "MainActivity onDestroy");
         handler.removeCallbacks(poll);
         probeExecutor.shutdownNow();
         if (connectivityManager != null && networkCallback != null) {
@@ -249,6 +279,18 @@ public class MainActivity extends BridgeActivity {
             }
         }
         super.onDestroy();
+    }
+
+    private void installCrashLogger() {
+        previousExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            Log.e(CRASH_TAG, "Uncaught native exception on thread " + thread.getName(), throwable);
+            if (previousExceptionHandler != null) {
+                previousExceptionHandler.uncaughtException(thread, throwable);
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        });
     }
 
     /** Interface-level check only; real reachability is confirmed by probeReachable(). */

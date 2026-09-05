@@ -27,7 +27,10 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false,
+    // Keep enabled for production-device diagnosis. Android Studio Logcat and
+    // chrome://inspect can then expose WebView failures that would otherwise
+    // look like an unexplained native app exit.
+    webContentsDebuggingEnabled: true,
   },
   plugins: {
     SplashScreen: {
