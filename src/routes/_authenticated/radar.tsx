@@ -37,7 +37,7 @@ import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
-import { HelpBeaconList, useHelpBeacons } from "@/components/BatSignal";
+import { useHelpBeacons } from "@/components/BatSignal";
 
 import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
@@ -915,11 +915,6 @@ function RadarPage() {
       <div className="mt-2.5 max-[360px]:mt-2">
         <IntentChip />
       </div>
-
-      <div className="mt-2.5 max-[360px]:mt-2">
-        <HelpBeaconList />
-      </div>
-
 
       <ActiveChats />
       <IncomingSignals />
