@@ -61,6 +61,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         installCrashLogger();
         Log.i(DEBUG_TAG, "MainActivity onCreate: starting Capacitor bridge");
+        registerPlugin(FirebaseStatusPlugin.class);
         super.onCreate(savedInstanceState);
         android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         Log.i(DEBUG_TAG, "MainActivity onCreate: bridge ready, WebView debugging enabled");

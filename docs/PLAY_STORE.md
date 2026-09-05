@@ -68,7 +68,9 @@ The app uses FCM. Before the release build:
 4. Paste the Firebase service-account JSON into Admin → Notifications so the server can
    send pushes.
 
-Without step 3 the release build will not receive notifications.
+Without step 3 the release build will not receive notifications. The app checks
+the installed binary before registering, so a missing or invalid file cannot
+crash sign-in.
 
 ## 4. Store listing content
 

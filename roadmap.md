@@ -5,6 +5,7 @@
 - [x] Audit and repair high-confidence native layout/navigation/error issues across iOS and Android
 - [x] Validate core mobile flows at representative phone sizes
 - [x] Add Android Studio diagnostics for the post-sign-in location crash
+- [x] Prevent fatal Android push registration when Firebase is not configured
 
 - [x] Show full Bat-Signal help details
 - [x] Keep the Android chat composer above system navigation
