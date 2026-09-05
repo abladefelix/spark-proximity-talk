@@ -13,6 +13,7 @@ import {
   Flag,
   MapPin,
   Compass,
+  LifeBuoy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { errorMessage } from "@/lib/errors";
@@ -40,7 +41,7 @@ import { HelpBeaconList, useHelpBeacons } from "@/components/BatSignal";
 import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
 import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
-import { intentFor } from "@/lib/intents";
+import { intentFor, helpKindFor } from "@/lib/intents";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { beaconColor } from "@/lib/beacon-styles";
