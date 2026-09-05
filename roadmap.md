@@ -3,7 +3,7 @@
 - [x] Make subscription checkout bounded, actionable, and free of stale store errors
 - [x] Make Pro dialogs responsive to safe areas, keyboard, and small screens
 - [x] Audit and repair high-confidence native layout/navigation/error issues across iOS and Android
-- [ ] Validate core mobile flows at representative phone sizes
+- [x] Validate core mobile flows at representative phone sizes
 
 - [x] Show full Bat-Signal help details
 - [x] Keep the Android chat composer above system navigation
