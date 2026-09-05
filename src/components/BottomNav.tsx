@@ -4,6 +4,7 @@ import { Radar, MessagesSquare, UserRound, Sparkles } from "lucide-react";
 import { GoProButton } from "@/components/GoProButton";
 import { useChatNotificationsCount } from "@/hooks/useChatNotificationsCount";
 import { useLocalNotificationsCount } from "@/hooks/useLocalNotifications";
+import { useRadarNotificationsCount } from "@/hooks/useRadarNotificationsCount";
 
 const items = [
   { to: "/radar", label: "Radar", icon: Radar },
@@ -15,13 +16,20 @@ const items = [
 export function BottomNav() {
   const { count: localCount } = useLocalNotificationsCount();
   const { count: chatCount } = useChatNotificationsCount();
+  const { count: radarCount } = useRadarNotificationsCount();
 
   return (
     <nav className="relative z-40 h-[var(--nav-height)] shrink-0 border-t border-border bg-card/95 backdrop-blur">
       <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">
         {items.map(({ to, label, icon: Icon }) => {
           const badgeCount =
-            to === "/local" ? localCount : to === "/chats" ? chatCount : 0;
+            to === "/local"
+              ? localCount
+              : to === "/chats"
+                ? chatCount
+                : to === "/radar"
+                  ? radarCount
+                  : 0;
 
           return (
             <Link
