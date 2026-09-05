@@ -57,5 +57,5 @@ export function useRadarNotificationsCount() {
     };
   }, [user, queryClient]);
 
-  return { count: query.data ?? 0, isLoading: query.isLoading, coords };
+  return { count: query.data ?? 0, isLoading: query.isLoading };
 }
