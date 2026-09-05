@@ -23,7 +23,13 @@ export function BiometricSetting() {
   useEffect(() => {
     setEnabled(isBiometricPrefEnabled());
     void checkBiometry().then((res) => {
-      if (!res) return;
+      if (!res) {
+        // The availability check itself failed (e.g. plugin not ready). Keep
+        // the switch usable so the member can try — the prompt surfaces the
+        // real error — instead of leaving a dead, disabled toggle.
+        setAvailable(true);
+        return;
+      }
       const ok = res.isAvailable || res.deviceIsSecure;
       setAvailable(ok);
       setLabel(biometryLabel(res));
