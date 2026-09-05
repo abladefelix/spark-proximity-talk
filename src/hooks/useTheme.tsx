@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 
 export type Theme = "light" | "dark";
 
@@ -29,6 +30,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
+    if (Capacitor.isNativePlatform()) {
+      void SystemBars.setStyle({
+        style: theme === "dark" ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      }).catch(() => {
+        /* Native system-bar styling is best-effort on older operating systems. */
+      });
+    }
   }, [theme]);
 
   const setTheme = useCallback((t: Theme) => {

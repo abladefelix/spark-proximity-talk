@@ -33,6 +33,10 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: true,
   },
   plugins: {
+    SystemBars: {
+      insetsHandling: "css",
+      style: "LIGHT",
+    },
     SplashScreen: {
       launchAutoHide: true,
       backgroundColor: "#FFFFFF",
