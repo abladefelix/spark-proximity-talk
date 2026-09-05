@@ -13,6 +13,7 @@ import {
   Flag,
   MapPin,
   Compass,
+  LifeBuoy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { errorMessage } from "@/lib/errors";
@@ -36,10 +37,11 @@ import { GenderAvatarIcon } from "@/components/GenderAvatarIcon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SuspendedGate } from "@/components/SuspendedGate";
 import { IncomingSignals } from "@/components/IncomingSignals";
-import { HelpBeaconList } from "@/components/BatSignal";
+import { HelpBeaconList, useHelpBeacons } from "@/components/BatSignal";
+import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
 import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
-import { intentFor } from "@/lib/intents";
+import { intentFor, helpKindFor } from "@/lib/intents";
 import { ActiveChats } from "@/components/ActiveChats";
 import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { beaconColor } from "@/lib/beacon-styles";
@@ -754,6 +756,33 @@ function RadarPage() {
 
   }, [people, scopeSize, radius, zoom]);
 
+  // Bat-Signals ride the same scope as people: true bearing, scaled distance,
+  // so a cry for help is visible on the radar itself, not only in the list.
+  const { data: helpBeacons = [] } = useHelpBeacons();
+  const helpMarkers = useMemo(() => {
+    const scope = scopeSize || 320;
+    const z = Math.max(1, zoom);
+    const size = Math.max(16, Math.min(34, Math.round(scope / 9))) / z;
+    const maxDist = Math.max(
+      people.reduce((m, p) => Math.max(m, p.distance_m), 0),
+      helpBeacons.reduce((m, b) => Math.max(m, b.distance_m), 0),
+    );
+    const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
+    const limit = scope * 0.46 - size / 2;
+    return helpBeacons
+      .filter((b) => !b.mine && b.bearing_deg != null && Number.isFinite(Number(b.bearing_deg)))
+      .map((b) => {
+        const rad = (Number(b.bearing_deg) * Math.PI) / 180;
+        const rr = Math.max(size * 0.6, Math.min(1, b.distance_m / viewMax) * limit);
+        return {
+          beacon: b,
+          size,
+          left: `calc(50% + ${Math.sin(rad) * rr}px)`,
+          top: `calc(50% + ${-Math.cos(rad) * rr}px)`,
+        };
+      });
+  }, [helpBeacons, people, scopeSize, radius, zoom]);
+
 
 
 
@@ -889,6 +918,10 @@ function RadarPage() {
 
       <div className="mt-2.5 max-[360px]:mt-2">
         <HelpBeaconList />
+      </div>
+
+      <div className="mt-2.5 max-[360px]:mt-2">
+        <QuestionBroadcasts radiusM={radius} />
       </div>
 
       <ActiveChats />
@@ -1147,7 +1180,42 @@ function RadarPage() {
             );
           })}
 
-
+          {helpMarkers.map(({ beacon, size, left, top }) => (
+            <button
+              key={beacon.id}
+              type="button"
+              onClick={() => {
+                if (dragged.current) return;
+                document
+                  .getElementById("help-beacons")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+              style={{ left, top, zIndex: 4 }}
+              aria-label={`${helpKindFor(beacon.kind)?.label ?? "Someone needs help"}, ${Math.round(beacon.distance_m)} metres away`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 active:scale-90"
+            >
+              <span
+                className="relative flex items-center justify-center"
+                style={{
+                  width: size,
+                  height: size,
+                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
+                }}
+              >
+                <span
+                  aria-hidden
+                  className="beacon-ping absolute inset-[-20%] rounded-full border border-destructive/70"
+                />
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-destructive/30 blur-md"
+                />
+                <span className="relative z-10 flex size-full items-center justify-center rounded-full bg-destructive text-destructive-foreground ring-2 ring-background">
+                  <LifeBuoy className="size-[62%]" />
+                </span>
+              </span>
+            </button>
+          ))}
 
         </div>
 
