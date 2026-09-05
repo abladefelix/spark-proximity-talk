@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284282863039",
+    "project_id": "skanaround",
+    "storage_bucket": "skanaround.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284282863039:android:b1be1a93fc61c43db1750a",
+        "android_client_info": {
+          "package_name": "com.skanaround"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgNSxVdyIaqROfC5JpBr0xoxfyLXK3V2M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
