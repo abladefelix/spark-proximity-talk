@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Radar, MessagesSquare, UserRound, Sparkles } from "lucide-react";
 
 import { GoProButton } from "@/components/GoProButton";
+import { useChatNotificationsCount } from "@/hooks/useChatNotificationsCount";
 import { useLocalNotificationsCount } from "@/hooks/useLocalNotifications";
 
 const items = [
