@@ -916,11 +916,6 @@ function RadarPage() {
         <IntentChip />
       </div>
 
-      <div className="mt-2.5 max-[360px]:mt-2">
-        <HelpBeaconList />
-      </div>
-
-
       <ActiveChats />
       <IncomingSignals />
 
