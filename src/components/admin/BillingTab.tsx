@@ -12,6 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { BILLING_INFO_KEY, formatAmount } from "@/hooks/useBilling";
 import { ProPlansSection } from "@/components/admin/ProPlansSection";
+import {
+  testStoreConnection,
+  type StoreTestResult,
+} from "@/lib/store-billing-test.functions";
+
 
 type Billing = Record<string, any>;
 
@@ -148,9 +153,68 @@ function StoreSetupChecklist({ d }: { d: Billing }) {
           store and members see no prices.
         </p>
       ) : null}
+      <LiveStoreTest />
     </div>
   );
 }
+
+/**
+ * Actually contacts RevenueCat with the saved keys and reports whether the
+ * plans, entitlement and offering really exist.
+ */
+function LiveStoreTest() {
+  const [result, setResult] = useState<StoreTestResult | null>(null);
+  const run = useMutation({
+    mutationFn: async () => await testStoreConnection(),
+    onSuccess: (r) => setResult(r),
+    onError: (e: any) => toast.error(e?.message ?? "Could not run the test."),
+  });
+
+  return (
+    <div className="mt-3 border-t border-border/60 pt-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] text-muted-foreground">
+          The list above only checks the values look right. Run a live test to confirm they
+          actually work.
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={run.isPending}
+          onClick={() => {
+            setResult(null);
+            run.mutate();
+          }}
+        >
+          {run.isPending ? <Loader2 className="mr-1 size-3.5 animate-spin" /> : null}
+          Test connection
+        </Button>
+      </div>
+      {result ? (
+        <ul className="mt-2 space-y-1">
+          {result.checks.map((c) => (
+            <li key={c.label} className="flex items-start gap-2 text-[11px]">
+              {c.status === "ok" ? (
+                <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              ) : (
+                <CircleAlert
+                  className={`mt-0.5 size-3.5 shrink-0 ${
+                    c.status === "fail" ? "text-destructive" : "text-muted-foreground"
+                  }`}
+                />
+              )}
+              <span className="min-w-0">
+                <span className="font-medium">{c.label}</span>
+                <span className="text-muted-foreground"> — {c.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 
 /** Payments, plan pricing, free-tier caps and Pro feature switches. */
 
