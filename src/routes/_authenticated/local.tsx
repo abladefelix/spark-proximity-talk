@@ -4,7 +4,6 @@ import { Brand } from "@/components/Brand";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { IntentChip } from "@/components/IntentSheet";
-import { BatSignalButton, HelpBeaconList } from "@/components/BatSignal";
 import { QuestionBroadcasts } from "@/components/QuestionBroadcasts";
 import { ZonePerk } from "@/components/ZonePerk";
 
@@ -45,8 +44,6 @@ function LocalPage() {
       <div className="mt-4 space-y-4">
         <IntentChip />
         <ZonePerk />
-        <HelpBeaconList />
-        <BatSignalButton />
         <QuestionBroadcasts />
       </div>
     </main>
