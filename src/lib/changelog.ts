@@ -19,6 +19,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       { kind: "fixed", text: "Membership settings that failed to load no longer make the upgrade card disappear silently — it retries and offers a Try again button." },
       { kind: "new", text: "Admin now shows a store setup checklist that names exactly which billing keys, plan ids or prices are missing." },
+      { kind: "fixed", text: "Fixed the app freezing on the opening logo screen on phones with weak or no signal — the sign-in check is time-limited and now offers Try again and Go to sign in buttons." },
     ],
   },
   {
