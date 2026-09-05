@@ -1178,9 +1178,12 @@ function RadarPage() {
               type="button"
               onClick={() => {
                 if (dragged.current) return;
-                document
-                  .getElementById("help-beacons")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                navigate({ to: "/local", hash: "help-beacons" });
+                setTimeout(() => {
+                  document
+                    .getElementById("help-beacons")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 250);
               }}
               style={{ left, top, zIndex: 4 }}
               aria-label={`${helpKindFor(beacon.kind)?.label ?? "Someone needs help"}, ${Math.round(beacon.distance_m)} metres away`}
