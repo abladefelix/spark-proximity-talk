@@ -843,9 +843,11 @@ function RadarPage() {
 
   return (
     <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-5 pt-3">
-      <div className="flex items-center justify-between">
-        <Brand />
-        <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+        <div className="flex min-w-0 items-center">
+          <Brand />
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
           <NotificationBell />
           <ThemeToggle />
 
@@ -864,7 +866,9 @@ function RadarPage() {
             }}
             aria-label="Visible on radar"
           />
-          <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Hidden"}</span>
+          <span className="hidden text-xs text-muted-foreground min-[380px]:inline">
+            {visible ? "Visible" : "Hidden"}
+          </span>
         </div>
       </div>
 
@@ -890,7 +894,9 @@ function RadarPage() {
             <DialogTitle>Turn on location</DialogTitle>
             <DialogDescription>
               {permDenied
-                ? "Location is blocked for this site. Enable it in your browser or phone settings, then tap Try again."
+                ? Capacitor.isNativePlatform()
+                  ? "Location is turned off for SKANAROUND. Open your phone Settings, find SKANAROUND, allow Location, then tap Try again."
+                  : "Location is blocked for SKANAROUND. Allow location in your device settings, then tap Try again."
                 : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
             </DialogDescription>
             <Link
@@ -971,7 +977,7 @@ function RadarPage() {
           touchAction: zoom > 1.001 ? "none" : "pan-y",
           cursor: zoom > 1.001 ? "grab" : "default",
         }}
-        className="relative aspect-square size-[min(100%,24rem)] shrink-0 overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative aspect-square size-[min(100%,24rem,55vh)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"

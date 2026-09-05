@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Brand } from "@/components/Brand";
+import { Brand, BrandMark } from "@/components/Brand";
 
 
 
@@ -34,12 +35,25 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
+  // Inside the installed app there is no "marketing" moment: go straight to the
+  // radar when signed in, or to sign-in when not, behind a branded splash.
+  const [isNative] = useState(() => Capacitor.isNativePlatform());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/radar" });
+      else if (isNative) navigate({ to: "/auth" });
     });
-  }, [navigate]);
+  }, [navigate, isNative]);
+
+  if (isNative) {
+    return (
+      <main className="flex h-full w-full flex-col items-center justify-center gap-4 px-6">
+        <BrandMark size={72} />
+        <p className="text-xs font-semibold tracking-[0.32em] text-muted-foreground">SKANAROUND</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
