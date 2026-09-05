@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Crown, Loader2, Check, RefreshCw, ExternalLink } from "lucide-react";
+import { Crown, Loader2, Check, RefreshCw, ExternalLink, CircleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,12 +20,12 @@ import {
   isNativeStore,
   listPackages,
   purchase,
-  purchaseProductId,
   restore,
   storeName,
   isUserCancelled,
   getStoreDiagnostics,
   recordStoreError,
+  clearStoreDiagnostics,
   type StorePackage,
   type StoreDiagnostics,
 } from "@/lib/revenuecat";
@@ -59,7 +59,7 @@ export function ProUpgradeCard() {
   const [busy, setBusy] = useState<string | null>(null);
   const [managementUrl, setManagementUrl] = useState<string | null>(null);
   const [diag, setDiag] = useState<StoreDiagnostics | null>(null);
-  const [showDiag, setShowDiag] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const native = isNativeStore();
 
@@ -68,49 +68,29 @@ export function ProUpgradeCard() {
     let cancelled = false;
     setReady(false);
     setStoreError(null);
+    setActionError(null);
+    clearStoreDiagnostics();
     (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth.user?.id;
         if (!uid) throw new Error("Sign in again to see the plans.");
-        // Plans from admin pricing show straight away; the store list only
-        // replaces them if it answers. Checkout still goes through the store.
         setStoreOptions({
           iosApiKey: billing.ios_api_key,
           androidApiKey: billing.android_api_key,
           userId: uid,
         });
-        setReady(true);
-        // Play Billing can stall indefinitely (no Play services, unsigned
-        // build, account not a licensed tester). Never wait forever.
-        const withTimeout = <T,>(p: Promise<T>, label: string) =>
-          Promise.race([
-            p,
-            new Promise<never>((_, reject) =>
-              setTimeout(
-                () => reject(new Error(`${label} did not respond. Check your connection and that you are signed in to Google Play.`)),
-                20000,
-              ),
-            ),
-          ]);
-
-        const ok = await withTimeout(
-          initStore({
-            iosApiKey: billing.ios_api_key,
-            androidApiKey: billing.android_api_key,
-            userId: uid,
-          }),
-          storeName(),
-        );
+        const ok = await initStore({
+          iosApiKey: billing.ios_api_key,
+          androidApiKey: billing.android_api_key,
+          userId: uid,
+        });
         if (cancelled) return;
         if (!ok) throw new Error("Store keys are missing. Please contact support.");
-        const list = await withTimeout(
-          listPackages(
-            [billing.monthly_product_id, billing.yearly_product_id].filter(
-              (id): id is string => Boolean(id),
-            ),
+        const list = await listPackages(
+          [billing.monthly_product_id, billing.yearly_product_id].filter(
+            (id): id is string => Boolean(id),
           ),
-          storeName(),
         );
         if (cancelled) return;
         setPackages(list);
@@ -185,36 +165,29 @@ export function ProUpgradeCard() {
   ].filter((p): p is { productId: string; label: string } => p !== null);
 
   async function buy(pkg: StorePackage) {
+    if (busy) return;
     setBusy(pkg.identifier);
+    setActionError(null);
     try {
       const ent = await purchase(pkg, entitlement);
       await afterStoreChange(ent.managementUrl);
       toast.success("You're Pro now. Enjoy!");
     } catch (e) {
       if (isUserCancelled(e)) toast.message("Purchase cancelled");
-      else toast.error(e instanceof Error ? e.message : "The purchase didn't go through.");
+      else {
+        const message = e instanceof Error ? e.message : "The purchase didn't go through.";
+        setActionError(message);
+        toast.error(message);
+      }
     } finally {
       setBusy(null);
     }
   }
-
-  async function buyProduct(productId: string) {
-    setBusy(productId);
-    try {
-      const ent = await purchaseProductId(productId, entitlement);
-      await afterStoreChange(ent.managementUrl);
-      toast.success("You're Pro now. Enjoy!");
-    } catch (e) {
-      if (isUserCancelled(e)) toast.message("Purchase cancelled");
-      else toast.error(e instanceof Error ? e.message : "The purchase didn't go through.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
 
   async function restorePurchases() {
+    if (busy) return;
     setBusy("restore");
+    setActionError(null);
     try {
       const ent = await restore(entitlement);
       await afterStoreChange(ent.managementUrl);
@@ -222,14 +195,16 @@ export function ProUpgradeCard() {
         ent.isActive ? "Your membership is back." : "No previous purchase found.",
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not restore purchases.");
+      const message = e instanceof Error ? e.message : "Could not restore purchases.";
+      setActionError(message);
+      toast.error(message);
     } finally {
       setBusy(null);
     }
   }
 
   return (
-    <div className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
+    <div className="min-w-0 rounded-2xl border border-primary/40 bg-primary/5 p-4">
       <p className="flex items-center gap-2 text-sm font-semibold">
         <Crown className="size-4 text-primary" />
         {billing.pro_label}
@@ -287,70 +262,39 @@ export function ProUpgradeCard() {
             </p>
           ) : packages.length === 0 ? (
             <div className="space-y-2">
-              {fallbackPlans.length > 0 ? (
-                <>
-                  {fallbackPlans.map((plan, i) => (
-                    <Button
-                      key={plan.productId}
-                      variant={i === 0 ? "default" : "outline"}
-                      className="w-full"
-                      disabled={busy !== null}
-                      onClick={() => buyProduct(plan.productId)}
-                    >
-                      {busy === plan.productId ? (
-                        <Loader2 className="mr-2 size-4 animate-spin" />
-                      ) : null}
-                      {plan.label}
-                    </Button>
-                  ))}
-                  <p className="text-center text-[11px] text-muted-foreground">
-                    Final price is confirmed by {storeName()} at checkout.
-                  </p>
-                </>
-              ) : null}
-              <p className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+              <p className="flex items-start gap-2 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                <span className="min-w-0 break-words">
                 {storeError ??
                   diag?.error ??
                   "No plans are available right now. Please check back soon."}
+                </span>
               </p>
+
+              {fallbackPlans.length > 0 ? (
+                <p className="break-words text-center text-[11px] leading-relaxed text-muted-foreground">
+                  Expected plans: {fallbackPlans.map((plan) => plan.label).join(" · ")}. Checkout becomes available when {storeName()} returns these plans.
+                </p>
+              ) : null}
 
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setAttempt((n) => n + 1)}
+                disabled={busy !== null}
+                onClick={() => {
+                  setStoreError(null);
+                  setActionError(null);
+                  clearStoreDiagnostics();
+                  setAttempt((n) => n + 1);
+                }}
               >
                 <RefreshCw className="mr-2 size-4" />
                 Try again
               </Button>
-              <button
-                type="button"
-                className="w-full text-center text-[11px] text-muted-foreground underline"
-                onClick={() => setShowDiag((v) => !v)}
-              >
-                {showDiag ? "Hide setup details" : "Show setup details"}
-              </button>
-              {showDiag ? (
-                <div className="space-y-2">
-                  <pre className="max-h-48 overflow-auto rounded-xl border border-border bg-secondary/30 p-3 text-[10px] leading-relaxed text-muted-foreground">
-{JSON.stringify(
-  diag ?? { note: "No details captured yet." },
-  null,
-  2,
-)}
-                  </pre>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => {
-                      navigator.clipboard
-                        ?.writeText(JSON.stringify(diag ?? {}, null, 2))
-                        .then(() => toast.success("Details copied"))
-                        .catch(() => toast.error("Could not copy"));
-                    }}
-                  >
-                    Copy details
-                  </Button>
-                </div>
+              {diag?.requestedProductIds.length ? (
+                <p className="break-all text-center text-[10px] text-muted-foreground">
+                  Support detail: {diag.platform} · {diag.requestedProductIds.join(", ")}
+                </p>
               ) : null}
             </div>
           ) : (
@@ -374,6 +318,12 @@ export function ProUpgradeCard() {
               </Button>
             ))
           )}
+
+          {actionError ? (
+            <p className="break-words rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">
+              {actionError}
+            </p>
+          ) : null}
 
           <Button
             variant="ghost"

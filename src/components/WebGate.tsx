@@ -88,7 +88,7 @@ export function WebGate({ children }: { children: ReactNode }) {
 
 function DownloadWall() {
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-background px-6 py-12">
+    <main data-scrollable className="flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-6 pb-[max(3rem,var(--safe-bottom))] pt-[max(3rem,var(--safe-top))]">
       <div className="w-full max-w-sm text-center">
         <div className="flex justify-center">
           <BrandMark size={64} />

@@ -13,7 +13,7 @@ export type StorePackage = {
   priceString: string;
   title: string;
   period: "monthly" | "yearly" | "other";
-  source: "offering" | "product";
+  source: "offering" | "product" | "subscription-option";
   raw: unknown;
 };
 
@@ -45,6 +45,28 @@ async function ensureConfigured() {
   return initStore(lastOptions);
 }
 
+const LOOKUP_DEADLINE_MS = 15_000;
+const PURCHASE_DEADLINE_MS = 120_000;
+
+function deadlineMessage(action: string) {
+  return `${storeName()} did not respond while ${action}. Check your connection and Play Store or App Store account, then try again.`;
+}
+
+/** Prevents a native billing call from leaving the app permanently busy. */
+async function withStoreDeadline<T>(promise: Promise<T>, action: string, ms = LOOKUP_DEADLINE_MS) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(deadlineMessage(action))), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export function isNativeStore() {
   return Capacitor.isNativePlatform();
 }
@@ -70,9 +92,12 @@ export async function initStore(opts: {
   if (!apiKey) return false;
 
   const token = `${apiKey}:${opts.userId}`;
-  const Purchases = await sdk();
+  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   if (configuredFor === token) return true;
-  await Purchases.configure({ apiKey, appUserID: opts.userId });
+  await withStoreDeadline(
+    Purchases.configure({ apiKey, appUserID: opts.userId }),
+    "connecting to billing",
+  );
   configuredFor = token;
   return true;
 }
@@ -108,6 +133,10 @@ export function getStoreDiagnostics() {
   return lastDiagnostics;
 }
 
+export function clearStoreDiagnostics() {
+  lastDiagnostics = null;
+}
+
 export function recordStoreError(message: string, keyPresent: boolean, keyPrefix: string | null) {
   lastDiagnostics = {
     platform: Capacitor.getPlatform(),
@@ -135,16 +164,36 @@ function packageFromOffering(pkg: any): StorePackage {
   };
 }
 
-function packageFromProduct(product: any): StorePackage {
+function periodFromOption(option: any): StorePackage["period"] {
+  const unit = String(option?.billingPeriod?.unit ?? "").toLowerCase();
+  const value = Number(option?.billingPeriod?.value ?? 1);
+  if (unit === "month" && value === 1) return "monthly";
+  if (unit === "year" && value === 1) return "yearly";
+  return "other";
+}
+
+function packageFromProduct(product: any, option?: any): StorePackage {
+  const fullPrice = option?.fullPricePhase?.price;
   return {
-    identifier: product.identifier,
+    identifier: option?.storeProductId ?? option?.id ?? product.identifier,
     productId: product.identifier,
-    priceString: product.priceString ?? "",
+    priceString: fullPrice?.formatted ?? fullPrice?.formattedPrice ?? product.priceString ?? "",
     title: product.title ?? product.identifier,
-    period: periodOf({ identifier: product.identifier, product }),
-    source: "product",
-    raw: product,
+    period: option ? periodFromOption(option) : periodOf({ identifier: product.identifier, product }),
+    source: option ? "subscription-option" : "product",
+    raw: option ?? product,
   };
+}
+
+function packagesFromProducts(products: any[]): StorePackage[] {
+  return products.flatMap((product) => {
+    const options = Array.isArray(product?.subscriptionOptions)
+      ? product.subscriptionOptions.filter((option: any) => option?.isBasePlan)
+      : [];
+    return options.length > 0
+      ? options.map((option: any) => packageFromProduct(product, option))
+      : [packageFromProduct(product)];
+  });
 }
 
 function errText(e: unknown) {
@@ -158,14 +207,15 @@ function errText(e: unknown) {
 /** Products available for purchase, priced and localised by the store. */
 export async function listPackages(productIds: string[] = []): Promise<StorePackage[]> {
   if (!isNativeStore()) return [];
-  const Purchases = await sdk();
+  clearStoreDiagnostics();
+  const Purchases = await withStoreDeadline(sdk(), "opening billing");
   const notes: string[] = [];
   const requestedProductIds = [...new Set(productIds.map((id) => id.trim()).filter(Boolean))];
 
   // 1. Offerings. A failure here must never stop the direct product lookup.
   let offerings: any = null;
   try {
-    offerings = await Purchases.getOfferings();
+    offerings = await withStoreDeadline(Purchases.getOfferings(), "loading plans");
   } catch (e) {
     notes.push(`Offerings failed: ${errText(e)}`);
   }
@@ -183,31 +233,15 @@ export async function listPackages(productIds: string[] = []): Promise<StorePack
   // packages were never attached, so this is the reliable path.
   if (mapped.length === 0 && requestedProductIds.length > 0) {
     try {
-      const direct: any = await Purchases.getProducts({
-        productIdentifiers: requestedProductIds,
-      });
-      mapped = (direct?.products ?? []).map(packageFromProduct);
+      const direct: any = await withStoreDeadline(
+        Purchases.getProducts({ productIdentifiers: requestedProductIds }),
+        "loading plans",
+      );
+      mapped = packagesFromProducts(direct?.products ?? []);
       if (mapped.length > 0) loadSource = "product";
       else notes.push("The store returned no matching products.");
     } catch (e) {
       notes.push(`Product lookup failed: ${errText(e)}`);
-    }
-  }
-
-  // 3. Android subscriptions are sometimes only resolvable with the base-plan
-  // suffix (product:baseplan). Try the common suffixes before giving up.
-  if (mapped.length === 0 && requestedProductIds.length > 0) {
-    const suffixed = requestedProductIds.flatMap((id) => [
-      `${id}:monthly`,
-      `${id}:yearly`,
-      `${id}:annual`,
-    ]);
-    try {
-      const direct: any = await Purchases.getProducts({ productIdentifiers: suffixed });
-      mapped = (direct?.products ?? []).map(packageFromProduct);
-      if (mapped.length > 0) loadSource = "product";
-    } catch (e) {
-      notes.push(`Base-plan lookup failed: ${errText(e)}`);
     }
   }
 
@@ -257,54 +291,38 @@ export function isUserCancelled(error: unknown) {
 
 /** Runs the native purchase sheet. Throws on failure. */
 export async function purchase(pkg: StorePackage, entitlementId: string) {
-  await ensureConfigured();
-  const Purchases = await sdk();
-  const res: any =
-    pkg.source === "product"
-      ? await Purchases.purchaseStoreProduct({ product: pkg.raw as any })
-      : await Purchases.purchasePackage({ aPackage: pkg.raw as any });
-  return readEntitlement(res?.customerInfo, entitlementId);
-}
-
-/**
- * Buys a plan straight from its store product id. Used when the plan list
- * could not be loaded up front, so a member can still subscribe.
- */
-export async function purchaseProductId(productId: string, entitlementId: string) {
-  await ensureConfigured();
-  const Purchases = await sdk();
-  const ids = [productId, `${productId}:monthly`, `${productId}:yearly`, `${productId}:annual`];
-  let product: any = null;
-  for (const id of ids) {
-    try {
-      const direct: any = await Purchases.getProducts({ productIdentifiers: [id] });
-      product = direct?.products?.[0];
-      if (product) break;
-    } catch {
-      // Try the next identifier shape.
-    }
-  }
-  if (!product) {
-    throw new Error(
-      `${storeName()} does not have "${productId}" available for your account yet.`,
-    );
-  }
-  const res: any = await Purchases.purchaseStoreProduct({ product });
+  clearStoreDiagnostics();
+  const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
+  if (!configured) throw new Error("Store billing is not configured. Please contact support.");
+  const Purchases = await withStoreDeadline(sdk(), "opening billing");
+  const request =
+    pkg.source === "subscription-option"
+      ? Purchases.purchaseSubscriptionOption({ subscriptionOption: pkg.raw as any })
+      : pkg.source === "product"
+        ? Purchases.purchaseStoreProduct({ product: pkg.raw as any })
+        : Purchases.purchasePackage({ aPackage: pkg.raw as any });
+  const res: any = await withStoreDeadline(request, "opening checkout", PURCHASE_DEADLINE_MS);
   return readEntitlement(res?.customerInfo, entitlementId);
 }
 
 
 /** Required by App Store review: re-applies purchases on a new device. */
 export async function restore(entitlementId: string) {
-  await ensureConfigured();
-  const Purchases = await sdk();
-  const res: any = await Purchases.restorePurchases();
+  clearStoreDiagnostics();
+  const configured = await withStoreDeadline(ensureConfigured(), "connecting to billing");
+  if (!configured) throw new Error("Store billing is not configured. Please contact support.");
+  const Purchases = await withStoreDeadline(sdk(), "opening billing");
+  const res: any = await withStoreDeadline(
+    Purchases.restorePurchases(),
+    "restoring purchases",
+    PURCHASE_DEADLINE_MS,
+  );
   return readEntitlement(res?.customerInfo, entitlementId);
 }
 
 export async function currentEntitlement(entitlementId: string) {
   if (!isNativeStore()) return null;
-  const Purchases = await sdk();
-  const res: any = await Purchases.getCustomerInfo();
+  const Purchases = await withStoreDeadline(sdk(), "opening billing");
+  const res: any = await withStoreDeadline(Purchases.getCustomerInfo(), "checking membership");
   return readEntitlement(res?.customerInfo, entitlementId);
 }
