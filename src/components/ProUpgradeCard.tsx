@@ -152,6 +152,28 @@ export function ProUpgradeCard() {
   const features = featureList(catalog, primary ? primary.features : null);
   const entitlement = billing.entitlement_id || "pro";
 
+  // Shown when the store list could not be loaded, so members always see what
+  // they can buy. Prices come from admin settings; the store confirms at checkout.
+  const money = (amount: number) => {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: billing.currency || "USD",
+        maximumFractionDigits: 2,
+      }).format(amount / 100);
+    } catch {
+      return `${billing.currency || "USD"} ${(amount / 100).toFixed(2)}`;
+    }
+  };
+  const fallbackPlans = [
+    billing.monthly_product_id && billing.monthly_amount > 0
+      ? { productId: billing.monthly_product_id, label: `${money(billing.monthly_amount)} / month` }
+      : null,
+    billing.yearly_product_id && billing.yearly_amount > 0
+      ? { productId: billing.yearly_product_id, label: `${money(billing.yearly_amount)} / year` }
+      : null,
+  ].filter((p): p is { productId: string; label: string } => p !== null);
+
   async function buy(pkg: StorePackage) {
     setBusy(pkg.identifier);
     try {
@@ -165,6 +187,21 @@ export function ProUpgradeCard() {
       setBusy(null);
     }
   }
+
+  async function buyProduct(productId: string) {
+    setBusy(productId);
+    try {
+      const ent = await purchaseProductId(productId, entitlement);
+      await afterStoreChange(ent.managementUrl);
+      toast.success("You're Pro now. Enjoy!");
+    } catch (e) {
+      if (isUserCancelled(e)) toast.message("Purchase cancelled");
+      else toast.error(e instanceof Error ? e.message : "The purchase didn't go through.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   async function restorePurchases() {
     setBusy("restore");
