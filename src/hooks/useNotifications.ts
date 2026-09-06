@@ -49,8 +49,12 @@ export function useNotifications(myId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "signals", filter: `to_user=eq.${myId}` },
         async (payload) => {
-          const from = (payload.new as { from_user: string }).from_user;
-          push("New signal on SKANAROUND", `${await nameOf(from)} wants to chat.`);
+          const row = payload.new as { from_user: string; intent?: string | null };
+          if (row.intent === "help") {
+            push("Help is on the way", `${await nameOf(row.from_user)} is responding to your Bat-Signal.`);
+          } else {
+            push("New signal on SKANAROUND", `${await nameOf(row.from_user)} wants to chat.`);
+          }
           queryClient.invalidateQueries({ queryKey: ["nearby"] });
         },
       )
