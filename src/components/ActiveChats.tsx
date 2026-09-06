@@ -119,7 +119,7 @@ export function ActiveChats() {
     if (!ids.length) return;
     const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
     queryClient.setQueryData<Row[]>(["active-chats"], []);
-    setExpanded(false);
+    setOpen(false);
     const { error } = await supabase.from("matches").delete().in("id", ids);
     if (error) {
       queryClient.setQueryData(["active-chats"], previous);
