@@ -23,7 +23,7 @@ type Row = {
 export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const { data: retention } = useChatRetention();
 
   const { data: allRows = [], isLoading } = useQuery({
