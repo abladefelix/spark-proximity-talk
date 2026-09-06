@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, MessageCircle, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useChatSheet } from "@/components/ChatSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonAvatar } from "@/components/PersonAvatar";
@@ -22,7 +23,7 @@ type Row = {
 export function ActiveChats() {
   const queryClient = useQueryClient();
   const { openChat } = useChatSheet();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const { data: retention } = useChatRetention();
 
   const { data: allRows = [], isLoading } = useQuery({
@@ -118,7 +119,7 @@ export function ActiveChats() {
     if (!ids.length) return;
     const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
     queryClient.setQueryData<Row[]>(["active-chats"], []);
-    setExpanded(false);
+    setOpen(false);
     const { error } = await supabase.from("matches").delete().in("id", ids);
     if (error) {
       queryClient.setQueryData(["active-chats"], previous);
@@ -138,8 +139,8 @@ export function ActiveChats() {
   return (
     <div className="relative z-10 mt-4">
       {/* Stacked deck: peeking cards behind the top card */}
-      <div className={`relative isolate ${!expanded && behind === 2 ? "pb-4" : !expanded && behind === 1 ? "pb-2" : ""}`}>
-        {!expanded &&
+      <div className={`relative isolate ${behind === 2 ? "pb-4" : behind === 1 ? "pb-2" : ""}`}>
+        {
           Array.from({ length: behind }).map((_, i) => {
             const depth = i + 1; // 1 = closest behind
             return (
@@ -160,7 +161,7 @@ export function ActiveChats() {
           <div className="flex items-center">
           <button
             type="button"
-            onClick={() => (rows.length > 1 ? setExpanded((v) => !v) : openChat(latest.matchId))}
+            onClick={() => (rows.length > 1 ? setOpen(true) : openChat(latest.matchId))}
             className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
           >
             <PersonAvatar
@@ -183,9 +184,7 @@ export function ActiveChats() {
                 <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                   {rows.length}
                 </span>
-                <ChevronDown
-                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
-                />
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
               </>
             ) : (
               <MessageCircle className="size-4 shrink-0 text-primary" />
@@ -200,17 +199,28 @@ export function ActiveChats() {
             <X className="size-4" />
           </button>
           </div>
+        </div>
+      </div>
 
-          {expanded && (
-            <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
-              {rows.map((row) => (
-                <div
-                  key={row.matchId}
-                  className="flex w-full items-center gap-1 rounded-xl transition-colors hover:bg-secondary/60"
-                >
+      {/* Pop-out list: the full chat picker lives in a bottom sheet so it can
+          never be clipped by the radar overlay. */}
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent className="max-h-[80dvh]">
+          <DrawerHeader>
+            <DrawerTitle>Your chats</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 overflow-y-auto px-3 pb-6">
+            {rows.map((row) => (
+              <div
+                key={row.matchId}
+                className="flex w-full items-center gap-1 rounded-xl transition-colors hover:bg-secondary/60"
+              >
                 <button
                   type="button"
-                  onClick={() => openChat(row.matchId)}
+                  onClick={() => {
+                    setOpen(false);
+                    openChat(row.matchId);
+                  }}
                   className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left"
                 >
                   <PersonAvatar
@@ -241,27 +251,26 @@ export function ActiveChats() {
                 >
                   <X className="size-4" />
                 </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={clearAll}
-                className="flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
-              >
-                <Trash2 className="size-3.5" />
-                Clear all chats
-              </button>
-              {/* Set expectations: these links do not stick around forever. */}
-              <p className="px-2 pb-1 pt-0.5 text-center text-[10px] leading-snug text-muted-foreground">
-                Chats vanish after {days} {days === 1 ? "day" : "days"}
-                {retention && !retention.isPro && retention.proDays > retention.freeDays
-                  ? ` — Pro keeps them ${retention.proDays} days.`
-                  : "."}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 className="size-3.5" />
+              Clear all chats
+            </button>
+            {/* Set expectations: these links do not stick around forever. */}
+            <p className="px-2 pb-1 pt-0.5 text-center text-[10px] leading-snug text-muted-foreground">
+              Chats vanish after {days} {days === 1 ? "day" : "days"}
+              {retention && !retention.isPro && retention.proDays > retention.freeDays
+                ? ` — Pro keeps them ${retention.proDays} days.`
+                : "."}
+            </p>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
