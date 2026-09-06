@@ -501,6 +501,33 @@ function RadarPage() {
       );
     })();
 
+    // Even when the position itself cannot be refreshed (stationary phone, or a
+    // coarse indoor fix we refuse to publish), presence must stay fresh or the
+    // person disappears from everyone else's radar after the presence timeout.
+    const touchPresence = async () => {
+      if (cancelled || publishInFlight || !lastPublished) return;
+      if (Date.now() - lastPublished.at < 60000) return;
+      let me = myIdRef.current;
+      if (!me) {
+        me = (await supabase.auth.getSession()).data.session?.user?.id ?? null;
+        myIdRef.current = me;
+      }
+      if (!me) return;
+      const at = Date.now();
+      const { error } = await supabase.from("locations").upsert(
+        {
+          user_id: me,
+          lat: lastPublished.lat,
+          lng: lastPublished.lng,
+          accuracy_m: lastPublished.accuracy,
+          is_visible: visible,
+          updated_at: new Date(at).toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+      if (!error && lastPublished) lastPublished = { ...lastPublished, at };
+    };
+
     // Stationary phones stop emitting position updates, which would make the
     // user look offline to everyone else. Re-publish the last fix periodically,
     // and ask for a fresh one when the watcher never delivered anything.
@@ -508,6 +535,7 @@ function RadarPage() {
       const coords = lastCoords.current;
       if (coords) void push(coords, true, true);
       else refreshFix();
+      void touchPresence();
     }, 10000);
 
     // Backgrounded tabs and suspended apps stop the heartbeat, so the person
@@ -516,9 +544,11 @@ function RadarPage() {
       if (document.visibilityState !== "visible") return;
       const coords = lastCoords.current;
       if (coords) void push(coords, true, true);
+      void touchPresence();
       refreshFix();
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     };
+
     document.addEventListener("visibilitychange", onWake);
     window.addEventListener("focus", onWake);
     window.addEventListener("pageshow", onWake);
@@ -913,7 +943,7 @@ function RadarPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pt-6 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pt-8 min-h-[700px]:pb-3">
+        <div className="order-2 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pt-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pt-3 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -925,7 +955,7 @@ function RadarPage() {
           touchAction: zoom > 1.001 ? "none" : "pan-y",
           cursor: zoom > 1.001 ? "grab" : "default",
         }}
-        className="relative mt-28 aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
@@ -1205,7 +1235,7 @@ function RadarPage() {
       </div>
 
       {/* Scrollable card strip that overlaps the top of the radar. */}
-      <div className="absolute inset-x-0 top-0 z-20 max-h-[62%] overflow-y-auto overscroll-contain bg-gradient-to-b from-background via-background/95 via-85% to-transparent px-[var(--app-gutter)] pt-4 pb-14 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="order-1 w-full shrink-0 max-h-[45%] overflow-y-auto overscroll-contain px-[var(--app-gutter)] pt-2 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mx-auto max-w-[min(24rem,100%)] pb-4">
           {geoError && (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
