@@ -913,43 +913,6 @@ function RadarPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Status overlays float above the radar so the scope keeps its full size. */}
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-30 px-[var(--app-gutter)] pt-2">
-          <div className="pointer-events-auto">
-            {geoError && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
-                <span>{geoError}</span>
-                <button
-                  type="button"
-                  onClick={() => setRetryKey((k) => k + 1)}
-                  className="shrink-0 rounded-full border border-border px-3 py-1 font-medium text-foreground"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-            {!geoError && nearby.isError && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
-                <span>Radar could not refresh. Check your connection and try again.</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => void nearby.refetch()}
-                >
-                  Retry
-                </Button>
-              </div>
-            )}
-            {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                {settings.empty_radar_text} Widen your scan range in your profile.
-              </p>
-            )}
-          </div>
-        </div>
-
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pt-6 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pt-8 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
@@ -1244,6 +1207,39 @@ function RadarPage() {
       {/* Scrollable card strip that overlaps the top of the radar. */}
       <div className="absolute inset-x-0 top-0 z-20 max-h-[45%] overflow-y-auto bg-gradient-to-b from-background via-background/95 to-transparent px-[var(--app-gutter)] pt-4 pb-10">
         <div className="mx-auto max-w-[min(24rem,100%)]">
+          {geoError && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
+              <span>{geoError}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setRetryKey((k) => k + 1)}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {!geoError && nearby.isError && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+              <span>Radar could not refresh. Check your connection and try again.</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => void nearby.refetch()}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
+            <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
+              {settings.empty_radar_text} Widen your scan range in your profile.
+            </p>
+          )}
           <div className="mt-2.5 max-[360px]:mt-2">
             <IntentChip />
           </div>
