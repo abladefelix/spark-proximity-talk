@@ -81,7 +81,7 @@ export function IncomingSignals() {
             intent_note: (s as { intent_note?: string | null }).intent_note ?? null,
           };
         })
-        .filter((x): x is Incoming => x !== null && x.match_id === null);
+        .filter((x): x is Incoming => x !== null && x.match_id === null && !blockedIds.has(x.from_user));
     },
   });
 
