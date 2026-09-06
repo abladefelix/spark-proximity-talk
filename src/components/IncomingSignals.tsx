@@ -87,10 +87,14 @@ export function IncomingSignals() {
     mutationFn: async (person: Incoming) => {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
+      // Clear any stale/expired signal I sent before so the fresh insert
+      // actually fires the match trigger instead of dying on the
+      // (from_user, to_user) unique constraint.
+      await supabase.from("signals").delete().eq("from_user", me).eq("to_user", person.from_user);
       const { error } = await supabase
         .from("signals")
         .insert({ from_user: me, to_user: person.from_user });
-      if (error && !error.message.includes("duplicate")) throw error;
+      if (error) throw error;
 
       // The match row is created by a trigger; give it a moment if needed.
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -138,9 +142,14 @@ export function IncomingSignals() {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
       const { error } = await supabase.from("blocks").insert({ blocker: me, blocked: person.from_user });
-      if (error) throw error;
+      if (error && !error.message.includes("duplicate")) throw error;
+      // Also remove their signal so the card never comes back.
+      await supabase.from("signals").delete().eq("from_user", person.from_user).eq("to_user", me);
     },
-    onSuccess: () => {
+    onSuccess: (_r, person) => {
+      queryClient.setQueryData<Incoming[]>(["incoming-signals"], (prev) =>
+        (prev ?? []).filter((p) => p.id !== person.id),
+      );
       queryClient.invalidateQueries({ queryKey: ["incoming-signals"] });
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
       toast.success("Declined");
