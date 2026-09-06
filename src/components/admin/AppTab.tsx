@@ -91,7 +91,13 @@ export function AppTab() {
       setDraft({});
       toast.success("Settings saved");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save");
+      const message =
+        e instanceof Error
+          ? e.message
+          : e && typeof e === "object" && "message" in e && typeof e.message === "string"
+            ? e.message
+            : "Could not save";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
