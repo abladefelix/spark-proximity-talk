@@ -199,17 +199,28 @@ export function ActiveChats() {
             <X className="size-4" />
           </button>
           </div>
+        </div>
+      </div>
 
-          {expanded && (
-            <div className="max-h-64 space-y-1 overflow-y-auto border-t border-border/60 p-1.5">
-              {rows.map((row) => (
-                <div
-                  key={row.matchId}
-                  className="flex w-full items-center gap-1 rounded-xl transition-colors hover:bg-secondary/60"
-                >
+      {/* Pop-out list: the full chat picker lives in a bottom sheet so it can
+          never be clipped by the radar overlay. */}
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent className="max-h-[80dvh]">
+          <DrawerHeader>
+            <DrawerTitle>Your chats</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 overflow-y-auto px-3 pb-6">
+            {rows.map((row) => (
+              <div
+                key={row.matchId}
+                className="flex w-full items-center gap-1 rounded-xl transition-colors hover:bg-secondary/60"
+              >
                 <button
                   type="button"
-                  onClick={() => openChat(row.matchId)}
+                  onClick={() => {
+                    setOpen(false);
+                    openChat(row.matchId);
+                  }}
                   className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left"
                 >
                   <PersonAvatar
@@ -240,27 +251,26 @@ export function ActiveChats() {
                 >
                   <X className="size-4" />
                 </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={clearAll}
-                className="flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
-              >
-                <Trash2 className="size-3.5" />
-                Clear all chats
-              </button>
-              {/* Set expectations: these links do not stick around forever. */}
-              <p className="px-2 pb-1 pt-0.5 text-center text-[10px] leading-snug text-muted-foreground">
-                Chats vanish after {days} {days === 1 ? "day" : "days"}
-                {retention && !retention.isPro && retention.proDays > retention.freeDays
-                  ? ` — Pro keeps them ${retention.proDays} days.`
-                  : "."}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 className="size-3.5" />
+              Clear all chats
+            </button>
+            {/* Set expectations: these links do not stick around forever. */}
+            <p className="px-2 pb-1 pt-0.5 text-center text-[10px] leading-snug text-muted-foreground">
+              Chats vanish after {days} {days === 1 ? "day" : "days"}
+              {retention && !retention.isPro && retention.proDays > retention.freeDays
+                ? ` — Pro keeps them ${retention.proDays} days.`
+                : "."}
+            </p>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
