@@ -233,7 +233,12 @@ function RadarPage() {
       if (accuracy > COARSE_FIX_LIMIT_M) {
         lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy };
         setAccuracyM(accuracy);
-        const precise = lastPublished && lastPublished.accuracy <= COARSE_FIX_LIMIT_M;
+        // Prefer a recent precise fix while GPS warms up, but do not let one
+        // old fix freeze the beacon forever after the phone moves indoors.
+        const precise =
+          lastPublished &&
+          lastPublished.accuracy <= COARSE_FIX_LIMIT_M &&
+          Date.now() - lastPublished.at < COARSE_GRACE_MS;
         const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
         if (precise || stillHopeful) {
           setGeoError(
