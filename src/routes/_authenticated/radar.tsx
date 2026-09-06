@@ -1205,8 +1205,8 @@ function RadarPage() {
       </div>
 
       {/* Scrollable card strip that overlaps the top of the radar. */}
-      <div className="absolute inset-x-0 top-0 z-20 max-h-[45%] overflow-y-auto bg-gradient-to-b from-background via-background/95 to-transparent px-[var(--app-gutter)] pt-4 pb-10">
-        <div className="mx-auto max-w-[min(24rem,100%)]">
+      <div className="absolute inset-x-0 top-0 z-20 max-h-[62%] overflow-y-auto overscroll-contain bg-gradient-to-b from-background via-background/95 via-85% to-transparent px-[var(--app-gutter)] pt-4 pb-14 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto max-w-[min(24rem,100%)] pb-4">
           {geoError && (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
               <span>{geoError}</span>
