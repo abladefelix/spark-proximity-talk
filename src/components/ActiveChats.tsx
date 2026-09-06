@@ -161,7 +161,7 @@ export function ActiveChats() {
           <div className="flex items-center">
           <button
             type="button"
-            onClick={() => (rows.length > 1 ? setExpanded((v) => !v) : openChat(latest.matchId))}
+            onClick={() => (rows.length > 1 ? setOpen(true) : openChat(latest.matchId))}
             className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
           >
             <PersonAvatar
@@ -184,9 +184,7 @@ export function ActiveChats() {
                 <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                   {rows.length}
                 </span>
-                <ChevronDown
-                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
-                />
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
               </>
             ) : (
               <MessageCircle className="size-4 shrink-0 text-primary" />
