@@ -97,6 +97,11 @@ export function ActiveChats() {
 
   const latest = rows[0];
 
+  // If removals leave the sheet empty, fold it back down automatically.
+  useEffect(() => {
+    if (rows.length === 0) setOpen(false);
+  }, [rows.length]);
+
   // Removals paint immediately and roll back only if the server refuses.
   async function removeChat(matchId: string) {
     const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
@@ -138,8 +143,12 @@ export function ActiveChats() {
 
   return (
     <div className="relative z-10 mt-4">
-      {/* Stacked deck: peeking cards behind the top card */}
-      <div className={`relative isolate ${behind === 2 ? "pb-4" : behind === 1 ? "pb-2" : ""}`}>
+      {/* Stacked deck: peeking cards behind the top card. The wrapper reserves
+          exactly the space the peeks take so nothing gets clipped. */}
+      <div
+        className="relative isolate"
+        style={{ paddingBottom: behind > 0 ? behind * 8 + 4 : 0 }}
+      >
         {
           Array.from({ length: behind }).map((_, i) => {
             const depth = i + 1; // 1 = closest behind
@@ -147,7 +156,7 @@ export function ActiveChats() {
               <div
                 key={`peek-${i}`}
                 aria-hidden
-                className="pointer-events-none absolute inset-x-2 top-0 h-[60px] rounded-2xl border border-border bg-card shadow-sm"
+                className="pointer-events-none absolute inset-x-2 bottom-0 top-0 rounded-2xl border border-border bg-card shadow-sm"
                 style={{
                   transform: `translateY(${depth * 8}px) scale(${1 - depth * 0.025})`,
                   opacity: 1 - depth * 0.22,
@@ -206,8 +215,16 @@ export function ActiveChats() {
           never be clipped by the radar overlay. */}
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[80dvh]">
-          <DrawerHeader>
+          <DrawerHeader className="flex flex-row items-center justify-between gap-2">
             <DrawerTitle>Your chats</DrawerTitle>
+            <button
+              type="button"
+              aria-label="Close chat list"
+              onClick={() => setOpen(false)}
+              className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
           </DrawerHeader>
           <div className="space-y-1 overflow-y-auto px-3 pb-6">
             {rows.map((row) => (
