@@ -138,8 +138,12 @@ export function ActiveChats() {
 
   return (
     <div className="relative z-10 mt-4">
-      {/* Stacked deck: peeking cards behind the top card */}
-      <div className={`relative isolate ${behind === 2 ? "pb-4" : behind === 1 ? "pb-2" : ""}`}>
+      {/* Stacked deck: peeking cards behind the top card. The wrapper reserves
+          exactly the space the peeks take so nothing gets clipped. */}
+      <div
+        className="relative isolate"
+        style={{ paddingBottom: behind > 0 ? behind * 8 + 4 : 0 }}
+      >
         {
           Array.from({ length: behind }).map((_, i) => {
             const depth = i + 1; // 1 = closest behind
@@ -147,7 +151,7 @@ export function ActiveChats() {
               <div
                 key={`peek-${i}`}
                 aria-hidden
-                className="pointer-events-none absolute inset-x-2 top-0 h-[60px] rounded-2xl border border-border bg-card shadow-sm"
+                className="pointer-events-none absolute inset-x-2 bottom-0 top-0 rounded-2xl border border-border bg-card shadow-sm"
                 style={{
                   transform: `translateY(${depth * 8}px) scale(${1 - depth * 0.025})`,
                   opacity: 1 - depth * 0.22,
