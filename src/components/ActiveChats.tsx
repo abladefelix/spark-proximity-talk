@@ -210,8 +210,16 @@ export function ActiveChats() {
           never be clipped by the radar overlay. */}
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[80dvh]">
-          <DrawerHeader>
+          <DrawerHeader className="flex flex-row items-center justify-between gap-2">
             <DrawerTitle>Your chats</DrawerTitle>
+            <button
+              type="button"
+              aria-label="Close chat list"
+              onClick={() => setOpen(false)}
+              className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
           </DrawerHeader>
           <div className="space-y-1 overflow-y-auto px-3 pb-6">
             {rows.map((row) => (
