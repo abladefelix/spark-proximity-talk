@@ -53,10 +53,12 @@ export function IncomingSignals() {
       if (error || !signals?.length) return [];
 
       const ids = signals.map((s) => s.from_user);
-      const [{ data: profiles }, { data: matches }] = await Promise.all([
+      const [{ data: profiles }, { data: matches }, { data: blocks }] = await Promise.all([
         supabase.from("profiles").select("id, username, display_name, avatar_url, gender").in("id", ids),
         supabase.from("matches").select("id, user_a, user_b").or(`user_a.eq.${me},user_b.eq.${me}`),
+        supabase.from("blocks").select("blocked").eq("blocker", me),
       ]);
+      const blockedIds = new Set((blocks ?? []).map((b) => b.blocked));
 
       return signals
         .map((s) => {
