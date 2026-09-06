@@ -97,6 +97,11 @@ export function ActiveChats() {
 
   const latest = rows[0];
 
+  // If removals leave the sheet empty, fold it back down automatically.
+  useEffect(() => {
+    if (rows.length === 0) setOpen(false);
+  }, [rows.length]);
+
   // Removals paint immediately and roll back only if the server refuses.
   async function removeChat(matchId: string) {
     const previous = queryClient.getQueryData<Row[]>(["active-chats"]);
