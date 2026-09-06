@@ -139,8 +139,8 @@ export function ActiveChats() {
   return (
     <div className="relative z-10 mt-4">
       {/* Stacked deck: peeking cards behind the top card */}
-      <div className={`relative isolate ${!expanded && behind === 2 ? "pb-4" : !expanded && behind === 1 ? "pb-2" : ""}`}>
-        {!expanded &&
+      <div className={`relative isolate ${behind === 2 ? "pb-4" : behind === 1 ? "pb-2" : ""}`}>
+        {
           Array.from({ length: behind }).map((_, i) => {
             const depth = i + 1; // 1 = closest behind
             return (
