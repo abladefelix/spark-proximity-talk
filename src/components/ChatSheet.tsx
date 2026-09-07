@@ -91,10 +91,10 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
           style={{ paddingBottom: keyboard }}
         >
-          <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
             <ChatPanel key={matchId} matchId={matchId} />
           </div>
+
         </div>
       )}
     </ChatSheetContext.Provider>
