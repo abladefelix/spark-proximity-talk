@@ -58,6 +58,7 @@ import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
 import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
 import { withTimeout } from "@/lib/net";
 import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
+import { runNativePermissionPrompt } from "@/lib/native-permission-queue";
 
 
 
@@ -443,7 +444,7 @@ function RadarPage() {
               permission.coarseLocation === "prompt-with-rationale")
           ) {
             nativeDebug("showing native location permission prompt");
-            permission = await Geolocation.requestPermissions();
+            permission = await runNativePermissionPrompt(() => Geolocation.requestPermissions());
             nativeDebug("native location permission prompt returned", {
               location: permission.location,
               coarseLocation: permission.coarseLocation,

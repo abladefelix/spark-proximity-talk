@@ -24,3 +24,4 @@
 - [x] Repair mutual phone discovery for coarse and identical location fixes
 - [x] Apply and verify the live radar discovery and layout repair
 - [x] Force the corrected nearby matching rules onto servers that recorded the earlier migration name
+- [x] Prevent Android notification and location permission prompts from colliding
