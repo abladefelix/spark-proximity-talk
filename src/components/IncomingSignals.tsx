@@ -174,7 +174,7 @@ export function IncomingSignals() {
       {incoming.map((person, index) => (
         <div
           key={person.id}
-          className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-3 py-2.5"
+          className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-2xl border border-border bg-card/70 px-3 py-2.5 max-[359px]:grid-cols-[auto_minmax(0,1fr)]"
         >
           <div className={hideIdentity ? "shrink-0 overflow-hidden rounded-full blur-[6px]" : "shrink-0"}>
             <PersonAvatar
@@ -207,7 +207,7 @@ export function IncomingSignals() {
           <Button
             size="sm"
             variant="ghost"
-            className="text-xs text-muted-foreground"
+            className="text-xs text-muted-foreground max-[359px]:col-start-1 max-[359px]:row-start-2"
             onClick={() => decline.mutate(person)}
             disabled={decline.isPending}
           >
@@ -216,7 +216,7 @@ export function IncomingSignals() {
           <Button
             size="sm"
             variant="heat"
-            className="gap-1 text-xs"
+            className="gap-1 text-xs max-[359px]:col-start-2 max-[359px]:row-start-2 max-[359px]:justify-self-end"
             onClick={() => accept.mutate(person)}
             disabled={accept.isPending}
           >
