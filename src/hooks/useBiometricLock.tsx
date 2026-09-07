@@ -90,12 +90,22 @@ export function describeBiometryError(err: unknown): string {
     case "noDeviceCredential":
     case "passcodeNotSet":
       return "Set a screen lock (PIN, pattern or password) on your phone first.";
-    default:
-      return (err as { message?: string } | null)?.message || "Verification failed. Try again.";
+    default: {
+      const message = (err as { message?: string } | null)?.message ?? "";
+      if (/not implemented|not available|no such plugin|unimplemented/i.test(message)) {
+        return "This version of the app doesn't include app lock. Update SKANAROUND from the store.";
+      }
+      return message || "Verification failed. Try again.";
+    }
   }
 }
 
 export async function runBiometricPrompt(reason: string) {
+  if (!isBiometricPluginAvailable()) {
+    throw Object.assign(new Error("App lock is not available in this app version."), {
+      code: "pluginMissing",
+    });
+  }
   await BiometricAuth.authenticate({
     reason,
     cancelTitle: "Cancel",
