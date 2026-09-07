@@ -597,6 +597,7 @@ function RadarPage() {
     return () => {
       cancelled = true;
       clearInterval(heartbeat);
+      clearTimeout(safetyTimeout);
       document.removeEventListener("visibilitychange", onWake);
       window.removeEventListener("focus", onWake);
       window.removeEventListener("pageshow", onWake);
