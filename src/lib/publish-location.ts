@@ -27,12 +27,10 @@ export async function publishMyLocation(): Promise<void> {
     lng = pos.coords.longitude;
     accuracy = pos.coords.accuracy ?? null;
   } catch {
-    // Fall back to the browser API (and, failing that, to whatever the radar
-    // last published).
-    // Android routes the WebView's own location request through the same
-    // native permission flow; firing it as a fallback can take the app down.
-    const webFallbackOk = !Capacitor.isNativePlatform() || Capacitor.getPlatform() === "ios";
-    if (webFallbackOk && typeof navigator !== "undefined" && navigator.geolocation) {
+    // Capacitor's Android WebView handles this permission prompt through its
+    // bridge, so it is a safe fallback when the native provider times out or
+    // has not produced its first fix yet.
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
