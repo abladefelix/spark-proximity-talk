@@ -485,6 +485,7 @@ function RadarPage() {
                 const denied = error.code === "OS-PLUG-GLOC-0003";
                 const unavailable = error.code === "OS-PLUG-GLOC-0007";
                 fail(denied, unavailable);
+                if (!denied && !unavailable) startBrowserWatch();
               }
             },
           );
