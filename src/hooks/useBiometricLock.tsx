@@ -145,7 +145,8 @@ export function BiometricLockProvider({ children }: { children: React.ReactNode 
   const prompting = useRef(false);
 
   const unlock = useCallback(async () => {
-    if (!isBiometricPlatform()) {
+    if (!isBiometricPlatform() || !isBiometricPluginAvailable()) {
+      // Never trap someone behind a lock screen the app cannot open.
       setLocked(false);
       return;
     }
