@@ -370,7 +370,7 @@ function RadarPage() {
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
-            if (webFallbackOk && "geolocation" in navigator) {
+            if (lateFallbackOk && "geolocation" in navigator) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
@@ -402,7 +402,7 @@ function RadarPage() {
         // Start the WKWebView provider in parallel. Capacitor's permission or
         // position promise can remain pending after an iOS resume; waiting for
         // it used to prevent both presence updates and nearby queries.
-        if (webFallbackOk && "geolocation" in navigator) {
+        if (lateFallbackOk && "geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(
             (position) => void push(position.coords),
             () => {},
@@ -464,7 +464,7 @@ function RadarPage() {
             nativeDebugError("initial native location fix failed", error);
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if (webFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
+            if (lateFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
