@@ -62,6 +62,10 @@ public class MainActivity extends BridgeActivity {
         installCrashLogger();
         Log.i(DEBUG_TAG, "MainActivity onCreate: starting Capacitor bridge");
         registerPlugin(FirebaseStatusPlugin.class);
+        // Register the biometric plugin explicitly. Auto-registration depends on
+        // a generated assets/capacitor.plugins.json; if that file is missing or
+        // stale the app lock silently has no native implementation.
+        registerPlugin(com.aparajita.capacitor.biometricauth.BiometricAuthNative.class);
         super.onCreate(savedInstanceState);
         // PluginManager registers Capacitor's stock push plugin during
         // super.onCreate(). Replace it only after the bridge exists; otherwise
