@@ -816,16 +816,16 @@ function RadarPage() {
   const { beacons, beaconSize, markerScale } = useMemo(() => {
     const scope = scopeSize || 320;
     const count = people.length;
-    const z = Math.max(1, zoom);
+    const z = zoom;
     // Markers shrink as the crowd grows so far more people fit before we have
     // to de-crowd, with a floor that keeps them tappable.
-    const size = Math.max(
+    const base = Math.max(
       14,
       Math.min(40, Math.round(scope / (4.6 + Math.sqrt(Math.max(count, 1)) * 2.1))),
     );
-    // Layer-space size: the whole layer is scaled by `zoom`, so divide to keep
-    // the rendered marker the same physical size at any zoom level.
-    const layerSize = size / z;
+    // Pinching resizes the beacons themselves — the radar disc never moves.
+    const size = base;
+    const layerSize = base * z;
     const maxDist = people.reduce((m, p) => Math.max(m, p.distance_m), 0);
     const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
     const limit = scope * 0.46 - layerSize / 2;
@@ -849,7 +849,7 @@ function RadarPage() {
 
     return {
       beaconSize: size,
-      markerScale: 1 / z,
+      markerScale: z,
       beacons: nodes
         // Pro beacons render last so they always sit on top of the stack.
         .slice()
@@ -869,8 +869,8 @@ function RadarPage() {
   const { data: helpBeacons = [] } = useHelpBeacons();
   const helpMarkers = useMemo(() => {
     const scope = scopeSize || 320;
-    const z = Math.max(1, zoom);
-    const size = Math.max(16, Math.min(34, Math.round(scope / 9))) / z;
+    const z = zoom;
+    const size = Math.max(16, Math.min(34, Math.round(scope / 9))) * z;
     const maxDist = Math.max(
       people.reduce((m, p) => Math.max(m, p.distance_m), 0),
       helpBeacons.reduce((m, b) => Math.max(m, b.distance_m), 0),
@@ -894,36 +894,19 @@ function RadarPage() {
 
 
 
-  // ---- Zoom & pan on the radar scope -------------------------------------
-  const MIN_ZOOM = 1;
-  const MAX_ZOOM = 6;
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
-  viewRef.current = { zoom, pan };
+  // ---- Pinch to resize the beacons ---------------------------------------
+  // The radar disc itself never scales or pans: pinching only grows or shrinks
+  // the people on it, so you can pack more beacons in or make them easier to
+  // read without losing the map.
+  const MIN_ZOOM = 0.55;
+  const MAX_ZOOM = 2.4;
+  const viewRef = useRef({ zoom: 1 });
+  viewRef.current = { zoom };
 
-
-  const clampPan = (z: number, p: { x: number; y: number }) => {
-    const scope = scopeSize || 320;
-    const slack = (scope * (z - 1)) / 2 + scope * 0.08 * (z - 1);
-    return {
-      x: Math.max(-slack, Math.min(slack, p.x)),
-      y: Math.max(-slack, Math.min(slack, p.y)),
-    };
-  };
-
-  const zoomAt = (nextZoomRaw: number, px: number, py: number) => {
-    const { zoom: z, pan: p } = viewRef.current;
+  const zoomAt = (nextZoomRaw: number) => {
     const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoomRaw));
-    if (next === z) return;
-    const k = next / z;
-    // Anchor the point under the cursor. Transform is translate(pan) scale(z)
-    // about the scope centre.
-    const c = (scopeSize || 320) / 2;
-    const ax = px - c;
-    const ay = py - c;
-    const nextPan = { x: ax - (ax - p.x) * k, y: ay - (ay - p.y) * k };
+    if (Math.abs(next - viewRef.current.zoom) < 0.001) return;
     setZoom(next);
-    setPan(next <= 1.001 ? { x: 0, y: 0 } : clampPan(next, nextPan));
   };
   const zoomAtRef = useRef(zoomAt);
   zoomAtRef.current = zoomAt;
@@ -932,19 +915,18 @@ function RadarPage() {
     const el = scopeRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      // Let the page scroll normally unless the user is deliberately zooming.
-      if (!e.ctrlKey && viewRef.current.zoom <= 1.001) return;
+      // Only a deliberate pinch/ctrl-scroll resizes beacons; plain scrolling
+      // stays a page scroll.
+      if (!e.ctrlKey) return;
       e.preventDefault();
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
-      const rect = el.getBoundingClientRect();
-      const { zoom: z } = viewRef.current;
-      zoomAtRef.current(z * Math.exp(-dy * 0.0018), e.clientX - rect.left, e.clientY - rect.top);
+      zoomAtRef.current(viewRef.current.zoom * Math.exp(-dy * 0.0018));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  // Pointer drag to pan, two-finger pinch to zoom.
+  // Two-finger pinch resizes the beacons.
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ dist: number; zoom: number } | null>(null);
   const dragged = useRef(false);
@@ -952,36 +934,21 @@ function RadarPage() {
   const onPointerDown = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     dragged.current = false;
-    // Only capture when a gesture is actually possible, so vertical page
-    // scrolling keeps working at the default zoom level.
-    if (viewRef.current.zoom > 1.001 || pointers.current.size > 1) {
+    if (pointers.current.size > 1) {
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    const prev = pointers.current.get(e.pointerId);
-    if (!prev) return;
+    if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = [...pointers.current.values()];
-    const el = scopeRef.current;
-    if (pts.length >= 2 && el) {
+    if (pts.length >= 2) {
       const [a, b] = pts as [{ x: number; y: number }, { x: number; y: number }];
       const dist = Math.hypot(b.x - a.x, b.y - a.y);
       if (!gesture.current) gesture.current = { dist, zoom: viewRef.current.zoom };
-      const rect = el.getBoundingClientRect();
-      zoomAtRef.current(
-        gesture.current.zoom * (dist / gesture.current.dist),
-        (a.x + b.x) / 2 - rect.left,
-        (a.y + b.y) / 2 - rect.top,
-      );
+      zoomAtRef.current(gesture.current.zoom * (dist / gesture.current.dist));
       dragged.current = true;
-      return;
     }
-    if (viewRef.current.zoom <= 1.001) return;
-    const dx = e.clientX - prev.x;
-    const dy = e.clientY - prev.y;
-    if (Math.abs(dx) + Math.abs(dy) > 1) dragged.current = true;
-    setPan((p) => clampPan(viewRef.current.zoom, { x: p.x + dx, y: p.y + dy }));
   };
   const endPointer = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId);
@@ -1076,16 +1043,13 @@ function RadarPage() {
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
-        style={{
-          touchAction: zoom > 1.001 ? "none" : "pan-y",
-          cursor: zoom > 1.001 ? "grab" : "default",
-        }}
+        style={{ touchAction: "pan-y" }}
         className="relative aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
           style={{
-            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotate(${rot}deg)`,
+            transform: `rotate(${rot}deg)`,
             // will-change only while pinching/panning: keeping it on during
             // compass rotation makes the browser reuse a cached bitmap, which
             // is what made the grid and labels look blurry while walking.

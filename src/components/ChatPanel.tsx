@@ -609,7 +609,11 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.75rem)] pt-3"
+        className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pt-3"
+        style={{
+          // Only this row reacts to the keyboard; the rest of the app stays put.
+          paddingBottom: "calc(0.75rem + max(var(--safe-bottom), var(--keyboard-inset)))",
+        }}
       >
         <input
           ref={fileRef}

@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useDeviceSessionGuard } from "@/hooks/useDeviceSessionGuard";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+import { useKeyboardInsetProvider } from "@/hooks/useKeyboardInset";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useBillingInfo } from "@/hooks/useBilling";
 import { BiometricGate } from "@/components/BiometricGate";
@@ -57,6 +58,7 @@ function AuthedLayout() {
   useNotifications(user?.id ?? null);
   useDeviceSessionGuard(user?.id ?? null);
   useInactivityTimeout(user?.id ?? null);
+  useKeyboardInsetProvider();
 
   return (
     <BiometricGate>

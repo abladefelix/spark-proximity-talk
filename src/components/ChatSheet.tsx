@@ -15,42 +15,9 @@ export function useChatSheet() {
   return ctx;
 }
 
-/**
- * Keyboard-aware height. iOS shrinks visualViewport when the keyboard opens;
- * we mirror that height so the composer sits right above the keyboard and the
- * header stays pinned instead of scrolling away.
- */
-function useKeyboardInset() {
-  const [inset, setInset] = useState(0);
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-        setInset(overlap > 80 ? overlap : 0);
-      });
-    };
-    update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    return () => {
-      cancelAnimationFrame(frame);
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-    };
-  }, []);
-
-  return inset;
-}
-
 export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
   const [matchId, setMatchId] = useState<string | null>(null);
   const pushedRef = useRef(false);
-  const keyboard = useKeyboardInset();
 
   const openChat = useCallback((id: string) => {
     setMatchId(id);
@@ -90,7 +57,8 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           aria-label="Chat"
           className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
           style={{
-            paddingBottom: keyboard,
+            // The composer handles the keyboard itself via --keyboard-inset,
+            // so the overlay keeps its full height and nothing shifts.
             ["--chat-safe-top" as string]: "var(--safe-top)",
             // Same background as the app body so the chat top bar blends with
             // the phone's status-bar strip exactly like the home page.
