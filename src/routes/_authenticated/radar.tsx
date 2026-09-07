@@ -187,6 +187,11 @@ function RadarPage() {
     // fallback is kept for iPhone only (where it rescues lost plugin
     // callbacks after the app resumes).
     const webFallbackOk = !isNative || Capacitor.getPlatform() === "ios";
+    // After the native plugin has already failed there is no permission dialog
+    // left to race with, so the WebView provider is a safe last resort on
+    // Android too — otherwise a missing native plugin means no position at all.
+    const lateFallbackOk = true;
+
     if (!isNative && !("geolocation" in navigator)) {
       setGeoError("This device can't share location.");
       return;
@@ -365,7 +370,7 @@ function RadarPage() {
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
-            if (webFallbackOk && "geolocation" in navigator) {
+            if (lateFallbackOk && "geolocation" in navigator) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
@@ -459,7 +464,7 @@ function RadarPage() {
             nativeDebugError("initial native location fix failed", error);
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if (webFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
+            if (lateFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
               navigator.geolocation.getCurrentPosition(
                 (position) => void push(position.coords),
                 () => {},
