@@ -588,16 +588,18 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[24px] bg-card px-2 py-[7px] ring-1 ring-border/50 transition focus-within:ring-primary/40">
-          <button
-            type="button"
-            aria-label="Upload a picture"
-            disabled={uploading}
-            onClick={() => fileRef.current?.click()}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition active:scale-90 disabled:opacity-40"
-          >
-            {uploading ? <LoaderCircle className="size-[18px] animate-spin" /> : <ImagePlus className="size-[19px]" />}
-          </button>
+
+        <button
+          type="button"
+          aria-label="Upload a picture"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+          className="mb-[1px] flex size-11 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border/50 transition active:scale-90 disabled:opacity-40"
+        >
+          {uploading ? <LoaderCircle className="size-[18px] animate-spin" /> : <ImagePlus className="size-[19px]" />}
+        </button>
+
+        <div className="mb-[1px] flex min-w-0 flex-1 items-end rounded-[24px] bg-card px-3 py-[7px] ring-1 ring-border/50 transition focus-within:ring-primary/40">
           <textarea
             ref={inputRef}
             value={text}
