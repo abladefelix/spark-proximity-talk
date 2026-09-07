@@ -5,6 +5,7 @@ import { GoProButton } from "@/components/GoProButton";
 import { useChatNotificationsCount } from "@/hooks/useChatNotificationsCount";
 import { useLocalNotificationsCount } from "@/hooks/useLocalNotifications";
 import { useRadarNotificationsCount } from "@/hooks/useRadarNotificationsCount";
+import { useKeyboardOpen } from "@/hooks/useKeyboardInset";
 
 const items = [
   { to: "/radar", label: "Radar", icon: Radar },
@@ -17,6 +18,11 @@ export function BottomNav() {
   const { count: localCount } = useLocalNotificationsCount();
   const { count: chatCount } = useChatNotificationsCount();
   const { count: radarCount } = useRadarNotificationsCount();
+  const keyboardOpen = useKeyboardOpen();
+
+  // The keyboard covers this strip anyway; removing it keeps the composer
+  // sitting exactly on top of the keyboard instead of floating above a gap.
+  if (keyboardOpen) return null;
 
   return (
     <nav
