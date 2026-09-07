@@ -632,8 +632,16 @@ function RadarPage() {
     placeholderData: (prev) => prev,
 
     queryFn: async () => {
+      nativeDebug("nearby lookup started", { radius });
       const { data, error } = await supabase.rpc("nearby_people", { radius_m: radius });
-      if (error) throw error;
+      if (error) {
+        nativeDebugError(
+          "nearby lookup failed",
+          new Error(`${error.code ?? "unknown"}: ${error.message}`),
+        );
+        throw error;
+      }
+      nativeDebug("nearby lookup succeeded", { count: data?.length ?? 0 });
       return (data ?? []) as NearbyPerson[];
     },
   });

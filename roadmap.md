@@ -25,3 +25,4 @@
 - [x] Apply and verify the live radar discovery and layout repair
 - [x] Force the corrected nearby matching rules onto servers that recorded the earlier migration name
 - [x] Prevent Android notification and location permission prompts from colliding
+- [x] Add privacy-safe Android diagnostics for the live nearby lookup
