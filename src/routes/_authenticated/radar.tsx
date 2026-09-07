@@ -574,7 +574,12 @@ function RadarPage() {
     const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords, true, true);
-      else refreshFix();
+      else {
+        refreshFix();
+        // If neither provider has ever produced a fix, make sure the WebView
+        // watcher is actually running (it may have been stopped by an error).
+        if (!lastPublished) startBrowserWatch();
+      }
       void touchPresence();
     }, 10000);
 
