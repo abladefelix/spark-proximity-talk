@@ -67,6 +67,8 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-gutter: clamp(0.875rem, 4vw, 1.25rem);
+  --chat-safe-top: var(--safe-top);
+
   --nav-height: 4.25rem;
   color-scheme: light;
   --background: oklch(0.985 0.004 80);
