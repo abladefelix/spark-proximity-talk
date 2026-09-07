@@ -516,18 +516,7 @@ function RadarPage() {
             nativeDebugError("initial native location fix failed", error);
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if (lateFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-              browserWatch = navigator.geolocation.watchPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-            }
+            if (lateFallbackOk) startBrowserWatch();
           }
         } catch (error) {
           nativeDebugError("native location startup failed", error);
