@@ -1043,16 +1043,13 @@ function RadarPage() {
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
-        style={{
-          touchAction: zoom > 1.001 ? "none" : "pan-y",
-          cursor: zoom > 1.001 ? "grab" : "default",
-        }}
+        style={{ touchAction: "pan-y" }}
         className="relative aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
           style={{
-            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotate(${rot}deg)`,
+            transform: `rotate(${rot}deg)`,
             // will-change only while pinching/panning: keeping it on during
             // compass rotation makes the browser reuse a cached bitmap, which
             // is what made the grid and labels look blurry while walking.
