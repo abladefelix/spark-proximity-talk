@@ -89,7 +89,14 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="Chat"
           className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
-          style={{ paddingBottom: keyboard, ["--chat-safe-top" as string]: "var(--safe-top)" } as React.CSSProperties}
+          style={{
+            paddingBottom: keyboard,
+            ["--chat-safe-top" as string]: "var(--safe-top)",
+            // Same background as the app body so the chat top bar blends with
+            // the phone's status-bar strip exactly like the home page.
+            backgroundImage: "var(--gradient-night)",
+            backgroundAttachment: "fixed",
+          } as React.CSSProperties}
 
         >
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">

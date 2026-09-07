@@ -469,7 +469,13 @@ export function ChatPanel({
       {/* Header pinned above the transcript so it never repaints while scrolling. */}
       <header
         className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2"
-        style={{ paddingTop: "calc(var(--chat-safe-top) + 0.25rem)" }}
+        style={{
+          paddingTop: "calc(var(--chat-safe-top) + 0.25rem)",
+          // Match the app shell's body background so the header and the phone's
+          // status-bar strip read as one continuous surface, like the home page.
+          backgroundImage: "var(--gradient-night)",
+          backgroundAttachment: "fixed",
+        }}
       >
 
 
