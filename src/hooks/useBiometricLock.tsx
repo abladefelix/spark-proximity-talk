@@ -26,6 +26,16 @@ export function isBiometricPlatform() {
   return Capacitor.isNativePlatform();
 }
 
+/**
+ * True only when the native side of the app lock is actually present. A build
+ * that missed the plugin registration answers false, and every call below
+ * would otherwise fail with an unhelpful "not implemented" error.
+ */
+export function isBiometricPluginAvailable() {
+  if (!isBiometricPlatform()) return false;
+  return Capacitor.isPluginAvailable("BiometricAuthNative");
+}
+
 export async function checkBiometry(): Promise<CheckBiometryResult | null> {
   if (!isBiometricPlatform()) return null;
   try {
@@ -80,12 +90,24 @@ export function describeBiometryError(err: unknown): string {
     case "noDeviceCredential":
     case "passcodeNotSet":
       return "Set a screen lock (PIN, pattern or password) on your phone first.";
-    default:
-      return (err as { message?: string } | null)?.message || "Verification failed. Try again.";
+    case "pluginMissing":
+      return "This version of the app doesn't include app lock. Update SKANAROUND from the store.";
+    default: {
+      const message = (err as { message?: string } | null)?.message ?? "";
+      if (/not implemented|not available|no such plugin|unimplemented/i.test(message)) {
+        return "This version of the app doesn't include app lock. Update SKANAROUND from the store.";
+      }
+      return message || "Verification failed. Try again.";
+    }
   }
 }
 
 export async function runBiometricPrompt(reason: string) {
+  if (!isBiometricPluginAvailable()) {
+    throw Object.assign(new Error("App lock is not available in this app version."), {
+      code: "pluginMissing",
+    });
+  }
   await BiometricAuth.authenticate({
     reason,
     cancelTitle: "Cancel",
@@ -123,7 +145,8 @@ export function BiometricLockProvider({ children }: { children: React.ReactNode 
   const prompting = useRef(false);
 
   const unlock = useCallback(async () => {
-    if (!isBiometricPlatform()) {
+    if (!isBiometricPlatform() || !isBiometricPluginAvailable()) {
+      // Never trap someone behind a lock screen the app cannot open.
       setLocked(false);
       return;
     }
