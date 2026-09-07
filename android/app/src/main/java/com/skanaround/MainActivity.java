@@ -70,6 +70,8 @@ public class MainActivity extends BridgeActivity {
         // plugin has no native implementation, so the phone never publishes a
         // position and nobody can discover it.
         registerPlugin(com.capacitorjs.plugins.geolocation.GeolocationPlugin.class);
+        super.onCreate(savedInstanceState);
+
 
         // PluginManager registers Capacitor's stock push plugin during
         // super.onCreate(). Replace it only after the bridge exists; otherwise
