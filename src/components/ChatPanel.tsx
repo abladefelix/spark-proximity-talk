@@ -287,6 +287,14 @@ export function ChatPanel({
   // Keep the newest message in view, but don't yank the view when older
   // history is prepended.
   const newestId = messages[messages.length - 1]?.id;
+  const prevNewestIdRef = useRef<string | undefined>(undefined);
+  const openedRef = useRef(false);
+
+  // Reset the open-scroll flag whenever this conversation changes.
+  useEffect(() => {
+    openedRef.current = false;
+    prevNewestIdRef.current = undefined;
+  }, [matchId]);
 
   // Opening (or staying in) the thread clears its unread badge.
   const newestAt = messages[messages.length - 1]?.created_at;
@@ -294,11 +302,36 @@ export function ChatPanel({
     if (newestAt) markChatRead(matchId, newestAt);
   }, [matchId, newestAt]);
 
+  // Scroll to the bottom on open, then only follow genuinely new messages.
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [newestId]);
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+
+    if (!openedRef.current && messages.length > 0) {
+      openedRef.current = true;
+      prevNewestIdRef.current = newestId;
+      // Multiple frames catch sheet animations, image loads and keyboard settle.
+      scrollToBottom();
+      requestAnimationFrame(() => {
+        scrollToBottom();
+        requestAnimationFrame(scrollToBottom);
+      });
+      const t1 = setTimeout(scrollToBottom, 60);
+      const t2 = setTimeout(scrollToBottom, 250);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+
+    if (newestId && prevNewestIdRef.current !== newestId) {
+      prevNewestIdRef.current = newestId;
+      scrollToBottom();
+    }
+  }, [messages.length, newestId]);
 
   // Grouping/day-separator maths run once per transcript change, not per render.
   const rows = useMemo<BubbleProps[]>(
