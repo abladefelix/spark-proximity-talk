@@ -373,13 +373,7 @@ function RadarPage() {
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
-            if (lateFallbackOk && "geolocation" in navigator) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-            }
+            if (lateFallbackOk) startBrowserWatch();
           });
       } else if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
