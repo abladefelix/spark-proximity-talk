@@ -274,7 +274,6 @@
     overscroll-behavior: none;
     touch-action: none;
     padding-top: var(--safe-top);
-    padding-bottom: var(--safe-bottom);
   }
 
   [data-app-shell] > [data-scrollable] {

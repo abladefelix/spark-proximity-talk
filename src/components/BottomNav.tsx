@@ -19,7 +19,10 @@ export function BottomNav() {
   const { count: radarCount } = useRadarNotificationsCount();
 
   return (
-    <nav className="relative z-40 h-[var(--nav-height)] shrink-0 border-t border-border bg-card/95 backdrop-blur">
+    <nav
+      className="relative z-40 shrink-0 border-t border-border bg-card"
+      style={{ height: "calc(var(--nav-height) + var(--safe-bottom))", paddingBottom: "var(--safe-bottom)" }}
+    >
       <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">
         {items.map(({ to, label, icon: Icon }) => {
           const badgeCount =
