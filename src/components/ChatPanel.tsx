@@ -505,11 +505,18 @@ export function ChatPanel({
             </div>
           </div>
 
-          <ChatSafetyMenu matchId={matchId} otherId={other?.id} otherName={name} onBlocked={closeChat} />
-        </header>
+        <ChatSafetyMenu matchId={matchId} otherId={other?.id} otherName={name} onBlocked={closeChat} />
+      </header>
 
-
+      <div
+        ref={scrollRef}
+        data-scrollable
+        data-selectable
+        className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain [transform:translateZ(0)]"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         <div className="px-3.5 pb-3 pt-4">
+
           <div className="mb-5 flex flex-col items-center rounded-[26px] bg-card px-6 py-6 text-center ring-1 ring-border/50">
             <PersonAvatar
               path={other?.avatar_url}
