@@ -331,6 +331,7 @@ export function ChatPanel({
       prevNewestIdRef.current = newestId;
       scrollToBottom();
     }
+    return;
   }, [messages.length, newestId]);
 
   // Grouping/day-separator maths run once per transcript change, not per render.
