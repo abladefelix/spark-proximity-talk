@@ -1,6 +1,7 @@
 # Production fixes
 
 - [x] Accept Android approximate-location permission and publish phone presence reliably
+- [x] Allow Android WebView location fallback when the native provider times out
 
 - [x] Make subscription checkout bounded, actionable, and free of stale store errors
 - [x] Make Pro dialogs responsive to safe areas, keyboard, and small screens
