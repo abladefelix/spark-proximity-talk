@@ -22,4 +22,5 @@
 - [x] Wire RevenueCat directly into native app startup and remove on-demand billing module loading
 - [x] Verify subscription connection build and mobile flow
 - [x] Repair mutual phone discovery for coarse and identical location fixes
-- [x] Apply and verify the live radar discovery and layout repair (deployed and verified live)
+- [x] Apply and verify the live radar discovery and layout repair
+- [x] Force the corrected nearby matching rules onto servers that recorded the earlier migration name
