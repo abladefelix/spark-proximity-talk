@@ -204,6 +204,20 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Keep user-facing copy inside its container on narrow phones and with
+     longer localized or admin-provided wording. Single-line previews can
+     still opt into `truncate` where losing overflow is intentional. */
+  :where(p, label, h1, h2, h3, h4, li, dd, dt, figcaption) {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  button,
+  [role="button"],
+  [role="tab"] {
+    max-width: 100%;
+  }
+
   #app-scroll {
     position: fixed;
     inset: 0;

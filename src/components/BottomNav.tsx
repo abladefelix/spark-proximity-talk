@@ -35,7 +35,7 @@ export function BottomNav() {
             <Link
               key={to}
               to={to}
-              className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none text-muted-foreground transition-colors"
+              className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none text-muted-foreground transition-colors max-[359px]:text-[10px]"
               activeProps={{ className: "text-primary" }}
             >
               <span className="relative">

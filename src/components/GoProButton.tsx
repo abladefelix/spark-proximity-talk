@@ -42,7 +42,7 @@ export function GoProButton({ variant = "icon", className }: Props) {
         aria-label="Reload Pro membership"
         className={cn(
           variant === "nav"
-            ? "flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[11px] leading-none text-muted-foreground"
+            ? "flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[11px] leading-none text-muted-foreground max-[359px]:text-[10px]"
             : "size-9 rounded-full",
           className,
         )}
@@ -66,7 +66,7 @@ export function GoProButton({ variant = "icon", className }: Props) {
             type="button"
             aria-label={isPro ? billing.pro_label : "Go Pro"}
             className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none transition-colors",
+              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none transition-colors max-[359px]:text-[10px]",
               isPro ? "text-primary" : "text-muted-foreground",
               className,
             )}
