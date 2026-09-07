@@ -66,7 +66,11 @@ public class MainActivity extends BridgeActivity {
         // a generated assets/capacitor.plugins.json; if that file is missing or
         // stale the app lock silently has no native implementation.
         registerPlugin(com.aparajita.capacitor.biometricauth.BiometricAuthNative.class);
-        super.onCreate(savedInstanceState);
+        // Same reason: without an explicit registration the radar's location
+        // plugin has no native implementation, so the phone never publishes a
+        // position and nobody can discover it.
+        registerPlugin(com.capacitorjs.plugins.geolocation.GeolocationPlugin.class);
+
         // PluginManager registers Capacitor's stock push plugin during
         // super.onCreate(). Replace it only after the bridge exists; otherwise
         // the stock implementation wins and can still throw when FCM is absent.
