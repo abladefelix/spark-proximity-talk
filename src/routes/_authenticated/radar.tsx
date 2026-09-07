@@ -490,6 +490,14 @@ function RadarPage() {
             },
           );
           nativeDebug("native location watcher started", { hasWatchId: Boolean(nativeWatch) });
+          // If the native plugin never delivers a fix, the WebView provider
+          // rescues presence after a short grace period.
+          safetyTimeout = setTimeout(() => {
+            if (!lastPublished) {
+              nativeDebug("native location safety timeout, starting WebView backup");
+              startBrowserWatch();
+            }
+          }, 20000);
           if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
 
           // A cached fix makes startup instant when available. A timeout here is
