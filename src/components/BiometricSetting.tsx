@@ -7,6 +7,7 @@ import {
   checkBiometry,
   describeBiometryError,
   isBiometricPlatform,
+  isBiometricPluginAvailable,
   isBiometricPrefEnabled,
   runBiometricPrompt,
   setBiometricPref,
@@ -22,6 +23,11 @@ export function BiometricSetting() {
 
   useEffect(() => {
     setEnabled(isBiometricPrefEnabled());
+    if (!isBiometricPluginAvailable()) {
+      setAvailable(false);
+      setReason("This version of the app doesn't include app lock. Update SKANAROUND from the store.");
+      return;
+    }
     void checkBiometry().then((res) => {
       if (!res) {
         // The availability check itself failed (e.g. plugin not ready). Keep
@@ -38,6 +44,7 @@ export function BiometricSetting() {
   }, []);
 
   if (!isBiometricPlatform()) return null;
+
 
   async function toggle(next: boolean) {
     if (busy) return;
