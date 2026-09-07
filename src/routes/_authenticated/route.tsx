@@ -57,6 +57,7 @@ function AuthedLayout() {
   useNotifications(user?.id ?? null);
   useDeviceSessionGuard(user?.id ?? null);
   useInactivityTimeout(user?.id ?? null);
+  useKeyboardInsetProvider();
 
   return (
     <BiometricGate>
