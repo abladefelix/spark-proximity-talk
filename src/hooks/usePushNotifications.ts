@@ -6,6 +6,7 @@ import { useChatSheet } from "@/components/ChatSheet";
 import { registerPushToken } from "@/lib/push-notifications.functions";
 import { useSettings } from "@/hooks/useAppSettings";
 import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
+import { runNativePermissionPrompt } from "@/lib/native-permission-queue";
 
 type FirebaseStatusPlugin = {
   getStatus: () => Promise<{ configured: boolean }>;
@@ -96,10 +97,14 @@ export function usePushNotifications(userId: string | null) {
     let unmounted = false;
     const listeners: Promise<{ remove: () => void }>[] = [];
 
-    canRegisterForPush()
+    // Let the radar claim Android's first permission sheet. Android rejects a
+    // second request while one is open, which previously left location stuck
+    // at "prompt" and prevented the phone from ever appearing nearby.
+    const registrationDelay = window.setTimeout(() => {
+      canRegisterForPush()
       .then((configured) => {
         if (!configured || unmounted) return undefined;
-        return PushNotifications.requestPermissions();
+        return runNativePermissionPrompt(() => PushNotifications.requestPermissions());
       })
       .then((res) => {
         if (res?.receive === "granted" && !unmounted) {
@@ -109,6 +114,7 @@ export function usePushNotifications(userId: string | null) {
         return undefined;
       })
       .catch((error) => nativeDebugError("push registration failed", error));
+    }, 1500);
 
     listeners.push(
       PushNotifications.addListener("registration", async ({ value }) => {
@@ -129,6 +135,7 @@ export function usePushNotifications(userId: string | null) {
 
     return () => {
       unmounted = true;
+      window.clearTimeout(registrationDelay);
       listeners.forEach((l) => void l.then((h) => h.remove()).catch(() => {}));
     };
   }, [userId, settings.push_enabled, register]);
