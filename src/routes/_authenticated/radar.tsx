@@ -400,6 +400,21 @@ function RadarPage() {
       if (unavailable) setGeoError("Turn on Location Services to use the radar.");
     };
 
+    const startBrowserWatch = () => {
+      if (!("geolocation" in navigator) || browserWatch !== undefined) return;
+      nativeDebug("starting WebView location backup");
+      navigator.geolocation.getCurrentPosition(
+        (position) => void push(position.coords),
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+      );
+      browserWatch = navigator.geolocation.watchPosition(
+        (position) => void push(position.coords),
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+      );
+    };
+
     void (async () => {
       if (isNative) {
         // Start the WKWebView provider in parallel. Capacitor's permission or
