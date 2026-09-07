@@ -894,36 +894,19 @@ function RadarPage() {
 
 
 
-  // ---- Zoom & pan on the radar scope -------------------------------------
-  const MIN_ZOOM = 1;
-  const MAX_ZOOM = 6;
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const viewRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
-  viewRef.current = { zoom, pan };
+  // ---- Pinch to resize the beacons ---------------------------------------
+  // The radar disc itself never scales or pans: pinching only grows or shrinks
+  // the people on it, so you can pack more beacons in or make them easier to
+  // read without losing the map.
+  const MIN_ZOOM = 0.55;
+  const MAX_ZOOM = 2.4;
+  const viewRef = useRef({ zoom: 1 });
+  viewRef.current = { zoom };
 
-
-  const clampPan = (z: number, p: { x: number; y: number }) => {
-    const scope = scopeSize || 320;
-    const slack = (scope * (z - 1)) / 2 + scope * 0.08 * (z - 1);
-    return {
-      x: Math.max(-slack, Math.min(slack, p.x)),
-      y: Math.max(-slack, Math.min(slack, p.y)),
-    };
-  };
-
-  const zoomAt = (nextZoomRaw: number, px: number, py: number) => {
-    const { zoom: z, pan: p } = viewRef.current;
+  const zoomAt = (nextZoomRaw: number) => {
     const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoomRaw));
-    if (next === z) return;
-    const k = next / z;
-    // Anchor the point under the cursor. Transform is translate(pan) scale(z)
-    // about the scope centre.
-    const c = (scopeSize || 320) / 2;
-    const ax = px - c;
-    const ay = py - c;
-    const nextPan = { x: ax - (ax - p.x) * k, y: ay - (ay - p.y) * k };
+    if (Math.abs(next - viewRef.current.zoom) < 0.001) return;
     setZoom(next);
-    setPan(next <= 1.001 ? { x: 0, y: 0 } : clampPan(next, nextPan));
   };
   const zoomAtRef = useRef(zoomAt);
   zoomAtRef.current = zoomAt;
