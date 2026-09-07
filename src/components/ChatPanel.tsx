@@ -16,6 +16,7 @@ import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 import { TranscriptSkeleton } from "@/components/Skeletons";
 import { markChatRead } from "@/lib/chat-reads";
+import { ChatBackdrop } from "@/components/ChatBackdrop";
 
 
 type Message = {
@@ -458,6 +459,9 @@ export function ChatPanel({
   }
 
   const name = other?.display_name ?? other?.username ?? "Chat";
+  const online = other?.last_seen
+    ? Date.now() - new Date(other.last_seen).getTime() < 5 * 60000
+    : false;
 
   return (
     <div className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
@@ -615,7 +619,7 @@ export function ChatPanel({
             e.preventDefault();
             void send();
           }}
-          className="mb-[1px] flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition active:scale-90 disabled:opacity-40"
+          className="mb-[1px] flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_var(--primary)] transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
         >
           <ArrowUp className="size-[18px]" strokeWidth={2.5} />
         </button>
