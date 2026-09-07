@@ -204,6 +204,7 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
+    let safetyTimeout: ReturnType<typeof setTimeout> | undefined;
     const filter = new GeoKalman();
     const push = async (
       raw: {
@@ -372,13 +373,7 @@ function RadarPage() {
             // A remotely hosted Capacitor app can occasionally lose the native
             // plugin callback after resume. WKWebView location remains usable,
             // so fall back instead of silently letting presence expire.
-            if (lateFallbackOk && "geolocation" in navigator) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-            }
+            if (lateFallbackOk) startBrowserWatch();
           });
       } else if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -397,6 +392,21 @@ function RadarPage() {
         return;
       }
       if (unavailable) setGeoError("Turn on Location Services to use the radar.");
+    };
+
+    const startBrowserWatch = () => {
+      if (!("geolocation" in navigator) || browserWatch !== undefined) return;
+      nativeDebug("starting WebView location backup");
+      navigator.geolocation.getCurrentPosition(
+        (position) => void push(position.coords),
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+      );
+      browserWatch = navigator.geolocation.watchPosition(
+        (position) => void push(position.coords),
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+      );
     };
 
     void (async () => {
@@ -451,6 +461,10 @@ function RadarPage() {
 
           setAskLocation(false);
           setPermDenied(false);
+          // The system permission dialog is closed by now, so starting the
+          // WebView provider on Android no longer risks the process-killing
+          // race. It acts as a backup if the native plugin stalls.
+          startBrowserWatch();
           nativeDebug("starting native location watcher");
           nativeWatch = await Geolocation.watchPosition(
              {
@@ -471,10 +485,19 @@ function RadarPage() {
                 const denied = error.code === "OS-PLUG-GLOC-0003";
                 const unavailable = error.code === "OS-PLUG-GLOC-0007";
                 fail(denied, unavailable);
+                if (!denied && !unavailable) startBrowserWatch();
               }
             },
           );
           nativeDebug("native location watcher started", { hasWatchId: Boolean(nativeWatch) });
+          // If the native plugin never delivers a fix, the WebView provider
+          // rescues presence after a short grace period.
+          safetyTimeout = setTimeout(() => {
+            if (!lastPublished) {
+              nativeDebug("native location safety timeout, starting WebView backup");
+              startBrowserWatch();
+            }
+          }, 20000);
           if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
 
           // A cached fix makes startup instant when available. A timeout here is
@@ -493,26 +516,15 @@ function RadarPage() {
             nativeDebugError("initial native location fix failed", error);
             // Keep the native watcher, but also start the WebView provider. On
             // iOS it can recover when a plugin callback is lost after resume.
-            if (lateFallbackOk && "geolocation" in navigator && browserWatch === undefined) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-              browserWatch = navigator.geolocation.watchPosition(
-                (position) => void push(position.coords),
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-              );
-            }
+            if (lateFallbackOk) startBrowserWatch();
           }
         } catch (error) {
           nativeDebugError("native location startup failed", error);
           const message = error instanceof Error ? error.message.toLowerCase() : "";
-          fail(
-            message.includes("permission") || message.includes("denied"),
-            message.includes("location services") || message.includes("disabled"),
-          );
+          const denied = message.includes("permission") || message.includes("denied");
+          const unavailable = message.includes("location services") || message.includes("disabled");
+          fail(denied, unavailable);
+          if (!denied && !unavailable) startBrowserWatch();
         }
         return;
       }
@@ -562,7 +574,12 @@ function RadarPage() {
     const heartbeat = setInterval(() => {
       const coords = lastCoords.current;
       if (coords) void push(coords, true, true);
-      else refreshFix();
+      else {
+        refreshFix();
+        // If neither provider has ever produced a fix, make sure the WebView
+        // watcher is actually running (it may have been stopped by an error).
+        if (!lastPublished) startBrowserWatch();
+      }
       void touchPresence();
     }, 10000);
 
@@ -585,6 +602,7 @@ function RadarPage() {
     return () => {
       cancelled = true;
       clearInterval(heartbeat);
+      clearTimeout(safetyTimeout);
       document.removeEventListener("visibilitychange", onWake);
       window.removeEventListener("focus", onWake);
       window.removeEventListener("pageshow", onWake);
