@@ -200,6 +200,7 @@ function RadarPage() {
     let cancelled = false;
     let browserWatch: number | undefined;
     let nativeWatch: string | undefined;
+    let nativeHighAccuracy = true;
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
@@ -357,9 +358,10 @@ function RadarPage() {
       if (isNative) {
         nativeDebug("requesting one-off native location refresh");
         void Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
+          enableHighAccuracy: nativeHighAccuracy,
           maximumAge: 0,
           timeout: 15000,
+          enableLocationFallback: true,
         })
           .then((position) => {
             nativeDebug("one-off native location received", { accuracy: position.coords.accuracy });
@@ -417,22 +419,48 @@ function RadarPage() {
         try {
           nativeDebug("checking native location permission");
           let permission = await Geolocation.checkPermissions();
-          nativeDebug("native location permission checked", { location: permission.location });
-          if (permission.location === "prompt" || permission.location === "prompt-with-rationale") {
+          nativeDebug("native location permission checked", {
+            location: permission.location,
+            coarseLocation: permission.coarseLocation,
+          });
+          const canLocate = () =>
+            permission.location === "granted" || permission.coarseLocation === "granted";
+          if (
+            !canLocate() &&
+            (permission.location === "prompt" ||
+              permission.location === "prompt-with-rationale" ||
+              permission.coarseLocation === "prompt" ||
+              permission.coarseLocation === "prompt-with-rationale")
+          ) {
             nativeDebug("showing native location permission prompt");
             permission = await Geolocation.requestPermissions();
-            nativeDebug("native location permission prompt returned", { location: permission.location });
+            nativeDebug("native location permission prompt returned", {
+              location: permission.location,
+              coarseLocation: permission.coarseLocation,
+            });
           }
-          if (permission.location !== "granted") {
+          if (!canLocate()) {
             fail(true);
             return;
           }
+
+          // Android 12+ lets people grant approximate location while declining
+          // precise location. That is still fully usable for proximity discovery,
+          // but requesting a fine-only fix can stall or repeatedly re-prompt.
+          nativeHighAccuracy = permission.location === "granted";
 
           setAskLocation(false);
           setPermDenied(false);
           nativeDebug("starting native location watcher");
           nativeWatch = await Geolocation.watchPosition(
-             { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+             {
+               enableHighAccuracy: nativeHighAccuracy,
+               maximumAge: 0,
+               timeout: 15000,
+               minimumUpdateInterval: 5000,
+               interval: 10000,
+               enableLocationFallback: true,
+             },
             (position, error) => {
               if (position) {
                 nativeDebug("native location watcher update", { accuracy: position.coords.accuracy });
@@ -454,9 +482,10 @@ function RadarPage() {
           try {
             nativeDebug("requesting initial native location fix");
             const position = await Geolocation.getCurrentPosition({
-              enableHighAccuracy: true,
+              enableHighAccuracy: nativeHighAccuracy,
               maximumAge: 0,
               timeout: 15000,
+              enableLocationFallback: true,
             });
             nativeDebug("initial native location fix received", { accuracy: position.coords.accuracy });
             await push(position.coords);
