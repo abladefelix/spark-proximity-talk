@@ -67,7 +67,7 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return await normalizeCatastrophicSsrResponse(response, request);
     } catch (error) {
       if (isClientDisconnect(error) || request.signal.aborted) {
         return new Response(null, { status: 499, statusText: "Client Closed Request" });
