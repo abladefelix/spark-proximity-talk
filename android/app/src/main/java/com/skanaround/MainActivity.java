@@ -31,7 +31,7 @@ public class MainActivity extends BridgeActivity {
 
     private static final String DEBUG_TAG = "SKAN_DEBUG";
     private static final String CRASH_TAG = "SKAN_CRASH";
-    private static final int ACCENT = Color.parseColor("#FAC259");
+    private static final int ACCENT = Color.parseColor("#0099E6");
     private static final int BACKDROP = Color.parseColor("#0E0C0B");
 
     /** Must match `server.url` in capacitor.config.ts. */
@@ -325,7 +325,7 @@ public class MainActivity extends BridgeActivity {
         View ring = new View(this);
         GradientDrawable shape = new GradientDrawable();
         shape.setShape(GradientDrawable.OVAL);
-        shape.setStroke(dp(1), Color.argb(alpha, 250, 194, 89));
+        shape.setStroke(dp(1), Color.argb(alpha, 0, 153, 230));
         ring.setBackground(shape);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dp(sizeDp), dp(sizeDp));
         lp.gravity = Gravity.CENTER;

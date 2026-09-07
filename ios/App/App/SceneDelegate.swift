@@ -140,7 +140,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             ring.translatesAutoresizingMaskIntoConstraints = false
             ring.layer.cornerRadius = size / 2
             ring.layer.borderWidth = 1
-            ring.layer.borderColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 0.12 + 0.09 * Double(index)).cgColor
+            ring.layer.borderColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 0.12 + 0.09 * Double(index)).cgColor
             rings.addSubview(ring)
             NSLayoutConstraint.activate([
                 ring.centerXAnchor.constraint(equalTo: rings.centerXAnchor),
@@ -152,9 +152,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let dot = UIView()
         dot.translatesAutoresizingMaskIntoConstraints = false
-        dot.backgroundColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1)
+        dot.backgroundColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 1)
         dot.layer.cornerRadius = 8
-        dot.layer.shadowColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1).cgColor
+        dot.layer.shadowColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 1).cgColor
         dot.layer.shadowOpacity = 0.8
         dot.layer.shadowRadius = 18
         dot.layer.shadowOffset = .zero
@@ -250,7 +250,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let mark = UIView()
         mark.translatesAutoresizingMaskIntoConstraints = false
-        mark.backgroundColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1)
+        mark.backgroundColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 1)
         mark.layer.cornerRadius = 8
         mark.widthAnchor.constraint(equalToConstant: 16).isActive = true
         mark.heightAnchor.constraint(equalToConstant: 16).isActive = true
@@ -259,7 +259,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         ring.translatesAutoresizingMaskIntoConstraints = false
         ring.layer.cornerRadius = 42
         ring.layer.borderWidth = 1
-        ring.layer.borderColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 0.25).cgColor
+        ring.layer.borderColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 0.25).cgColor
         ring.widthAnchor.constraint(equalToConstant: 84).isActive = true
         ring.heightAnchor.constraint(equalToConstant: 84).isActive = true
         ring.addSubview(mark)
@@ -289,7 +289,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         retry.setTitle("Try again", for: .normal)
         retry.setTitleColor(UIColor(red: 0.055, green: 0.047, blue: 0.043, alpha: 1), for: .normal)
         retry.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-        retry.backgroundColor = UIColor(red: 0.98, green: 0.76, blue: 0.35, alpha: 1)
+        retry.backgroundColor = UIColor(red: 0.0, green: 0.6, blue: 0.902, alpha: 1)
         retry.layer.cornerRadius = 10
         retry.contentEdgeInsets = UIEdgeInsets(top: 12, left: 26, bottom: 12, right: 26)
         retry.addTarget(self, action: #selector(retryTapped), for: .touchUpInside)
