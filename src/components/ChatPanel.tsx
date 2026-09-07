@@ -468,9 +468,10 @@ export function ChatPanel({
       <ChatBackdrop />
       {/* Header pinned above the transcript so it never repaints while scrolling. */}
       <header
-        className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2.5"
-        style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
+        className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2"
+        style={{ paddingTop: "calc(var(--chat-safe-top) + 0.25rem)" }}
       >
+
 
           <button
             type="button"
