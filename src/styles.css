@@ -68,6 +68,9 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-gutter: clamp(0.875rem, 4vw, 1.25rem);
   --chat-safe-top: var(--safe-top);
+  /* Height of the on-screen keyboard, measured in JS. Only the chat composer
+     uses it; the rest of the app never moves when the keyboard opens. */
+  --keyboard-inset: 0px;
 
   --nav-height: 4.25rem;
   color-scheme: light;
