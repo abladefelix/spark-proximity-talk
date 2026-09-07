@@ -68,7 +68,7 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
   const corner = `rounded-[20px] ${tail ? (mine ? "rounded-tr-[8px]" : "rounded-tl-[8px]") : ""}`;
   const skin = mine
     ? "bg-primary text-primary-foreground shadow-[0_6px_18px_-10px_var(--primary)]"
-    : "bg-card/90 text-foreground ring-1 ring-border/50 backdrop-blur-[2px]";
+    : "bg-card text-foreground ring-1 ring-border/50";
 
   const stamp = (
     <span
@@ -88,7 +88,7 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
     >
       {newDay && (
         <div className="my-4 flex justify-center">
-          <span className="rounded-full bg-card/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground ring-1 ring-border/40 backdrop-blur-sm">
+          <span className="rounded-full bg-card px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground ring-1 ring-border/40">
             {dayLabel(m.created_at)}
           </span>
         </div>
@@ -476,7 +476,7 @@ export function ChatPanel({
       >
         {/* Header pinned at the top of the chat. */}
         <header
-          className="sticky top-0 z-20 flex shrink-0 items-center gap-1 border-b border-border/40 bg-background/80 px-1.5 pb-2.5 backdrop-blur-xl"
+          className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2.5"
           style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
         >
           <button
@@ -517,7 +517,7 @@ export function ChatPanel({
 
 
         <div className="px-3.5 pb-3 pt-4">
-          <div className="mb-5 flex flex-col items-center rounded-[26px] bg-card/85 px-6 py-6 text-center ring-1 ring-border/50 backdrop-blur-sm">
+          <div className="mb-5 flex flex-col items-center rounded-[26px] bg-card px-6 py-6 text-center ring-1 ring-border/50">
             <PersonAvatar
               path={other?.avatar_url}
               name={other?.display_name}
@@ -549,7 +549,7 @@ export function ChatPanel({
               <button
                 type="button"
                 onClick={loadEarlier}
-                className="rounded-full bg-card/85 px-3.5 py-1.5 text-[11px] font-medium text-muted-foreground ring-1 ring-border/50 backdrop-blur-sm transition active:scale-95"
+                className="rounded-full bg-card px-3.5 py-1.5 text-[11px] font-medium text-muted-foreground ring-1 ring-border/50 transition active:scale-95"
               >
                 Load earlier messages
               </button>
@@ -568,7 +568,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background/85 px-2.5 pb-[calc(var(--safe-bottom)+0.6rem)] pt-2 backdrop-blur-xl"
+        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.6rem)] pt-2"
       >
         <input
           ref={fileRef}
@@ -581,7 +581,7 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[24px] bg-card/90 px-2 py-[7px] ring-1 ring-border/50 backdrop-blur-sm transition focus-within:ring-primary/40">
+        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[24px] bg-card px-2 py-[7px] ring-1 ring-border/50 transition focus-within:ring-primary/40">
           <button
             type="button"
             aria-label="Upload a picture"
