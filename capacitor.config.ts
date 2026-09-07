@@ -23,6 +23,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "never",
     allowsLinkPreview: false,
+    webContentsDebuggingEnabled: true,
   },
   android: {
     allowMixedContent: false,
