@@ -609,7 +609,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.35rem)] pt-2"
+        className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.75rem)] pt-3"
       >
         <input
           ref={fileRef}
@@ -628,12 +628,12 @@ export function ChatPanel({
           aria-label="Upload a picture"
           disabled={uploading}
           onClick={() => fileRef.current?.click()}
-          className="mb-[1px] flex size-11 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border/50 transition active:scale-90 disabled:opacity-40"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border/50 transition active:scale-90 disabled:opacity-40"
         >
           {uploading ? <LoaderCircle className="size-[18px] animate-spin" /> : <ImagePlus className="size-[19px]" />}
         </button>
 
-        <div className="mb-[1px] flex min-w-0 flex-1 items-end rounded-[24px] bg-card px-3 py-[7px] ring-1 ring-border/50 transition focus-within:ring-primary/40">
+        <div className="flex min-w-0 flex-1 items-center rounded-[24px] bg-card px-3 py-[7px] ring-1 ring-border/50 transition focus-within:ring-primary/40">
           <textarea
             ref={inputRef}
             value={text}
@@ -662,7 +662,7 @@ export function ChatPanel({
             e.preventDefault();
             void send();
           }}
-          className="mb-[1px] flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_var(--primary)] transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_var(--primary)] transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
         >
           <ArrowUp className="size-[18px]" strokeWidth={2.5} />
         </button>
