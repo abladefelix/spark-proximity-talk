@@ -124,4 +124,21 @@ if [[ -n "${MISSING// /}" ]]; then
   exit 1
 fi
 
-echo "OK — database is up to date"
+# A function can exist but still contain the old matching rules when an older
+# server already recorded a migration whose contents were later amended. Check
+# the behavior-critical clauses so a deploy cannot report success while mutual
+# discovery is still running stale SQL.
+NEARBY_DEF="$(psql_run -tAc "
+  select pg_get_functiondef(p.oid)
+  from pg_proc p
+  join pg_namespace ns on ns.oid = p.pronamespace
+  where ns.nspname = 'public'
+    and p.proname = 'nearby_people'
+    and pg_get_function_identity_arguments(p.oid) = 'radius_m double precision';
+")"
+if [[ "$NEARBY_DEF" != *"greatest(pmin * 6, 10)"* ]]    || [[ "$NEARBY_DEF" != *"least(coalesce(myaccuracy, 0), 100)"* ]]    || [[ "$NEARBY_DEF" != *"least(coalesce(l.accuracy_m, 0), 100)"* ]]; then
+  echo "nearby_people still has stale matching rules — refusing to report a healthy deploy." >&2
+  exit 1
+fi
+
+echo "OK — database is up to date and nearby matching is repaired"
