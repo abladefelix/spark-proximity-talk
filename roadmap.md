@@ -18,3 +18,4 @@
 - [x] Replace the Android visual offset with native system-bar insets and make compass activation opt-in
 - [x] Wire RevenueCat directly into native app startup and remove on-demand billing module loading
 - [x] Verify subscription connection build and mobile flow
+- [x] Repair mutual phone discovery for coarse and identical location fixes
