@@ -468,9 +468,10 @@ export function ChatPanel({
       <ChatBackdrop />
       {/* Header pinned above the transcript so it never repaints while scrolling. */}
       <header
-        className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2.5"
-        style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
+        className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2"
+        style={{ paddingTop: "calc(var(--chat-safe-top) + 0.25rem)" }}
       >
+
 
           <button
             type="button"
@@ -568,7 +569,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.6rem)] pt-2"
+        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.35rem)] pt-2"
       >
         <input
           ref={fileRef}

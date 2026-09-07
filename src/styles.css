@@ -67,6 +67,8 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-gutter: clamp(0.875rem, 4vw, 1.25rem);
+  --chat-safe-top: var(--safe-top);
+
   --nav-height: 4.25rem;
   color-scheme: light;
   --background: oklch(0.985 0.004 80);
@@ -274,7 +276,11 @@
     overscroll-behavior: none;
     touch-action: none;
     padding-top: var(--safe-top);
+    /* The shell already clears the status bar, so screens inside it must not
+       add the inset a second time. Full-screen overlays re-enable it. */
+    --chat-safe-top: 0px;
   }
+
 
   [data-app-shell] > [data-scrollable] {
     touch-action: pan-y;
