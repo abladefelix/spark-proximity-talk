@@ -66,9 +66,6 @@ import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
 
 /** Fixes worse than this are network/wifi guesses, not usable GPS. */
 const COARSE_FIX_LIMIT_M = 65;
-/** How long we wait for a precise fix before falling back to a coarse one. */
-const COARSE_GRACE_MS = 45000;
-
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
     meta: [
@@ -201,7 +198,6 @@ function RadarPage() {
     let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
     let publishInFlight = false;
     let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
-    const startedAt = Date.now();
     const filter = new GeoKalman();
     const push = async (
       raw: {
@@ -226,26 +222,19 @@ function RadarPage() {
       const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
       const accuracy = smoothed.accuracy;
 
-      // Wifi / IP fixes (laptops, phones with GPS still warming up) can be
-      // hundreds of metres off and make someone sitting next to you look far
-      // away. Keep them local: never publish them while a precise fix is in
-      // reach, and only fall back to one if nothing better arrives at all.
+      // Publish the first usable native fix immediately. Android's fused
+      // provider often starts above 65m indoors; withholding that fix made two
+      // nearby phones mutually invisible until a more precise fix arrived.
       if (accuracy > COARSE_FIX_LIMIT_M) {
         lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy };
         setAccuracyM(accuracy);
-        // Prefer a recent precise fix while GPS warms up, but do not let one
-        // old fix freeze the beacon forever after the phone moves indoors.
+        // Once a precise fix has landed, retain it briefly instead of replacing
+        // it with a much coarser network estimate.
         const precise =
           lastPublished &&
           lastPublished.accuracy <= COARSE_FIX_LIMIT_M &&
-          Date.now() - lastPublished.at < COARSE_GRACE_MS;
-        const stillHopeful = Date.now() - startedAt < COARSE_GRACE_MS;
-        if (precise || stillHopeful) {
-          setGeoError(
-            "Getting a precise GPS fix… hold on a moment.",
-          );
-          return;
-        }
+          Date.now() - lastPublished.at < 120000;
+        if (precise) return;
       }
 
 
@@ -760,12 +749,15 @@ function RadarPage() {
     const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
     const limit = scope * 0.46 - layerSize / 2;
 
-    const nodes = people
-      .filter((p) => p.bearing_deg != null && Number.isFinite(Number(p.bearing_deg)))
-      .map((person) => {
+    const nodes = people.map((person, index) => {
         // True geographic placement: north is up, bearing runs clockwise, and
-        // the radius is the real distance scaled against the scan range.
-        const bearing = Number(person.bearing_deg);
+        // the radius is the real distance scaled against the scan range. At
+        // exactly the same coordinates PostGIS has no azimuth, so distribute
+        // those beacons around the centre instead of filtering them out.
+        const reportedBearing = Number(person.bearing_deg);
+        const bearing = Number.isFinite(reportedBearing)
+          ? reportedBearing
+          : (index * 137.508) % 360;
         const rad = (bearing * Math.PI) / 180;
         const rr = Math.max(
           layerSize * 0.6,
