@@ -89,7 +89,8 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="Chat"
           className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
-          style={{ paddingBottom: keyboard }}
+          style={{ paddingBottom: keyboard, ["--chat-safe-top" as string]: "var(--safe-top)" } as React.CSSProperties}
+
         >
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
             <ChatPanel key={matchId} matchId={matchId} />
