@@ -915,19 +915,18 @@ function RadarPage() {
     const el = scopeRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      // Let the page scroll normally unless the user is deliberately zooming.
-      if (!e.ctrlKey && viewRef.current.zoom <= 1.001) return;
+      // Only a deliberate pinch/ctrl-scroll resizes beacons; plain scrolling
+      // stays a page scroll.
+      if (!e.ctrlKey) return;
       e.preventDefault();
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
-      const rect = el.getBoundingClientRect();
-      const { zoom: z } = viewRef.current;
-      zoomAtRef.current(z * Math.exp(-dy * 0.0018), e.clientX - rect.left, e.clientY - rect.top);
+      zoomAtRef.current(viewRef.current.zoom * Math.exp(-dy * 0.0018));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  // Pointer drag to pan, two-finger pinch to zoom.
+  // Two-finger pinch resizes the beacons.
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ dist: number; zoom: number } | null>(null);
   const dragged = useRef(false);
@@ -935,36 +934,21 @@ function RadarPage() {
   const onPointerDown = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     dragged.current = false;
-    // Only capture when a gesture is actually possible, so vertical page
-    // scrolling keeps working at the default zoom level.
-    if (viewRef.current.zoom > 1.001 || pointers.current.size > 1) {
+    if (pointers.current.size > 1) {
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    const prev = pointers.current.get(e.pointerId);
-    if (!prev) return;
+    if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = [...pointers.current.values()];
-    const el = scopeRef.current;
-    if (pts.length >= 2 && el) {
+    if (pts.length >= 2) {
       const [a, b] = pts as [{ x: number; y: number }, { x: number; y: number }];
       const dist = Math.hypot(b.x - a.x, b.y - a.y);
       if (!gesture.current) gesture.current = { dist, zoom: viewRef.current.zoom };
-      const rect = el.getBoundingClientRect();
-      zoomAtRef.current(
-        gesture.current.zoom * (dist / gesture.current.dist),
-        (a.x + b.x) / 2 - rect.left,
-        (a.y + b.y) / 2 - rect.top,
-      );
+      zoomAtRef.current(gesture.current.zoom * (dist / gesture.current.dist));
       dragged.current = true;
-      return;
     }
-    if (viewRef.current.zoom <= 1.001) return;
-    const dx = e.clientX - prev.x;
-    const dy = e.clientY - prev.y;
-    if (Math.abs(dx) + Math.abs(dy) > 1) dragged.current = true;
-    setPan((p) => clampPan(viewRef.current.zoom, { x: p.x + dx, y: p.y + dy }));
   };
   const endPointer = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId);
