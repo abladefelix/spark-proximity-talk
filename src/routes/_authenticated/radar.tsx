@@ -521,10 +521,10 @@ function RadarPage() {
         } catch (error) {
           nativeDebugError("native location startup failed", error);
           const message = error instanceof Error ? error.message.toLowerCase() : "";
-          fail(
-            message.includes("permission") || message.includes("denied"),
-            message.includes("location services") || message.includes("disabled"),
-          );
+          const denied = message.includes("permission") || message.includes("denied");
+          const unavailable = message.includes("location services") || message.includes("disabled");
+          fail(denied, unavailable);
+          if (!denied && !unavailable) startBrowserWatch();
         }
         return;
       }
