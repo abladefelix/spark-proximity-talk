@@ -90,6 +90,8 @@ export function describeBiometryError(err: unknown): string {
     case "noDeviceCredential":
     case "passcodeNotSet":
       return "Set a screen lock (PIN, pattern or password) on your phone first.";
+    case "pluginMissing":
+      return "This version of the app doesn't include app lock. Update SKANAROUND from the store.";
     default: {
       const message = (err as { message?: string } | null)?.message ?? "";
       if (/not implemented|not available|no such plugin|unimplemented/i.test(message)) {
