@@ -274,7 +274,11 @@
     overscroll-behavior: none;
     touch-action: none;
     padding-top: var(--safe-top);
+    /* The shell already clears the status bar, so screens inside it must not
+       add the inset a second time. Full-screen overlays re-enable it. */
+    --chat-safe-top: 0px;
   }
+
 
   [data-app-shell] > [data-scrollable] {
     touch-action: pan-y;
