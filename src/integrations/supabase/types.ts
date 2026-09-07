@@ -1470,8 +1470,13 @@ export type Database = {
         Args: { radius_m?: number }
         Returns: {
           eff_radius: number
+          fresh_banned: number
+          fresh_blocked: number
+          fresh_in_radius: number
+          fresh_no_profile: number
           my_age_s: number
           my_location: boolean
+          my_profile: boolean
           my_visible: boolean
           nearest_m: number
           others_fresh: number
