@@ -461,6 +461,10 @@ function RadarPage() {
 
           setAskLocation(false);
           setPermDenied(false);
+          // The system permission dialog is closed by now, so starting the
+          // WebView provider on Android no longer risks the process-killing
+          // race. It acts as a backup if the native plugin stalls.
+          startBrowserWatch();
           nativeDebug("starting native location watcher");
           nativeWatch = await Geolocation.watchPosition(
              {
