@@ -641,7 +641,24 @@ function RadarPage() {
         );
         throw error;
       }
-      nativeDebug("nearby lookup succeeded", { count: data?.length ?? 0 });
+      const count = data?.length ?? 0;
+      nativeDebug("nearby lookup succeeded", { count });
+      if (count === 0) {
+        // Aggregate-only diagnostic (no names, ids, or coordinates) so an
+        // empty radar can be traced to the exact failing condition on device.
+        const probe = await (
+          supabase.rpc as unknown as (
+            fn: string,
+            args: Record<string, unknown>,
+          ) => Promise<{ data: unknown; error: { message: string } | null }>
+        )("radar_self_check", { radius_m: radius });
+        if (probe.error) {
+          nativeDebugError("radar self check failed", new Error(probe.error.message));
+        } else {
+          const row = Array.isArray(probe.data) ? probe.data[0] : probe.data;
+          nativeDebug("radar self check", (row ?? {}) as Record<string, unknown>);
+        }
+      }
       return (data ?? []) as NearbyPerson[];
     },
   });
