@@ -644,7 +644,10 @@ function RadarPage() {
   });
 
 
-  const people = (nearby.data ?? []).filter((person) => person.is_online);
+  // nearby_people already applies the server's presence grace window. Keep
+  // those rows on the scope when a phone briefly suspends its heartbeat;
+  // is_online is presentation state, not a second visibility filter.
+  const people = nearby.data ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Optional alert tone whenever somebody new shows up on the scope.
@@ -939,8 +942,55 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="order-2 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pt-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pt-3 min-h-[700px]:pb-3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Cards stay in normal flow above the scope. Their own area scrolls
+            when the queue grows, so they never cover or distort the radar. */}
+        <div className="z-20 max-h-[38%] shrink-0 overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mx-auto max-w-[min(24rem,100%)]">
+            {geoError && (
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
+                <span className="min-w-0">{geoError}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setRetryKey((k) => k + 1)}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+            {!geoError && nearby.isError && (
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+                <span className="min-w-0">Radar could not refresh. Check your connection and try again.</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => void nearby.refetch()}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+            {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
+              <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
+                {located
+                  ? `${settings.empty_radar_text} Widen your scan range in your profile.`
+                  : "Finding your location…"}
+              </p>
+            )}
+            <div className="mt-2.5 max-[360px]:mt-2">
+              <IntentChip />
+            </div>
+            <ActiveChats />
+            <IncomingSignals />
+          </div>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -1229,51 +1279,6 @@ function RadarPage() {
         </div>
       )}
 
-      </div>
-
-      {/* Floating card strip: overlays the top of the radar without ever
-          resizing or shifting it. Scrollable, with a soft fade at the bottom. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 max-h-[55%] overflow-y-auto overscroll-contain px-[var(--app-gutter)] pt-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="pointer-events-auto mx-auto max-w-[min(24rem,100%)] pb-4">
-          {geoError && (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
-              <span>{geoError}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() => setRetryKey((k) => k + 1)}
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-          {!geoError && nearby.isError && (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
-              <span>Radar could not refresh. Check your connection and try again.</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() => void nearby.refetch()}
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-          {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
-            <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
-              {settings.empty_radar_text} Widen your scan range in your profile.
-            </p>
-          )}
-          <div className="mt-2.5 max-[360px]:mt-2">
-            <IntentChip />
-          </div>
-          <ActiveChats />
-          <IncomingSignals />
-        </div>
       </div>
     </div>
 
