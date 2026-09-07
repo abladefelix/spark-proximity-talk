@@ -26,6 +26,16 @@ export function isBiometricPlatform() {
   return Capacitor.isNativePlatform();
 }
 
+/**
+ * True only when the native side of the app lock is actually present. A build
+ * that missed the plugin registration answers false, and every call below
+ * would otherwise fail with an unhelpful "not implemented" error.
+ */
+export function isBiometricPluginAvailable() {
+  if (!isBiometricPlatform()) return false;
+  return Capacitor.isPluginAvailable("BiometricAuthNative");
+}
+
 export async function checkBiometry(): Promise<CheckBiometryResult | null> {
   if (!isBiometricPlatform()) return null;
   try {
