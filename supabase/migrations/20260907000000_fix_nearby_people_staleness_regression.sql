@@ -38,6 +38,7 @@ AS $function$
 DECLARE
   me uuid := auth.uid();
   mylat double precision;
+  myaccuracy double precision;
   mylng double precision;
   mygeo extensions.geography;
   pmin integer;
@@ -68,7 +69,7 @@ BEGIN
     eff_radius := least(eff_radius, free_max::double precision);
   END IF;
 
-  SELECT l.lat, l.lng INTO mylat, mylng
+  SELECT l.lat, l.lng, l.accuracy_m INTO mylat, mylng, myaccuracy
   FROM public.locations l
   WHERE l.user_id = me;
   IF mylat IS NULL THEN RETURN; END IF;
@@ -109,10 +110,15 @@ BEGIN
       (degrees(extensions.ST_Azimuth(
         mygeo,
         extensions.ST_SetSRID(extensions.ST_MakePoint(l.lng, l.lat), 4326)::extensions.geography
-      )) + 360.0)::numeric % 360.0 AS bearing_raw
+      )) + 360.0)::numeric % 360.0 AS bearing_raw_maybe
   ) gsrc
   CROSS JOIN LATERAL (
-    SELECT gsrc.dist AS dist, gsrc.bearing_raw::double precision AS bearing
+    SELECT gsrc.dist AS dist,
+           -- Identical coordinates give a NULL azimuth; fall back to a stable
+           -- deterministic bearing so the beacon still renders on the radar.
+           coalesce(gsrc.bearing_raw_maybe,
+                    (('x' || substr(md5(l.user_id::text), 1, 4))::bit(16)::int % 360)::numeric
+           )::double precision AS bearing
   ) g
   CROSS JOIN LATERAL (
     SELECT EXISTS (
@@ -129,7 +135,7 @@ BEGIN
     -- pmin*6 (min 10) minutes still counts as "nearby", even though
     -- is_online correctly reports it as stale once older than pmin minutes.
     AND l.updated_at > now() - (greatest(pmin * 6, 10) || ' minutes')::interval
-    AND g.dist <= eff_radius
+    AND g.dist <= eff_radius + least(coalesce(myaccuracy, 0), 100) + least(coalesce(l.accuracy_m, 0), 100)
     AND NOT EXISTS (
       SELECT 1 FROM public.blocks b
       WHERE (b.blocker = me AND b.blocked = p.id) OR (b.blocker = p.id AND b.blocked = me)
