@@ -466,19 +466,12 @@ export function ChatPanel({
   return (
     <div className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
       <ChatBackdrop />
-      {/* Scrollable area; the header is sticky so it stays pinned while messages scroll. */}
-      <div
-        ref={scrollRef}
-        data-scrollable
-        data-selectable
-        className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [transform:translateZ(0)]"
-        style={{ WebkitOverflowScrolling: "touch", contain: "layout paint" }}
+      {/* Header pinned above the transcript so it never repaints while scrolling. */}
+      <header
+        className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2.5"
+        style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
       >
-        {/* Header pinned at the top of the chat. */}
-        <header
-          className="relative z-20 flex shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 pb-2.5"
-          style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
-        >
+
           <button
             type="button"
             onClick={closeChat}
