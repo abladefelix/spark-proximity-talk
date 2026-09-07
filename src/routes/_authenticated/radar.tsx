@@ -816,16 +816,16 @@ function RadarPage() {
   const { beacons, beaconSize, markerScale } = useMemo(() => {
     const scope = scopeSize || 320;
     const count = people.length;
-    const z = Math.max(1, zoom);
+    const z = zoom;
     // Markers shrink as the crowd grows so far more people fit before we have
     // to de-crowd, with a floor that keeps them tappable.
-    const size = Math.max(
+    const base = Math.max(
       14,
       Math.min(40, Math.round(scope / (4.6 + Math.sqrt(Math.max(count, 1)) * 2.1))),
     );
-    // Layer-space size: the whole layer is scaled by `zoom`, so divide to keep
-    // the rendered marker the same physical size at any zoom level.
-    const layerSize = size / z;
+    // Pinching resizes the beacons themselves — the radar disc never moves.
+    const size = base;
+    const layerSize = base * z;
     const maxDist = people.reduce((m, p) => Math.max(m, p.distance_m), 0);
     const viewMax = Math.max(25, Math.min(radius, maxDist * 1.15));
     const limit = scope * 0.46 - layerSize / 2;
@@ -849,7 +849,7 @@ function RadarPage() {
 
     return {
       beaconSize: size,
-      markerScale: 1 / z,
+      markerScale: z,
       beacons: nodes
         // Pro beacons render last so they always sit on top of the stack.
         .slice()
@@ -869,8 +869,8 @@ function RadarPage() {
   const { data: helpBeacons = [] } = useHelpBeacons();
   const helpMarkers = useMemo(() => {
     const scope = scopeSize || 320;
-    const z = Math.max(1, zoom);
-    const size = Math.max(16, Math.min(34, Math.round(scope / 9))) / z;
+    const z = zoom;
+    const size = Math.max(16, Math.min(34, Math.round(scope / 9))) * z;
     const maxDist = Math.max(
       people.reduce((m, p) => Math.max(m, p.distance_m), 0),
       helpBeacons.reduce((m, b) => Math.max(m, b.distance_m), 0),
