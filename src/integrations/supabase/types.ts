@@ -1466,6 +1466,20 @@ export type Database = {
       purge_expired_signals: { Args: never; Returns: undefined }
       purge_old_chats: { Args: never; Returns: number }
       purge_vanished_messages: { Args: never; Returns: number }
+      radar_self_check: {
+        Args: { radius_m?: number }
+        Returns: {
+          eff_radius: number
+          my_age_s: number
+          my_location: boolean
+          my_visible: boolean
+          nearest_m: number
+          others_fresh: number
+          others_total: number
+          others_visible: number
+          presence_timeout_min: number
+        }[]
+      }
       set_chat_vanish: {
         Args: { _hours: number; _match_id: string; _on_leave: boolean }
         Returns: undefined
