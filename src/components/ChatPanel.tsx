@@ -16,6 +16,7 @@ import { ChatSafetyMenu } from "@/components/ChatSafetyMenu";
 import { useChatRetention, DEFAULT_CHAT_TTL_DAYS } from "@/hooks/useChatTtl";
 import { TranscriptSkeleton } from "@/components/Skeletons";
 import { markChatRead } from "@/lib/chat-reads";
+import { ChatBackdrop } from "@/components/ChatBackdrop";
 
 
 type Message = {
@@ -61,18 +62,18 @@ type BubbleProps = {
 
 /** Memoized so a new message never re-renders the whole transcript. */
 const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
-  // WhatsApp-style geometry: small 8px radius, a pointed tail only on the
-  // first bubble of a run, and the timestamp tucked inside the bubble.
+  // Soft, modern geometry: generous 20px radius, one tucked corner on the
+  // first bubble of a run, and a quiet inline timestamp.
   const tail = !grouped;
-  const corner = `rounded-[10px] ${tail ? (mine ? "rounded-tr-[3px]" : "rounded-tl-[3px]") : ""}`;
+  const corner = `rounded-[20px] ${tail ? (mine ? "rounded-tr-[8px]" : "rounded-tl-[8px]") : ""}`;
   const skin = mine
-    ? "bg-primary text-primary-foreground"
-    : "bg-card text-foreground border border-border/50";
+    ? "bg-primary text-primary-foreground shadow-[0_6px_18px_-10px_var(--primary)]"
+    : "bg-card/90 text-foreground ring-1 ring-border/50 backdrop-blur-[2px]";
 
   const stamp = (
     <span
-      className={`ml-2 shrink-0 translate-y-[3px] text-[10px] leading-none ${
-        mine ? "text-primary-foreground/70" : "text-muted-foreground"
+      className={`ml-2 shrink-0 translate-y-[3px] text-[10px] leading-none tabular-nums ${
+        mine ? "text-primary-foreground/65" : "text-muted-foreground/80"
       }`}
     >
       {timeLabel(m.created_at)}
@@ -86,21 +87,22 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
       }`}
     >
       {newDay && (
-        <div className="my-3 flex justify-center">
-          <span className="rounded-[7px] bg-card px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground shadow-sm">
+        <div className="my-4 flex justify-center">
+          <span className="rounded-full bg-card/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground ring-1 ring-border/40 backdrop-blur-sm">
             {dayLabel(m.created_at)}
           </span>
         </div>
       )}
 
       <div
-        className={`relative flex ${grouped ? "mt-[2px]" : "mt-2"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
+        className={`relative flex ${grouped ? "mt-[3px]" : "mt-2.5"} ${mine ? "justify-end pl-12" : "justify-start pr-12"}`}
       >
+
         <div className={`relative flex max-w-[82%] flex-col ${mine ? "items-end" : "items-start"}`}>
           {m.kind === "image" ? (
-            <div className={`relative overflow-hidden ${corner} ${skin} p-[3px] shadow-sm`}>
+            <div className={`relative overflow-hidden ${corner} ${skin} p-[3px]`}>
               {m.mediaUrl ? (
-                <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[8px]">
+                <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[17px]">
                   <img
                     src={m.mediaUrl}
                     alt="Shared in chat"
@@ -110,7 +112,7 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
                   />
                 </a>
               ) : (
-                <div className="flex h-32 w-48 items-center justify-center rounded-[8px] bg-secondary text-[11px] text-muted-foreground">
+                <div className="flex h-32 w-48 items-center justify-center rounded-[17px] bg-secondary text-[11px] text-muted-foreground">
                   Picture unavailable
                 </div>
               )}
@@ -123,7 +125,7 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
               href={`https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-end px-2.5 py-[6px] shadow-sm ${corner} ${skin}`}
+              className={`flex items-end px-3.5 py-2 ${corner} ${skin}`}
             >
               <span className="flex items-center gap-1.5 text-[14.5px]">
                 <MapPin className="size-3.5" />
@@ -132,11 +134,12 @@ const Bubble = memo(function Bubble({ m, mine, newDay, grouped }: BubbleProps) {
               {stamp}
             </a>
           ) : (
-            <div className={`flex items-end px-2.5 py-[5px] shadow-sm ${corner} ${skin}`}>
-              <p className="whitespace-pre-wrap break-words text-[14.5px] leading-[1.32]">{m.content}</p>
+            <div className={`flex items-end px-3.5 py-2 ${corner} ${skin}`}>
+              <p className="whitespace-pre-wrap break-words text-[14.5px] leading-[1.35]">{m.content}</p>
               {stamp}
             </div>
           )}
+
         </div>
       </div>
     </div>
@@ -456,41 +459,50 @@ export function ChatPanel({
   }
 
   const name = other?.display_name ?? other?.username ?? "Chat";
+  const online = other?.last_seen
+    ? Date.now() - new Date(other.last_seen).getTime() < 5 * 60000
+    : false;
 
   return (
-    <div className={className ?? "mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
+    <div className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
+      <ChatBackdrop />
       {/* Scrollable area; the header is sticky so it stays pinned while messages scroll. */}
       <div
         ref={scrollRef}
         data-scrollable
         data-selectable
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [transform:translateZ(0)]"
+        className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [transform:translateZ(0)]"
         style={{ WebkitOverflowScrolling: "touch", contain: "layout paint" }}
       >
         {/* Header pinned at the top of the chat. */}
         <header
-          className="sticky top-0 z-20 flex shrink-0 items-center gap-2 border-b border-border/40 bg-background/90 px-1.5 pb-2 backdrop-blur-md"
-          style={{ paddingTop: "calc(var(--safe-top) + 0.25rem)" }}
+          className="sticky top-0 z-20 flex shrink-0 items-center gap-1 border-b border-border/40 bg-background/80 px-1.5 pb-2.5 backdrop-blur-xl"
+          style={{ paddingTop: "calc(var(--safe-top) + 0.35rem)" }}
         >
           <button
             type="button"
             onClick={closeChat}
             aria-label="Back"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary transition active:scale-90"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full text-foreground/80 transition active:scale-90"
           >
-            <ChevronLeft className="size-6" strokeWidth={2.5} />
+            <ChevronLeft className="size-6" strokeWidth={2.25} />
           </button>
 
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <PersonAvatar
-              path={other?.avatar_url}
-              name={other?.display_name}
-              username={other?.username ?? "?"}
-              gender={other?.gender as import("@/components/PersonAvatar").Gender}
-              className="size-8 rounded-full"
-            />
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="relative shrink-0">
+              <PersonAvatar
+                path={other?.avatar_url}
+                name={other?.display_name}
+                username={other?.username ?? "?"}
+                gender={other?.gender as import("@/components/PersonAvatar").Gender}
+                className="size-9 rounded-full ring-1 ring-border/60"
+              />
+              {online && (
+                <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+              )}
+            </span>
             <div className="min-w-0">
-              <p className="flex items-center gap-1 truncate text-[15px] font-semibold leading-tight tracking-[-0.01em]">
+              <p className="flex items-center gap-1 truncate text-[15.5px] font-semibold leading-tight tracking-[-0.01em]">
                 {name}
                 {other?.verified && <VerifiedBadge className="size-3" />}
               </p>
@@ -503,52 +515,47 @@ export function ChatPanel({
           <ChatSafetyMenu matchId={matchId} otherId={other?.id} otherName={name} onBlocked={closeChat} />
         </header>
 
-        <div className="px-3 pb-3 pt-3">
-          {/* WhatsApp-style intro: a small encryption note, then a contact card. */}
-          <div className="mx-auto mb-3 max-w-[85%] rounded-[10px] bg-accent/40 px-3 py-2 text-center text-[11px] leading-snug text-muted-foreground">
-            Messages here stay between you two. You matched by being nearby — meet in public places.
-          </div>
 
-          {/* Members should always know how long this conversation will live. */}
-          <div className="mx-auto mb-3 max-w-[85%] text-center text-[11px] leading-snug text-muted-foreground">
-            This chat vanishes {retentionDays} {retentionDays === 1 ? "day" : "days"} after each message
-            {retention && !retention.isPro && retention.proDays > retention.freeDays
-              ? ` — Pro keeps chats for ${retention.proDays} days.`
-              : "."}
-          </div>
-
-          <div className="mb-4 flex flex-col items-center rounded-[14px] bg-card px-6 py-5 text-center shadow-sm">
+        <div className="px-3.5 pb-3 pt-4">
+          <div className="mb-5 flex flex-col items-center rounded-[26px] bg-card/85 px-6 py-6 text-center ring-1 ring-border/50 backdrop-blur-sm">
             <PersonAvatar
               path={other?.avatar_url}
               name={other?.display_name}
               username={other?.username ?? "?"}
               gender={other?.gender as import("@/components/PersonAvatar").Gender}
-              className="size-20 rounded-full"
+              className="size-20 rounded-full ring-2 ring-primary/25"
             />
-            <p className="mt-3 flex items-center gap-1 text-[15px] font-semibold leading-tight">
+            <p className="mt-3 flex items-center gap-1 text-[16px] font-semibold leading-tight">
               {other ? name : ""}
               {other?.verified && <VerifiedBadge className="size-3.5" />}
             </p>
             {other?.username && (
               <p className="mt-0.5 text-[12px] text-muted-foreground">@{other.username}</p>
             )}
-            <p className="mt-1 text-[12px] text-muted-foreground">
-              Not a contact • Matched nearby
+            <p className="mt-2 rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+              Matched nearby
+            </p>
+            <p className="mt-3 max-w-[17rem] text-[11.5px] leading-snug text-muted-foreground">
+              Messages stay between you two — meet in public places. This chat vanishes {retentionDays}{" "}
+              {retentionDays === 1 ? "day" : "days"} after each message
+              {retention && !retention.isPro && retention.proDays > retention.freeDays
+                ? `; Pro keeps chats for ${retention.proDays} days.`
+                : "."}
             </p>
           </div>
-
 
           {hasMore && (
             <div className="mb-3 flex justify-center">
               <button
                 type="button"
                 onClick={loadEarlier}
-                className="rounded-full bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground transition active:scale-95"
+                className="rounded-full bg-card/85 px-3.5 py-1.5 text-[11px] font-medium text-muted-foreground ring-1 ring-border/50 backdrop-blur-sm transition active:scale-95"
               >
                 Load earlier messages
               </button>
             </div>
           )}
+
 
           {loadingMessages && rows.length === 0 ? (
             <TranscriptSkeleton />
@@ -561,7 +568,7 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="z-20 flex shrink-0 items-end gap-1.5 border-t border-border/40 bg-background/95 px-2 pb-[calc(var(--safe-bottom)+0.5rem)] pt-1.5 backdrop-blur-md"
+        className="relative z-20 flex shrink-0 items-end gap-2 border-t border-border/40 bg-background/85 px-2.5 pb-[calc(var(--safe-bottom)+0.6rem)] pt-2 backdrop-blur-xl"
       >
         <input
           ref={fileRef}
@@ -574,7 +581,7 @@ export function ChatPanel({
             event.target.value = "";
           }}
         />
-        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[22px] bg-card px-2 py-[6px] shadow-sm ring-1 ring-border/50">
+        <div className="flex min-w-0 flex-1 items-end gap-1.5 rounded-[24px] bg-card/90 px-2 py-[7px] ring-1 ring-border/50 backdrop-blur-sm transition focus-within:ring-primary/40">
           <button
             type="button"
             aria-label="Upload a picture"
@@ -612,7 +619,7 @@ export function ChatPanel({
             e.preventDefault();
             void send();
           }}
-          className="mb-[1px] flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition active:scale-90 disabled:opacity-40"
+          className="mb-[1px] flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_var(--primary)] transition active:scale-90 disabled:opacity-40 disabled:shadow-none"
         >
           <ArrowUp className="size-[18px]" strokeWidth={2.5} />
         </button>

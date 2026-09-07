@@ -1,40 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ChatPanel } from "@/components/ChatPanel";
-import { supabase } from "@/integrations/supabase/client";
-import { backgroundCss, useChatBackgrounds } from "@/lib/chatBackgrounds";
 
-/** Washed-out wallpaper behind the chat, chosen by the member in their profile. */
-function ChatBackdrop() {
-  const backgrounds = useChatBackgrounds();
-  const { data: chosen } = useQuery({
-    queryKey: ["my-chat-background"],
-    staleTime: 60_000,
-    queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return "none";
-      const { data } = await supabase
-        .from("profiles")
-        .select("chat_background")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      return data?.chat_background ?? "none";
-    },
-  });
-
-  const css = backgroundCss(backgrounds.find((b) => b.id === chosen));
-  if (!css) return null;
-
-  return (
-    // No backdrop-filter here: a full-screen blur layer forces the compositor to
-    // repaint the whole chat on every scroll frame. A flat wash is just as soft
-    // and keeps scrolling at 60fps.
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.22] dark:opacity-[0.16]" style={{ background: css }} />
-      <div className="absolute inset-0 bg-background/70" />
-    </div>
-  );
-}
 
 type ChatSheetContextValue = {
   openChat: (matchId: string) => void;
@@ -125,10 +91,10 @@ export function ChatSheetProvider({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden overscroll-none bg-background animate-in fade-in slide-in-from-right-2 duration-200"
           style={{ paddingBottom: keyboard }}
         >
-          <ChatBackdrop />
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
             <ChatPanel key={matchId} matchId={matchId} />
           </div>
+
         </div>
       )}
     </ChatSheetContext.Provider>
