@@ -38,11 +38,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Keyboard: {
-      // Keep the app window stable. ChatPanel uses the reported keyboard height
-      // to shorten only the conversation screen, so opening the keyboard never
-      // compresses the radar or the rest of the app behind it.
-      resize: "none",
-      resizeOnFullScreen: false,
+      // Let the native window become exactly as tall as the space above the
+      // keyboard. Fixed chat headers stay put while the transcript shortens and
+      // the composer naturally rests on the keyboard, like a native messenger.
+      resize: "native",
+      resizeOnFullScreen: true,
     },
     SystemBars: {
       insetsHandling: "css",
