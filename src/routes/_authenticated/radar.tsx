@@ -679,6 +679,9 @@ function RadarPage() {
               intent: myIntent?.intent ?? null,
               intent_note: myIntent?.intent_note ?? null,
               created_at: new Date().toISOString(),
+              expires_at: new Date(
+                Date.now() + (settings.signal_expiry_hours || 6) * 3_600_000,
+              ).toISOString(),
             },
             { onConflict: "from_user,to_user" },
           ),
