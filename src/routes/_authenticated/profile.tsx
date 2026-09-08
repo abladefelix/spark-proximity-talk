@@ -156,6 +156,14 @@ function ProfilePage() {
   // Once a gender has been stored it can never be edited again.
   const genderLocked = Boolean(profile?.gender);
 
+  // Unsaved-changes detector, drives the floating save bar.
+  const profileDirty =
+    Boolean(profile) &&
+    (displayName !== (profile?.display_name ?? "") ||
+      bio !== (profile?.bio ?? "") ||
+      (!genderLocked && gender !== (profile?.gender ?? "unset")));
+
+
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
@@ -335,9 +343,16 @@ function ProfilePage() {
               : "Shown as your beacon icon on the radar when you have no photo. This can't be changed after you save it."}
           </p>
         </div>
-        <Button variant="heat" size="lg" className="w-full" disabled={saving} onClick={save}>
-          Save profile
+        <Button
+          variant="heat"
+          size="lg"
+          className="w-full"
+          disabled={saving || !profileDirty}
+          onClick={save}
+        >
+          {profileDirty ? "Save profile" : "Saved"}
         </Button>
+
       </section>
 
       <section className="mt-8 space-y-4">
@@ -481,8 +496,28 @@ function ProfilePage() {
 
         <DeleteAccountSection />
       </section>
+
+      {profileDirty && (
+        <div
+          className="fixed inset-x-0 z-40 px-4"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.25rem)" }}
+        >
+          <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur">
+            <p className="pl-2 text-xs text-muted-foreground">Unsaved changes</p>
+            <Button
+              variant="heat"
+              className="ml-auto"
+              disabled={saving}
+              onClick={save}
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
+
 }
 
 /**

@@ -21,11 +21,12 @@ import { Input } from "@/components/ui/input";
 import { GUIDE_SECTIONS, type GuideSection } from "@/lib/guide";
 import { cn } from "@/lib/utils";
 import { GuideLegend } from "@/components/guide/GuideLegend";
-import radarShot from "@/assets/guide/radar_people.png.asset.json";
-import beaconShot from "@/assets/guide/profile_dialog.png.asset.json";
-import chatShot from "@/assets/guide/chat.png.asset.json";
-import chatsShot from "@/assets/guide/chats.png.asset.json";
-import profileShot from "@/assets/guide/profile.png.asset.json";
+const radarShot = { url: "/guide/radar_people.png" };
+const beaconShot = { url: "/guide/profile_dialog.png" };
+const chatShot = { url: "/guide/chat.png" };
+const chatsShot = { url: "/guide/chats.png" };
+const profileShot = { url: "/guide/profile.png" };
+
 import { useSettings } from "@/hooks/useAppSettings";
 
 const ICONS: Record<GuideSection["icon"], typeof Radar> = {
