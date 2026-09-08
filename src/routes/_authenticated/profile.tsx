@@ -496,8 +496,28 @@ function ProfilePage() {
 
         <DeleteAccountSection />
       </section>
+
+      {profileDirty && (
+        <div
+          className="fixed inset-x-0 z-40 px-4"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.25rem)" }}
+        >
+          <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur">
+            <p className="pl-2 text-xs text-muted-foreground">Unsaved changes</p>
+            <Button
+              variant="heat"
+              className="ml-auto"
+              disabled={saving}
+              onClick={save}
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
+
 }
 
 /**
