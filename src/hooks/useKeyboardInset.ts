@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { useEffect, useSyncExternalStore } from "react";
 
 /**
@@ -15,6 +17,7 @@ function setInset(next: number) {
   if (next === inset) return;
   inset = next;
   document.documentElement.style.setProperty("--keyboard-inset", `${next}px`);
+  document.documentElement.toggleAttribute("data-keyboard-open", next > 0);
   listeners.forEach((l) => l());
 }
 
@@ -36,34 +39,42 @@ export function useKeyboardOpen() {
 export function useKeyboardInsetProvider() {
   useEffect(() => {
     const vv = window.visualViewport;
-    if (!vv) return;
-
     let frame = 0;
-    const pin = () => {
-      // Undo the platform's automatic scroll of the whole web view.
-      if (window.scrollY !== 0) window.scrollTo(0, 0);
-      const se = document.scrollingElement;
-      if (se && se.scrollTop !== 0) se.scrollTop = 0;
-    };
+    let nativeKeyboard = false;
 
     const update = () => {
+      if (!vv || nativeKeyboard) return;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
         setInset(overlap > 80 ? Math.round(overlap) : 0);
-        pin();
       });
     };
 
+    const nativeListeners = Capacitor.isNativePlatform()
+      ? Promise.all([
+          Keyboard.setResizeMode({ mode: KeyboardResize.None }).catch(() => undefined),
+          Keyboard.addListener("keyboardWillShow", ({ keyboardHeight }) => {
+            nativeKeyboard = true;
+            setInset(Math.max(0, Math.round(keyboardHeight)));
+          }),
+          Keyboard.addListener("keyboardWillHide", () => {
+            nativeKeyboard = true;
+            setInset(0);
+          }),
+        ])
+      : null;
+
     update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    window.addEventListener("scroll", pin, { passive: true });
+    vv?.addEventListener("resize", update);
+    vv?.addEventListener("scroll", update);
     return () => {
       cancelAnimationFrame(frame);
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-      window.removeEventListener("scroll", pin);
+      vv?.removeEventListener("resize", update);
+      vv?.removeEventListener("scroll", update);
+      void nativeListeners?.then((values) => {
+        values.slice(1).forEach((handle) => void handle?.remove());
+      });
       setInset(0);
     };
   }, []);
