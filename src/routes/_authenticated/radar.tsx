@@ -672,12 +672,19 @@ function RadarPage() {
       const result = await withTimeout<{ error: { message: string } | null }>(
         (supabase as any)
           .from("signals")
-          .insert({
-            from_user: me,
-            to_user: person.id,
-            intent: myIntent?.intent ?? null,
-            intent_note: myIntent?.intent_note ?? null,
-          }),
+          .upsert(
+            {
+              from_user: me,
+              to_user: person.id,
+              intent: myIntent?.intent ?? null,
+              intent_note: myIntent?.intent_note ?? null,
+              created_at: new Date().toISOString(),
+              expires_at: new Date(
+                Date.now() + (settings.signal_expiry_hours || 6) * 3_600_000,
+              ).toISOString(),
+            },
+            { onConflict: "from_user,to_user" },
+          ),
         10_000,
         "Signal",
       );
