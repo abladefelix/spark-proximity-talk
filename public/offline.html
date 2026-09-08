@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SKANAROUND</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #05070f;
+        color: #e8eefc;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        background-image: radial-gradient(120% 80% at 50% 0%, #0b2b45 0%, #05070f 70%);
+      }
+      .card { width: 100%; max-width: 340px; text-align: center; }
+      .logo {
+        width: 84px; height: 84px; margin: 0 auto 22px;
+        border-radius: 24px; background: #0099e6;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 44px; font-weight: 800; color: #fff;
+        box-shadow: 0 18px 40px -18px #0099e6;
+      }
+      h1 { font-size: 20px; margin: 0 0 10px; letter-spacing: -0.01em; }
+      p { margin: 0; font-size: 15px; line-height: 1.5; color: #9fb0cc; }
+      .ring {
+        margin: 26px auto 0; width: 26px; height: 26px; border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.15); border-top-color: #0099e6;
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      button {
+        margin-top: 26px; width: 100%; padding: 14px 18px; border: 0;
+        border-radius: 16px; background: #0099e6; color: #fff;
+        font-size: 16px; font-weight: 600; cursor: pointer;
+      }
+      button:active { opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">S</div>
+      <h1>Reconnecting&hellip;</h1>
+      <p>SKANAROUND is updating. This only takes a moment &mdash; we&rsquo;ll bring you back automatically.</p>
+      <div class="ring"></div>
+      <button type="button" id="retry">Try now</button>
+    </div>
+    <script>
+      var HOME = "https://skanaround.bytenetdigital.com/";
+      var busy = false;
+      async function attempt() {
+        if (busy) return;
+        busy = true;
+        try {
+          var res = await fetch(HOME + "?_probe=" + Date.now(), { cache: "no-store" });
+          if (res.ok) { window.location.replace(HOME); return; }
+        } catch (e) {}
+        busy = false;
+      }
+      document.getElementById("retry").addEventListener("click", attempt);
+      setInterval(attempt, 3000);
+      setTimeout(attempt, 800);
+    </script>
+  </body>
+</html>
