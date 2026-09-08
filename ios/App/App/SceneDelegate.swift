@@ -76,7 +76,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func applyConnectivity(_ online: Bool) {
         if online {
-            if offlineWindow != nil { attemptRecovery() }
+            if offlineWindow != nil {
+                attemptRecovery()
+                return
+            }
+            // The site is reachable but the web view is stuck blank — e.g. it
+            // reloaded while the server was restarting. Bring the app back
+            // without the user having to do anything.
+            let current = bridgeWebView?.url?.absoluteString ?? ""
+            if current.isEmpty || current == "about:blank" {
+                reloadWeb()
+            }
         } else {
             hideSplash()
             showOffline()
