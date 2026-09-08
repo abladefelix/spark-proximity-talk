@@ -305,6 +305,10 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         body: "Every conversation shows how many days it will stay — at the top of the chat and under the unfolded chat stack. Once a message passes that window it disappears, and Pro keeps chats for longer when that perk is switched on.",
       },
       {
+        term: "Disappearing chats",
+        body: "You can make a chat vanish sooner than the default — pick a shorter timer inside the conversation, up to the maximum the admin allows. Handy for quick meet-ups you don't want lingering in your list.",
+      },
+      {
         term: "Trouble in a chat",
         body: "Use report or block from inside the conversation. Blocking removes the person from your radar and theirs.",
       },
