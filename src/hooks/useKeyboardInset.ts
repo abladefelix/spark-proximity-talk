@@ -1,13 +1,13 @@
 import { Capacitor } from "@capacitor/core";
-import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { Keyboard } from "@capacitor/keyboard";
 import { useEffect, useSyncExternalStore } from "react";
 
 /**
- * The on-screen keyboard must never resize or shift the app shell. iOS scrolls
- * the whole web view up to reveal a focused field and Android can shrink the
- * window; both squash every fixed element on screen. We measure the keyboard
- * ourselves, expose it as `--keyboard-inset`, and undo any shift the platform
- * applied, so only the chat composer reacts to the keyboard.
+ * The platform resizes the web view for the keyboard (Capacitor Keyboard
+ * `resize: "native"`, Android `adjustResize`), which is exactly how native
+ * apps behave: the app shell simply becomes shorter. This hook only reports
+ * the keyboard state so surfaces such as the bottom navigation and the
+ * composer's home-indicator padding can respond; it never moves the layout.
  */
 
 let inset = 0;
