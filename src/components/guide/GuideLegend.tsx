@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   Bell,
   Crown,
+  LifeBuoy,
   MessagesSquare,
   Radar as RadarIcon,
   Compass,
@@ -131,6 +132,11 @@ export function GuideLegend() {
           visual={<EyeOff className="size-6 text-muted-foreground" />}
           term="Invisible"
           body="When you turn visibility off you disappear from everyone's radar while still being able to browse. Your existing chats keep working."
+        />
+        <Row
+          visual={<LifeBuoy className="size-6 text-destructive" />}
+          term="Bat Signal"
+          body="The lifebuoy marks an urgent call for help. Send yours from the Local tab; a red beacon shows it to everyone nearby until you cancel it or it expires."
         />
       </Group>
 
