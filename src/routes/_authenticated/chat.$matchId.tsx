@@ -25,5 +25,9 @@ function ChatPage() {
     else void navigate({ to: "/chats" });
   };
 
-  return <ChatPanel matchId={matchId} onBack={goBack} />;
+  return (
+    <div data-chat-route className="h-full min-h-0">
+      <ChatPanel matchId={matchId} onBack={goBack} />
+    </div>
+  );
 }

@@ -20,13 +20,10 @@ export function BottomNav() {
   const { count: radarCount } = useRadarNotificationsCount();
   const keyboardOpen = useKeyboardOpen();
 
-  // The keyboard covers this strip anyway; removing it keeps the composer
-  // sitting exactly on top of the keyboard instead of floating above a gap.
-  if (keyboardOpen) return null;
-
   return (
     <nav
-      className="relative z-40 shrink-0 border-t border-border bg-card"
+      aria-hidden={keyboardOpen || undefined}
+      className={`relative z-40 shrink-0 border-t border-border bg-card ${keyboardOpen ? "invisible pointer-events-none" : ""}`}
       style={{ height: "calc(var(--nav-height) + var(--safe-bottom))", paddingBottom: "var(--safe-bottom)" }}
     >
       <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">

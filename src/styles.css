@@ -237,15 +237,6 @@
     -webkit-overflow-scrolling: auto;
   }
 
-  /* Never let browser focus scrolling translate the fixed native app shell. */
-  html[data-keyboard-open],
-  html[data-keyboard-open] body,
-  html[data-keyboard-open] #app-scroll {
-    top: 0;
-    bottom: auto;
-    height: 100%;
-  }
-
   /* Native app feel: no text selection, no long-press callout, no visible scrollbars. */
   body {
     user-select: none;
@@ -299,6 +290,12 @@
 
   [data-app-shell] > [data-scrollable] {
     touch-action: pan-y;
+  }
+
+  /* A routed chat shares the shell with the bottom menu. While the keyboard
+     covers that reserved strip, give its height back to the chat only. */
+  html[data-keyboard-open] [data-chat-route] {
+    --chat-keyboard-compensation: calc(var(--nav-height) + var(--safe-bottom));
   }
 
   /* Short Android screens need denser vertical rhythm so controls never press
