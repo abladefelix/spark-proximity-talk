@@ -72,7 +72,7 @@ export function useKeyboardInsetProvider() {
       vv?.removeEventListener("resize", update);
       vv?.removeEventListener("scroll", update);
       void nativeListeners?.then((values) => {
-        values.slice(1).forEach((handle) => void handle?.remove());
+        values.forEach((handle) => void handle?.remove());
       });
       setInset(0);
     };
