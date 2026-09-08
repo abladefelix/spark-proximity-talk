@@ -53,7 +53,6 @@ export function useKeyboardInsetProvider() {
 
     const nativeListeners = Capacitor.isNativePlatform()
       ? Promise.all([
-          Keyboard.setResizeMode({ mode: KeyboardResize.None }).catch(() => undefined),
           Keyboard.addListener("keyboardWillShow", ({ keyboardHeight }) => {
             nativeKeyboard = true;
             setInset(Math.max(0, Math.round(keyboardHeight)));
