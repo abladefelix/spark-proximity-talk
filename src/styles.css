@@ -261,6 +261,19 @@
     -webkit-user-select: text;
   }
 
+  /* iOS zooms the whole page when a focused field's text is under 16px, and
+     that zoom cannot be undone by the user in a web view. Keep every field at
+     16px or larger on touch devices. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select,
+    [contenteditable="true"] {
+      font-size: max(16px, 1em);
+    }
+  }
+
+
   * {
     scrollbar-width: none;
   }
