@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   Bell,
   Crown,
+  LifeBuoy,
   MessagesSquare,
   Radar as RadarIcon,
   Compass,
