@@ -249,6 +249,34 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: "local",
+    title: "The local scene",
+    icon: "signal",
+    summary: "The Bat Signal, quick questions, intents and venue perks around you.",
+    items: [
+      {
+        term: "Bat Signal — call for help",
+        body: "The red button drops a short-lived help beacon around you. Pick what you need (a jump-start, directions, a spare charger…), add a note, and everyone nearby sees it for a few minutes. They can answer with one tap, which opens a chat with you. It expires on its own.",
+      },
+      {
+        term: "Answering a Bat Signal",
+        body: "When someone near you calls for help, their beacon appears on the Local screen with what they need and how far away they are. Answer it to open a chat — no signal or match needed.",
+      },
+      {
+        term: "Question broadcasts",
+        body: "Ask everyone around you a quick question with a few answer options — for example “Coffee after this?” with Yes / No / Maybe. Nearby people vote anonymously, you watch the counts come in live, and you can start a chat with the asker straight from the card. Broadcasts expire after a short window.",
+      },
+      {
+        term: "“What are you up to?” — your intent",
+        body: "The chip on the radar lets you say what you're in the mood for (grabbing lunch, networking, just browsing…) and for how long. It shows on your beacon card so people who signal you already know what to open with. Tap it any time to change or clear it.",
+      },
+      {
+        term: "Venue perks",
+        body: "Some venues on the map are zones. When you're standing inside one, a perk card appears — a discount or freebie from that place. Tap claim and show the code at the counter.",
+      },
+    ],
+  },
+  {
     id: "chats",
     shot: "chat",
     shotCaption: "A match chat — your messages on the right, theirs on the left, photos via the icon in the input bar.",
