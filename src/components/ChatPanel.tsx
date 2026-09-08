@@ -609,11 +609,11 @@ export function ChatPanel({
       {/* Composer stays at the bottom, never scrolls. */}
       <form
         onSubmit={send}
-        className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pb-[calc(var(--safe-bottom)+0.5rem)] pt-3 will-change-transform"
+        className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pt-3"
         style={{
-          // The native web view stays full-height. Move only the composer above
-          // the keyboard instead of resizing the entire application shell.
-          transform: "translate3d(0, calc(-1 * var(--keyboard-inset)), 0)",
+          // The web view itself shrinks for the keyboard, so the composer only
+          // needs the home-indicator inset when the keyboard is closed.
+          paddingBottom: "calc(0.5rem + max(var(--safe-bottom) - var(--keyboard-inset), 0px))",
         }}
       >
         <input

@@ -35,9 +35,10 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Keyboard: {
-      // Keep the native web view at a stable height. The chat composer alone is
-      // moved above the keyboard using the native keyboard-height event.
-      resize: "none",
+      // Let the platform resize the web view itself (the behaviour native apps
+      // use). The layout is height:100%, so the header stays put and only the
+      // conversation area shrinks — no JS offsets, no jumping.
+      resize: "native",
       resizeOnFullScreen: true,
     },
     SystemBars: {

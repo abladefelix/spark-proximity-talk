@@ -187,8 +187,11 @@
   body {
     position: fixed;
     inset: 0;
-    width: 100dvw;
-    height: 100dvh;
+    width: 100%;
+    /* The native web view resizes itself for the keyboard; following its real
+       height (not a frozen viewport unit) is what makes the app behave like a
+       native one instead of shifting the whole interface. */
+    height: 100%;
     overflow: hidden;
     overscroll-behavior: none;
     touch-action: none;
@@ -226,8 +229,8 @@
   #app-scroll {
     position: fixed;
     inset: 0;
-    width: 100dvw;
-    height: 100dvh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     overscroll-behavior: none;
     touch-action: none;
@@ -240,7 +243,7 @@
   html[data-keyboard-open] #app-scroll {
     top: 0;
     bottom: auto;
-    height: 100dvh;
+    height: 100%;
   }
 
   /* Native app feel: no text selection, no long-press callout, no visible scrollbars. */
