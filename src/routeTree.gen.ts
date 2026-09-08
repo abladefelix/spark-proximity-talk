@@ -19,7 +19,6 @@ import { Route as Console9f42x7RouteImport } from './routes/console-9f42x7'
 import { Route as CsaeRouteImport } from './routes/csae'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as GuideRouteImport } from './routes/guide'
-import { Route as KeyboardTestRouteImport } from './routes/keyboard-test'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -82,11 +81,6 @@ const DeleteAccountRoute = DeleteAccountRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KeyboardTestRoute = KeyboardTestRouteImport.update({
-  id: '/keyboard-test',
-  path: '/keyboard-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -173,7 +167,6 @@ export interface FileRoutesByFullPath {
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
-  '/keyboard-test': typeof KeyboardTestRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -199,7 +192,6 @@ export interface FileRoutesByTo {
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
-  '/keyboard-test': typeof KeyboardTestRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -227,7 +219,6 @@ export interface FileRoutesById {
   '/csae': typeof CsaeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/guide': typeof GuideRoute
-  '/keyboard-test': typeof KeyboardTestRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -255,7 +246,6 @@ export interface FileRouteTypes {
     | '/csae'
     | '/delete-account'
     | '/guide'
-    | '/keyboard-test'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -281,7 +271,6 @@ export interface FileRouteTypes {
     | '/csae'
     | '/delete-account'
     | '/guide'
-    | '/keyboard-test'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -308,7 +297,6 @@ export interface FileRouteTypes {
     | '/csae'
     | '/delete-account'
     | '/guide'
-    | '/keyboard-test'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -336,7 +324,6 @@ export interface RootRouteChildren {
   CsaeRoute: typeof CsaeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   GuideRoute: typeof GuideRoute
-  KeyboardTestRoute: typeof KeyboardTestRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
@@ -418,13 +405,6 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/keyboard-test': {
-      id: '/keyboard-test'
-      path: '/keyboard-test'
-      fullPath: '/keyboard-test'
-      preLoaderRoute: typeof KeyboardTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -558,7 +538,6 @@ const rootRouteChildren: RootRouteChildren = {
   CsaeRoute: CsaeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   GuideRoute: GuideRoute,
-  KeyboardTestRoute: KeyboardTestRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
