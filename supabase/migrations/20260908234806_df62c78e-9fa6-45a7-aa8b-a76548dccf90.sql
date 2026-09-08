@@ -1,0 +1,1 @@
+CREATE POLICY "signals_update_own" ON public.signals FOR UPDATE TO authenticated USING (auth.uid() = from_user) WITH CHECK (auth.uid() = from_user AND from_user <> to_user);
