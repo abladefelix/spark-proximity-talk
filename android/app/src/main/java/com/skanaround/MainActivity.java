@@ -149,19 +149,9 @@ public class MainActivity extends BridgeActivity {
     private void applyConnectivity(boolean online) {
         Log.i(DEBUG_TAG, "Connectivity result: " + (online ? "online" : "offline"));
         if (online) {
-            if (overlay != null) {
-                hideOffline(true);
-                return;
-            }
-            // The site is reachable but the web view is stuck blank — e.g. it
-            // reloaded while the server was restarting. Bring the app back
-            // without the user having to do anything.
-            if (getBridge() != null && getBridge().getWebView() != null) {
-                String current = getBridge().getWebView().getUrl();
-                if (current == null || current.isEmpty() || "about:blank".equals(current)) {
-                    reloadWeb();
-                }
-            }
+            // Only recover when the branded offline screen is actually up;
+            // never interfere with a normal first load.
+            hideOffline(overlay != null);
         } else {
             hideSplash();
             showOffline();
