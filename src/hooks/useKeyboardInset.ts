@@ -41,6 +41,7 @@ export function useKeyboardInsetProvider() {
     const vv = window.visualViewport;
     let frame = 0;
     let nativeKeyboard = false;
+    let cancelled = false;
 
     const update = () => {
       if (!vv || nativeKeyboard) return;
@@ -51,7 +52,7 @@ export function useKeyboardInsetProvider() {
       });
     };
 
-    const nativeListeners = Capacitor.isNativePlatform()
+    const nativeListeners = Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("Keyboard")
       ? Promise.all([
           Keyboard.addListener("keyboardWillShow", ({ keyboardHeight }) => {
             nativeKeyboard = true;
@@ -61,8 +62,13 @@ export function useKeyboardInsetProvider() {
             nativeKeyboard = true;
             setInset(0);
           }),
-        ])
-      : null;
+        ]).catch(() => {
+          // A web deployment can be newer than the installed native shell.
+          // Keep VisualViewport handling active until that shell is rebuilt.
+          nativeKeyboard = false;
+          return [];
+        })
+      : Promise.resolve([]);
 
     update();
     vv?.addEventListener("resize", update);
@@ -71,8 +77,9 @@ export function useKeyboardInsetProvider() {
       cancelAnimationFrame(frame);
       vv?.removeEventListener("resize", update);
       vv?.removeEventListener("scroll", update);
-      void nativeListeners?.then((values) => {
-        values.forEach((handle) => void handle?.remove());
+      cancelled = true;
+      void nativeListeners.then((values) => {
+        values.forEach((handle) => void handle.remove());
       });
       setInset(0);
     };
