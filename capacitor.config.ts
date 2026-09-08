@@ -34,6 +34,12 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: true,
   },
   plugins: {
+    Keyboard: {
+      // Keep the native web view at a stable height. The chat composer alone is
+      // moved above the keyboard using the native keyboard-height event.
+      resize: "none",
+      resizeOnFullScreen: true,
+    },
     SystemBars: {
       insetsHandling: "css",
       style: "LIGHT",

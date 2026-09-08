@@ -234,6 +234,15 @@
     -webkit-overflow-scrolling: auto;
   }
 
+  /* Never let browser focus scrolling translate the fixed native app shell. */
+  html[data-keyboard-open],
+  html[data-keyboard-open] body,
+  html[data-keyboard-open] #app-scroll {
+    top: 0;
+    bottom: auto;
+    height: 100dvh;
+  }
+
   /* Native app feel: no text selection, no long-press callout, no visible scrollbars. */
   body {
     user-select: none;
