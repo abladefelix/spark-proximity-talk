@@ -139,9 +139,10 @@ function KeyboardTestPage() {
 
       <nav
         aria-hidden={keyboardOpen || undefined}
-        className={`relative z-40 shrink-0 border-t border-border bg-card ${keyboardOpen ? "invisible pointer-events-none" : ""}`}
+        className={`relative z-40 shrink-0 border-t border-border bg-card transition-opacity duration-200 ${keyboardOpen ? "hidden" : ""}`}
         style={{ height: "calc(var(--nav-height) + var(--safe-bottom))", paddingBottom: "var(--safe-bottom)" }}
       >
+
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
           Bottom nav
         </div>
