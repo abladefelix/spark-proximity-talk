@@ -38,12 +38,21 @@ function Landing() {
   const navigate = useNavigate();
   // Inside the installed app there is no "marketing" moment: go straight to the
   // radar when signed in, or to sign-in when not, behind a branded splash.
-  const [isNative] = useState(() => Capacitor.isNativePlatform());
+  // Start with the same value used by SSR, then detect Capacitor after hydration.
+  // Rendering the native splash during the first client pass produced different
+  // HTML from the server landing page and caused React hydration error 418.
+  const [isNative, setIsNative] = useState(false);
+  const [platformReady, setPlatformReady] = useState(false);
   const [stuck, setStuck] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!isNative) return;
+    setIsNative(Capacitor.isNativePlatform());
+    setPlatformReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!platformReady || !isNative) return;
     let cancelled = false;
     // getSession() can hang forever on a stalled token refresh (weak signal at
     // launch). Bound it, and if it stalls, show a retry/continue escape hatch.
@@ -68,22 +77,22 @@ function Landing() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [navigate, isNative, attempt]);
+  }, [navigate, isNative, platformReady, attempt]);
 
   useEffect(() => {
     // Web landing keeps its old behaviour: hop signed-in visitors to the radar.
-    if (isNative) return;
+    if (!platformReady || isNative) return;
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/radar" });
     });
-  }, [navigate, isNative]);
+  }, [navigate, isNative, platformReady]);
 
   const retry = useCallback(() => {
     setStuck(false);
     setAttempt((n) => n + 1);
   }, []);
 
-  if (isNative) {
+  if (platformReady && isNative) {
     return (
       <main className="flex h-full w-full flex-col items-center justify-center gap-4 px-6">
         <BrandMark size={72} />
