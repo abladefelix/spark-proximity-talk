@@ -292,6 +292,12 @@
     touch-action: pan-y;
   }
 
+  /* A routed chat shares the shell with the bottom menu. While the keyboard
+     covers that reserved strip, give its height back to the chat only. */
+  html[data-keyboard-open] [data-chat-route] {
+    --chat-keyboard-compensation: calc(var(--nav-height) + var(--safe-bottom));
+  }
+
   /* Short Android screens need denser vertical rhythm so controls never press
      against the system navigation area. */
   @media (max-height: 720px) {

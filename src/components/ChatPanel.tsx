@@ -500,7 +500,9 @@ export function ChatPanel({
   return (
     <div
       className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}
-      style={{ height: "calc(100% - var(--keyboard-inset))" }}
+      style={{
+        height: "min(100%, calc(100% - var(--keyboard-inset) + var(--chat-keyboard-compensation, 0px)))",
+      }}
     >
       <ChatBackdrop />
       {/* Header pinned above the transcript so it never repaints while scrolling. */}
