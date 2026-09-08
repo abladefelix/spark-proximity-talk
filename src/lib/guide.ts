@@ -8,6 +8,7 @@ export type GuideSection = {
     | "beacon"
     | "compass"
     | "signal"
+    | "bat"
     | "chat"
     | "profile"
     | "verified"
@@ -251,7 +252,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "local",
     title: "The local scene",
-    icon: "signal",
+    icon: "bat",
     summary: "The Bat Signal, quick questions, intents and venue perks around you.",
     items: [
       {
