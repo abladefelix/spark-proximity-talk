@@ -498,7 +498,10 @@ export function ChatPanel({
     : false;
 
   return (
-    <div className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}>
+    <div
+      className={className ?? "relative mx-auto flex h-full min-h-0 w-full max-w-lg flex-col"}
+      style={{ height: "calc(100% - var(--keyboard-inset))" }}
+    >
       <ChatBackdrop />
       {/* Header pinned above the transcript so it never repaints while scrolling. */}
       <header
@@ -611,8 +614,8 @@ export function ChatPanel({
         onSubmit={send}
         className="relative z-20 flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-2.5 pt-3"
         style={{
-          // The web view itself shrinks for the keyboard, so the composer only
-          // needs the home-indicator inset when the keyboard is closed.
+          // The chat panel shortens by the keyboard height; remove the home
+          // indicator inset while typing so this row rests against the keyboard.
           paddingBottom: "calc(0.5rem + max(var(--safe-bottom) - var(--keyboard-inset), 0px))",
         }}
       >

@@ -35,11 +35,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Keyboard: {
-      // Let the platform resize the web view itself (the behaviour native apps
-      // use). The layout is height:100%, so the header stays put and only the
-      // conversation area shrinks — no JS offsets, no jumping.
-      resize: "native",
-      resizeOnFullScreen: true,
+      // Keep the app window stable. ChatPanel uses the reported keyboard height
+      // to shorten only the conversation screen, so opening the keyboard never
+      // compresses the radar or the rest of the app behind it.
+      resize: "none",
+      resizeOnFullScreen: false,
     },
     SystemBars: {
       insetsHandling: "css",
