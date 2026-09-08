@@ -648,7 +648,7 @@ export function ChatPanel({
             placeholder={settings.chat_prompt_text}
             rows={1}
             maxLength={settings.max_message_len}
-            className="max-h-[108px] w-full resize-none border-0 bg-transparent py-[5px] pr-1 text-[15px] leading-[1.3] outline-none placeholder:text-muted-foreground/70"
+            className="max-h-[108px] w-full resize-none border-0 bg-transparent py-[5px] pr-1 text-[16px] leading-[1.3] outline-none placeholder:text-muted-foreground/70"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
