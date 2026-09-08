@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.skanaround",
   appName: "SKANAROUND",
-  webDir: ".output/public",
+  webDir: "dist/client",
   server: {
     // The app is a server-rendered TanStack Start site (server functions power
     // auth, radar and chat), so the web view must load the live deployment.
