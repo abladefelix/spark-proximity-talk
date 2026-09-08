@@ -23,9 +23,10 @@ export function BottomNav() {
   return (
     <nav
       aria-hidden={keyboardOpen || undefined}
-      className={`relative z-40 shrink-0 border-t border-border bg-card ${keyboardOpen ? "invisible pointer-events-none" : ""}`}
+      className={`relative z-40 shrink-0 border-t border-border bg-card transition-opacity duration-200 ${keyboardOpen ? "hidden" : ""}`}
       style={{ height: "calc(var(--nav-height) + var(--safe-bottom))", paddingBottom: "var(--safe-bottom)" }}
     >
+
       <div className="mx-auto grid h-full max-w-lg grid-cols-5 items-stretch px-1.5">
         {items.map(({ to, label, icon: Icon }) => {
           const badgeCount =
