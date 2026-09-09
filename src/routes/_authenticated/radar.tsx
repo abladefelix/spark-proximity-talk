@@ -994,10 +994,10 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Cards sit above the radar in the flow so they never overlap it, but
-            they are capped at 38% of the screen and scroll if they get long. */}
-        <div className="shrink-0 max-h-[38%] overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        {/* Cards float as a top overlay. They never change the radar's size
+            or position — the radar lives in its own pinned layer below. */}
+        <div className="absolute inset-x-0 top-0 z-20 max-h-[38%] overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="mx-auto max-w-[min(24rem,100%)]">
 
             {geoError && (
@@ -1043,7 +1043,9 @@ function RadarPage() {
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
+        {/* Radar layer: absolutely pinned to fill the screen between the header
+            and the bottom nav, always centered, regardless of the cards above. */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
