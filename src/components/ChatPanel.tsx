@@ -32,6 +32,53 @@ type Message = {
   pending?: boolean;
 };
 
+function ChatSafetyNotice({ matchId }: { matchId: string }) {
+  const storageKey = `chat-safety-dismissed-${matchId}`;
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  if (dismissed) return null;
+
+  function dismiss() {
+    try {
+      localStorage.setItem(storageKey, "1");
+    } catch {
+      /* ignore */
+    }
+    setDismissed(true);
+  }
+
+  return (
+    <div className="relative z-10 shrink-0 border-b border-amber-500/25 bg-amber-500/10 px-3.5 py-2.5">
+      <div className="flex items-start gap-2.5">
+        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[12.5px] font-semibold leading-tight text-amber-600 dark:text-amber-400">
+            Stay safe when meeting up
+          </p>
+          <p className="mt-0.5 text-[11.5px] leading-snug text-amber-700/90 dark:text-amber-300/80">
+            Meet in a public place, never go alone, and don't let anyone pressure you into leaving
+            your location. Tell a friend where you're going.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss safety notice"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full text-amber-600/80 transition active:scale-90 dark:text-amber-400/80"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function lastSeenLabel(iso: string | null | undefined) {
   if (!iso) return "";
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
