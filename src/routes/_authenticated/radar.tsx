@@ -994,10 +994,10 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        {/* Cards float as a top overlay. They never change the radar's size
-            or position — the radar lives in its own pinned layer below. */}
-        <div className="absolute inset-x-0 top-0 z-20 max-h-[38%] overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Cards occupy only their measured space. The radar below is centered
+            between the bottom of this region and the bottom navigation. */}
+        <div className="relative z-20 max-h-[38%] shrink-0 overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="mx-auto max-w-[min(24rem,100%)]">
 
             {geoError && (
@@ -1043,9 +1043,8 @@ function RadarPage() {
           </div>
         </div>
 
-        {/* Radar layer: absolutely pinned to fill the screen between the header
-            and the bottom nav, always centered, regardless of the cards above. */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
+        {/* This layer receives only the clear space left below the cards. */}
+        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
       <section
         ref={scopeRef}
         aria-label={geoError ?? "Radar"}
@@ -1054,7 +1053,7 @@ function RadarPage() {
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
         style={{ touchAction: "pan-y" }}
-        className="relative aspect-square h-auto max-h-full w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
+        className="relative aspect-square h-auto max-h-[calc(100%-3rem)] w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
       >
         <div
           className="absolute inset-0 origin-center"
