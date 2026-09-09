@@ -598,6 +598,8 @@ export function ChatPanel({
         <ChatSafetyMenu matchId={matchId} otherId={other?.id} otherName={name} onBlocked={closeChat} />
       </header>
 
+      <ChatSafetyNotice matchId={matchId} />
+
       <div
         ref={scrollRef}
         data-scrollable
