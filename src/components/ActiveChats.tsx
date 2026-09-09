@@ -139,7 +139,8 @@ export function ActiveChats() {
   if (isLoading && allRows.length === 0) return <ActiveChatsSkeleton />;
   if (!latest) return null;
 
-  const behind = Math.min(rows.length - 1, 2);
+  // Keep just one peeking fold underneath; the badge already shows the total count.
+  const behind = rows.length > 1 ? 1 : 0;
 
   return (
     <div className="relative z-10 mt-4">
