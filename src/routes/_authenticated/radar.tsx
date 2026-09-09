@@ -995,10 +995,10 @@ function RadarPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Cards float above the scope so the radar keeps its exact size and
-            centre no matter how many cards are queued. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 max-h-[38%] overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="pointer-events-auto mx-auto max-w-[min(24rem,100%)]">
+        {/* Cards sit above the radar in the flow so they never overlap it, but
+            they are capped at 38% of the screen and scroll if they get long. */}
+        <div className="shrink-0 max-h-[38%] overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mx-auto max-w-[min(24rem,100%)]">
 
             {geoError && (
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
