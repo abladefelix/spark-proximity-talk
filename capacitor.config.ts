@@ -22,19 +22,17 @@ const config: CapacitorConfig = {
     ],
   },
 
-
   ios: {
     contentInset: "never",
     allowsLinkPreview: false,
-    webContentsDebuggingEnabled: true,
+    // Do not expose Safari Web Inspector against App Store builds.
+    webContentsDebuggingEnabled: false,
   },
   android: {
     allowMixedContent: false,
     captureInput: true,
-    // Keep enabled for production-device diagnosis. Android Studio Logcat and
-    // chrome://inspect can then expose WebView failures that would otherwise
-    // look like an unexplained native app exit.
-    webContentsDebuggingEnabled: true,
+    // Do not expose Chrome WebView debugging in Play Store builds.
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     Keyboard: {
