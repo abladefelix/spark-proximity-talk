@@ -1,5 +1,7 @@
 name: Store Readiness
 
+# Release validation for SKANAROUND native store submissions.
+
 on:
   push:
     branches:
