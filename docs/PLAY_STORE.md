@@ -6,7 +6,7 @@ Everything below is specific to this app. Follow it top to bottom.
 | --- | --- |
 | App name | SKANAROUND |
 | Package (application id) | `com.skanaround` |
-| Version | `versionName 1.0.2`, `versionCode 3` (`android/app/build.gradle`) |
+| Version | `versionName 1.1.7`, `versionCode 19` (`android/app/build.gradle`) |
 | Category | Social |
 | Content rating | Mature 17+ (user-generated content + location) |
 | Target audience | 18+ only (app enforces a date-of-birth age gate) |
@@ -147,6 +147,8 @@ Have these ready to point at; they already exist in the app:
    results, then roll out (start at 20% staged rollout).
 
 ## 7. Pre-submission checklist
+
+Release baseline as of 3 October 2026: Android targets API 36, app version is 1.1.7 (19), and production WebView debugging is disabled.
 
 - [ ] `versionCode` incremented, signed `.aab` built
 - [ ] `google-services.json` present for the release package
