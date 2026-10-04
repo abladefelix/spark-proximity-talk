@@ -6,7 +6,7 @@ Everything below is specific to this app. Follow it top to bottom.
 | --- | --- |
 | App name | SKANAROUND |
 | Package (application id) | `com.skanaround` |
-| Version | `versionName 1.0.2`, `versionCode 3` (`android/app/build.gradle`) |
+| Version | `versionName 1.1.7`; latest submitted release uses `versionCode 20` |
 | Category | Social |
 | Content rating | Mature 17+ (user-generated content + location) |
 | Target audience | 18+ only (app enforces a date-of-birth age gate) |
