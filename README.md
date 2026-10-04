@@ -4,6 +4,9 @@ Proximity chat. People nearby appear as beacons on a live radar; a mutual signal
 unlocks a private chat. Built as a mobile-first app (iOS + Android via Capacitor)
 with a web admin console.
 
+> Returning to the project? Start with **[PROJECT_MAP.md](./PROJECT_MAP.md)** for
+> a sitemap-style map of code, routes, infrastructure, accounts and release docs.
+
 ## Quick start
 
 Requires Node.js 20+ and Bun.
@@ -12,41 +15,45 @@ Requires Node.js 20+ and Bun.
 git clone <this-repository-url>
 cd <repository-name>
 bun install
-bun run dev            # http://localhost:8080
+bun run dev
 ```
 
 Scripts: `bun run dev`, `bun run build`, `bun run preview`, `bun run lint`,
 `bun run format`.
 
-## Backend
+## Production backend
 
-The backend (Postgres, Auth, Storage, Realtime) is managed by Lovable Cloud.
-Client env vars live in `.env` and are generated automatically:
+Production uses a **self-hosted Supabase stack on the Azure VM** (Postgres,
+Auth, Storage and Realtime). The original Lovable-hosted Supabase project is
+kept for history/migration reference and is not production.
 
-| Variable | Where it is used |
-| --- | --- |
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | browser client |
-| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server functions |
-| `SUPABASE_SERVICE_ROLE_KEY` | privileged server-only work |
+Production references are injected at deploy time from protected server
+environment files. Never expose the service-role key to browser code or commit
+production secret values.
 
-Never expose the service-role key to browser code.
+See:
+
+- [docs/OPERATIONS_RUNBOOK.md](./docs/OPERATIONS_RUNBOOK.md)
+- [docs/ACCOUNTS_INFRASTRUCTURE.md](./docs/ACCOUNTS_INFRASTRUCTURE.md)
+- [docs/SELF_HOST_BACKEND.md](./docs/SELF_HOST_BACKEND.md)
 
 ## Documentation
 
+The complete index is [docs/README.md](./docs/README.md).
+
+Highest-value entry points:
+
 | Doc | Contents |
 | --- | --- |
-| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | How to use the app: sign up, radar, signals, chat, Pro |
-| [docs/ADMIN.md](./docs/ADMIN.md) | Admin console: every tab, setting and moderation action |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Stack, data model, routes, security model |
-| [docs/DATABASE.md](./docs/DATABASE.md) | Migrations, tables, RPCs, storage buckets |
-| [docs/DEPLOY_WINDOWS_VPS.md](./docs/DEPLOY_WINDOWS_VPS.md) | Self-hosting on a Windows VPS at skanaround.bytenetdigital.com |
-| [docs/SETUP.md](./docs/SETUP.md) | Local setup, first admin, billing/mail configuration |
-| [docs/LAUNCH.md](./docs/LAUNCH.md) | Line-by-line iOS + Android run commands |
-| [docs/MOBILE.md](./docs/MOBILE.md) | Native builds, permissions, store checklist |
-| [docs/PUSH_NOTIFICATIONS.md](./docs/PUSH_NOTIFICATIONS.md) | APNs + FCM setup |
-| [docs/GITHUB_SYNC.md](./docs/GITHUB_SYNC.md) | Repo sync and working locally |
+| [PROJECT_MAP.md](./PROJECT_MAP.md) | Structural repository/system map |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Stack, data flow and security model |
+| [docs/OPERATIONS_RUNBOOK.md](./docs/OPERATIONS_RUNBOOK.md) | Production operations |
+| [docs/ACCOUNTS_INFRASTRUCTURE.md](./docs/ACCOUNTS_INFRASTRUCTURE.md) | Resource/login references without secrets |
+| [docs/RELEASE_RUNBOOK.md](./docs/RELEASE_RUNBOOK.md) | iOS/Android/store releases |
+| [docs/FUTURE_MAINTENANCE.md](./docs/FUTURE_MAINTENANCE.md) | Handoff and future maintenance |
 
 ## Tech
 
-TanStack Start (React 19) + Vite, Tailwind v4 tokens in `src/styles.css`,
-TanStack Query, Capacitor 8 native shell, Paystack for payments, SMTP for email.
+TanStack Start (React 19) + Vite, Tailwind v4, TanStack Query, Capacitor 8,
+self-hosted Supabase on Azure, RevenueCat for native subscriptions, and SMTP for
+email.
