@@ -140,6 +140,8 @@ type VerifyFilter = "all" | "selfie" | "pro";
 
 export function AdminPage() {
   const queryClient = useQueryClient();
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [search, setSearch] = useState("");
   const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
   const [verifySearch, setVerifySearch] = useState("");
@@ -306,9 +308,30 @@ export function AdminPage() {
   const { data: access, isLoading: accessLoading } = useQuery({
     queryKey: ["admin-access"],
     queryFn: async () => {
-      const me = (await supabase.auth.getUser()).data.user?.id ?? null;
-      const { data: roles } = await supabase.from("user_roles").select("role");
-      const { data: adminExists } = await supabase.rpc("admin_exists");
+      const { data: userData } = await supabase.auth.getUser();
+      const me = userData.user?.id ?? null;
+
+      // Never call privileged admin RPCs as an anonymous browser. When there is
+      // no session, render the admin sign-in form instead.
+      if (!me) {
+        return {
+          me: null,
+          roles: [] as Role[],
+          isStaff: false,
+          isAdmin: false,
+          adminExists: true,
+        };
+      }
+
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", me);
+      if (rolesError) throw rolesError;
+
+      const { data: adminExists, error: adminExistsError } = await supabase.rpc("admin_exists");
+      if (adminExistsError) throw adminExistsError;
+
       const list = (roles ?? []).map((r) => r.role as Role);
       return {
         me,
@@ -319,6 +342,30 @@ export function AdminPage() {
       };
     },
   });
+
+  const adminSignIn = useMutation({
+    mutationFn: async () => {
+      const email = adminEmail.trim();
+      if (!email || !adminPassword) throw new Error("Enter your email and password");
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: adminPassword,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setAdminPassword("");
+      await queryClient.invalidateQueries({ queryKey: ["admin-access"] });
+      toast.success("Signed in");
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not sign in"),
+  });
+
+  async function adminSignOut() {
+    await supabase.auth.signOut();
+    await queryClient.invalidateQueries({ queryKey: ["admin-access"] });
+    toast.success("Signed out");
+  }
 
   const isStaff = access?.isStaff ?? false;
   const isAdmin = access?.isAdmin ?? false;
@@ -644,6 +691,64 @@ export function AdminPage() {
     );
   }
 
+  if (!access?.me) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-6">
+        <form
+          className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+          onSubmit={(event) => {
+            event.preventDefault();
+            adminSignIn.mutate();
+          }}
+        >
+          <div className="text-center">
+            <ShieldCheck className="mx-auto size-9 text-primary" />
+            <h1 className="mt-3 text-xl font-semibold">Admin sign in</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sign in with a SKANAROUND account that already has an admin role.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="admin-email" className="text-sm font-medium">
+              Email
+            </label>
+            <Input
+              id="admin-email"
+              type="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              value={adminEmail}
+              onChange={(event) => setAdminEmail(event.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="admin-password" className="text-sm font-medium">
+              Password
+            </label>
+            <Input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              value={adminPassword}
+              onChange={(event) => setAdminPassword(event.target.value)}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="heat"
+            className="w-full"
+            disabled={adminSignIn.isPending}
+          >
+            {adminSignIn.isPending ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   if (!isStaff) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
@@ -662,6 +767,9 @@ export function AdminPage() {
             Claim admin
           </Button>
         )}
+        <Button variant="outline" onClick={() => void adminSignOut()}>
+          Sign out
+        </Button>
       </div>
     );
   }
