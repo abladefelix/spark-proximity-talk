@@ -9,11 +9,11 @@ of the admin console.
 
 - **App**: TanStack Start (React 19) + Vite, TanStack Query, Tailwind v4 tokens
   in `src/styles.css` (light + dark via OKLCH tokens)
-- **Backend**: Lovable Cloud (Postgres, Auth, Storage, Realtime)
+- **Production backend**: self-hosted Supabase on the Azure VM (Postgres, Auth, Storage, Realtime)\n- **Historical backend**: Lovable Cloud project retained for migration/history only
 - **Server logic**: `createServerFn` modules in `src/lib/*.functions.ts` with
   server-only helpers in `*.server.ts`
 - **Native**: Capacitor 8 shell (geolocation, push, biometrics, app state)
-- **Payments**: Paystack · **Email**: SMTP configured in Admin
+- **Native subscriptions**: RevenueCat over Apple IAP / Google Play Billing\n- **Web-only billing**: Paystack · **Email**: SMTP configured in Admin
 
 ## Routes
 
