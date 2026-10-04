@@ -75,10 +75,16 @@ export function WebGate({ children }: { children: ReactNode }) {
 
 
   const allowed = WEB_ALLOWED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  // Keep the consumer web app disabled, but allow the existing auth screen
+  // when it is explicitly opened for browser-based administration.
+  const adminAuth =
+    hydrated &&
+    pathname === "/auth" &&
+    new URLSearchParams(window.location.search).get("admin") === "1";
   const isNative = hydrated && Capacitor.isNativePlatform();
   const { data: webEnabled, isLoading } = useWebAppEnabled();
 
-  if (!hydrated || isNative || allowed) return <>{children}</>;
+  if (!hydrated || isNative || allowed || adminAuth) return <>{children}</>;
   // Wait for the admin setting before deciding, so the wall never flashes.
   if (isLoading) return null;
   if (webEnabled) return <>{children}</>;
