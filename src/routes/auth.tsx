@@ -46,6 +46,13 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function isAdminBrowserLogin() {
+  return (
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("admin") === "1"
+  );
+}
+
 /** Whole years between a YYYY-MM-DD date and today; null when unparseable. */
 function ageFrom(dob: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
@@ -139,7 +146,7 @@ function AuthPage() {
         if (error) throw error;
       }
       setOtherDevice(null);
-      navigate({ to: "/radar" });
+      navigate({ to: isAdminBrowserLogin() ? "/admin" : "/radar" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not sign the other device out");
     } finally {
@@ -172,12 +179,12 @@ function AuthPage() {
     let active = true;
     const check = () => {
       supabase.auth.getSession().then(({ data }) => {
-        if (active && data.session && !signingUp.current) navigate({ to: "/radar" });
+        if (active && data.session && !signingUp.current) navigate({ to: isAdminBrowserLogin() ? "/admin" : "/radar" });
       });
     };
     check();
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session && !signingUp.current) navigate({ to: "/radar" });
+      if (session && !signingUp.current) navigate({ to: isAdminBrowserLogin() ? "/admin" : "/radar" });
     });
     window.addEventListener("focus", check);
     return () => {
@@ -325,7 +332,7 @@ function AuthPage() {
       }
 
       nativeDebug("navigating to radar");
-      navigate({ to: "/radar" });
+      navigate({ to: isAdminBrowserLogin() ? "/admin" : "/radar" });
 
 
     } catch (err) {
