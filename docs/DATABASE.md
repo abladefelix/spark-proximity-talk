@@ -1,6 +1,6 @@
 # SKANAROUND — Database
 
-Postgres managed by Lovable Cloud. Schema changes are made only through
+Production Postgres runs in the self-hosted Supabase stack on the Azure VM. The old Lovable-hosted database is historical. Schema changes are made only through
 migrations in `supabase/migrations/*.sql`, applied in timestamp order.
 
 ## Migration rules
