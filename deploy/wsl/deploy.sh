@@ -21,7 +21,14 @@ echo "==> Applying self-hosted backend values to .env"
 BACKEND_ENV="/etc/skanaround-backend.env"
 [[ -f "$BACKEND_ENV" ]] || BACKEND_ENV="/etc/skanaround.env"
 
-read_kv() { grep -m1 "^$1=" "$2" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true; }
+read_kv() {
+  local key="$1" file="$2"
+  if [[ -r "$file" ]]; then
+    grep -m1 "^$key=" "$file" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true
+  elif [[ -f "$file" ]]; then
+    sudo grep -m1 "^$key=" "$file" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true
+  fi
+}
 
 SUPA_URL="$(read_kv SUPABASE_URL "$BACKEND_ENV")"
 [[ -n "$SUPA_URL" ]] || SUPA_URL="$(read_kv VITE_SUPABASE_URL "$BACKEND_ENV")"
@@ -34,7 +41,7 @@ SERVICE_KEY="$(read_kv SUPABASE_SERVICE_ROLE_KEY "$BACKEND_ENV")"
 
 # The running stack is authoritative for signing keys. /etc may contain keys
 # from an earlier stack setup, which Envoy rejects before Auth sees the login.
-if [[ -r /srv/supabase/.env ]]; then
+if [[ -f /srv/supabase/.env ]]; then
   STACK_ANON="$(read_kv ANON_KEY /srv/supabase/.env)"
   STACK_SERVICE_KEY="$(read_kv SERVICE_ROLE_KEY /srv/supabase/.env)"
   [[ -n "$STACK_ANON" ]] && ANON="$STACK_ANON"
