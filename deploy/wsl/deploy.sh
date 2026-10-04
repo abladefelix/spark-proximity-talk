@@ -108,7 +108,10 @@ set_env SUPABASE_PROJECT_ID "selfhosted"
 echo "    backend -> $SUPA_URL"
 
 echo "==> Applying database migrations"
-bash "$APP_DIR/deploy/wsl/apply-migrations.sh" "$APP_DIR" /srv/supabase
+# The self-hosted Supabase stack keeps /srv/supabase/.env protected, so
+# docker compose must run with elevated access while the application build
+# continues as the normal deploy user.
+sudo bash "$APP_DIR/deploy/wsl/apply-migrations.sh" "$APP_DIR" /srv/supabase
 
 echo "==> Installing dependencies"
 # Lovable maintains bun.lock as the authoritative dependency lockfile.
