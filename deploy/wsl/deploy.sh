@@ -104,10 +104,12 @@ echo "==> Applying database migrations"
 bash "$APP_DIR/deploy/wsl/apply-migrations.sh" "$APP_DIR" /srv/supabase
 
 echo "==> Installing dependencies"
-npm ci --no-audit --no-fund
+# Lovable maintains bun.lock as the authoritative dependency lockfile.
+# package-lock.json may lag after Lovable dependency/security updates.
+bun install --frozen-lockfile
 
 echo "==> Building"
-npm run build
+bun run build
 
 echo "==> Verifying the built bundle targets the self-hosted backend"
 if grep -rl "pxgxxlcchyxrilibecsc.supabase.co" dist .output 2>/dev/null | head -5 | grep -q .; then
