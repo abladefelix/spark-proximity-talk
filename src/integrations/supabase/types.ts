@@ -979,6 +979,9 @@ export type Database = {
       }
       reports: {
         Row: {
+          content_id: string | null
+          content_snapshot: string | null
+          content_type: string | null
           created_at: string
           id: string
           reason: string
@@ -986,6 +989,9 @@ export type Database = {
           reporter: string
         }
         Insert: {
+          content_id?: string | null
+          content_snapshot?: string | null
+          content_type?: string | null
           created_at?: string
           id?: string
           reason: string
@@ -993,6 +999,9 @@ export type Database = {
           reporter: string
         }
         Update: {
+          content_id?: string | null
+          content_snapshot?: string | null
+          content_type?: string | null
           created_at?: string
           id?: string
           reason?: string
@@ -1405,6 +1414,7 @@ export type Database = {
       nearby_broadcasts: {
         Args: { radius_m?: number }
         Returns: {
+          author_id: string
           counts: number[]
           distance_m: number
           expires_at: string
@@ -1415,6 +1425,7 @@ export type Database = {
           options: string[]
           question: string
           total: number
+          username: string
         }[]
       }
       nearby_help_beacons: {
@@ -1462,6 +1473,18 @@ export type Database = {
       post_broadcast: {
         Args: { _options: string[]; _question: string }
         Returns: string
+      }
+      delete_my_broadcast: {
+        Args: { _broadcast_id: string }
+        Returns: undefined
+      }
+      report_broadcast: {
+        Args: { _broadcast_id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_remove_reported_content: {
+        Args: { _report_id: string }
+        Returns: undefined
       }
       purge_expired_signals: { Args: never; Returns: undefined }
       purge_old_chats: { Args: never; Returns: number }
