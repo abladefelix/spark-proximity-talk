@@ -29,7 +29,7 @@ There is no tolerance for objectionable content or abusive users. You must not p
 Accounts that breach this section are suspended or permanently banned, and content is removed.
 
 ## 4. Reporting and moderation
-Every profile and chat has a Report and a Block action. Reports reach our moderation queue immediately. We aim to review every report and remove offending content and ejectors of abusive users **within 24 hours**. Blocking is instant and hides both people from each other on the radar and in chat.
+Every profile and chat has a Report and a Block action. Reports reach our moderation queue immediately. We review reports as quickly as possible and aim to remove offending content and suspend or permanently remove abusive users **within 24 hours**. Blocking is instant and hides both people from each other on the radar and in chat.
 
 ## 5. Your content
 You keep ownership of the photos and messages you post. You grant us the licence needed to store and display them to the people you chat with. You are responsible for what you send.
