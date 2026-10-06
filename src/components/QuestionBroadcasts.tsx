@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MessageCircleQuestion, Plus, Zap } from "lucide-react";
+import {
+  Ban,
+  Flag,
+  MessageCircleQuestion,
+  MoreHorizontal,
+  Plus,
+  ShieldAlert,
+  Trash2,
+  Zap,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { errorMessage } from "@/lib/errors";
@@ -9,6 +18,7 @@ import { publishMyLocation } from "@/lib/publish-location";
 import { useChatSheet } from "@/components/ChatSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -16,9 +26,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Broadcast = {
   id: string;
+  author_id: string;
+  username: string;
   question: string;
   options: string[];
   counts: number[];
@@ -29,6 +48,13 @@ type Broadcast = {
   expires_at: string;
   match_id: string | null;
 };
+
+const CLIENT_BLOCKED_CONTENT =
+  /(kill\s+yourself|rape|child\s*(sex|porn)|csam|porn|nudes?|explicit\s+sex|fuck|fucking|cunt|bomb\s+threat|terrorist\s+threat)/i;
+
+function containsBlockedContent(text: string) {
+  return CLIENT_BLOCKED_CONTENT.test(text);
+}
 
 function minutesLeft(iso: string) {
   const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
@@ -42,11 +68,14 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
     const saved = Number(window.localStorage.getItem("skan-radius") ?? "");
     return Number.isFinite(saved) && saved > 0 ? saved : 1000;
   })();
+
   const qc = useQueryClient();
   const { openChat } = useChatSheet();
   const [composing, setComposing] = useState(false);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
+  const [reporting, setReporting] = useState<Broadcast | null>(null);
+  const [reportReason, setReportReason] = useState("");
 
   const { data: items = [] } = useQuery({
     queryKey: ["broadcasts", savedRadius],
@@ -62,10 +91,18 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
 
   const post = useMutation({
     mutationFn: async () => {
+      const cleanQuestion = question.trim();
       const opts = options.map((o) => o.trim()).filter(Boolean);
+
+      if (containsBlockedContent(cleanQuestion) || opts.some(containsBlockedContent)) {
+        throw new Error(
+          "This content may violate SKANAROUND Community Rules. Please edit it and try again.",
+        );
+      }
+
       await publishMyLocation();
       const { error } = await (supabase as any).rpc("post_broadcast", {
-        _question: question.trim(),
+        _question: cleanQuestion,
         _options: opts,
       });
       if (error) throw error;
@@ -75,9 +112,18 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
       setComposing(false);
       setQuestion("");
       setOptions(["", ""]);
-      toast.success("Asked the area", { description: "Answers are anonymous for 15 minutes." });
+      toast.success("Question posted", {
+        description: "Your username is shown. Answers remain private for 15 minutes.",
+      });
     },
-    onError: (e) => toast.error(errorMessage(e, "Could not post")),
+    onError: (e) => {
+      const message = errorMessage(e, "Could not post");
+      toast.error(
+        /content_not_allowed/i.test(message)
+          ? "This content may violate SKANAROUND Community Rules. Please edit it and try again."
+          : message,
+      );
+    },
   });
 
   const answer = useMutation({
@@ -108,6 +154,57 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
     onError: (e) => toast.error(errorMessage(e, "Could not signal")),
   });
 
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).rpc("delete_my_broadcast", {
+        _broadcast_id: id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
+      toast.success("Question removed");
+    },
+    onError: (e) => toast.error(errorMessage(e, "Could not remove question")),
+  });
+
+  const block = useMutation({
+    mutationFn: async (b: Broadcast) => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) throw new Error("Sign in again to block this user");
+      const { error } = await supabase.from("blocks").insert({
+        blocker: me,
+        blocked: b.author_id,
+      });
+      if (error && !/duplicate/i.test(error.message)) throw error;
+    },
+    onSuccess: (_data, b) => {
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
+      qc.invalidateQueries({ queryKey: ["nearby"] });
+      toast.success(`@${b.username} blocked`);
+    },
+    onError: (e) => toast.error(errorMessage(e, "Could not block user")),
+  });
+
+  const report = useMutation({
+    mutationFn: async () => {
+      if (!reporting) return;
+      const { error } = await (supabase as any).rpc("report_broadcast", {
+        _broadcast_id: reporting.id,
+        _reason: reportReason.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setReporting(null);
+      setReportReason("");
+      toast.success("Report sent", {
+        description: "The question is hidden from you after you block the user. Reports are reviewed within 24 hours.",
+      });
+    },
+    onError: (e) => toast.error(errorMessage(e, "Could not send report")),
+  });
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
@@ -121,7 +218,7 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
 
       {items.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-          No questions nearby. Ask one — it's anonymous and vanishes in 15 minutes.
+          No questions nearby. Ask one — your username is shown and it vanishes in 15 minutes.
         </p>
       ) : null}
 
@@ -129,8 +226,58 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
         <div key={b.id} className="space-y-2 rounded-2xl border border-border bg-card/70 px-3 py-2.5">
           <div className="flex items-start gap-2">
             <MessageCircleQuestion className="mt-0.5 size-4 shrink-0 text-primary" />
-            <p className="flex-1 text-sm">{b.question}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium text-muted-foreground">@{b.username}</p>
+              <p className="text-sm">{b.question}</p>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Question safety options"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground"
+                >
+                  <MoreHorizontal className="size-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {b.mine ? (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => {
+                      if (window.confirm("Remove this question immediately?")) remove.mutate(b.id);
+                    }}
+                  >
+                    <Trash2 className="size-4" /> Delete my question
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setReportReason("");
+                        setReporting(b);
+                      }}
+                    >
+                      <Flag className="size-4" /> Report question
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onSelect={() => {
+                        if (window.confirm(`Block @${b.username}? You will no longer see each other.`)) {
+                          block.mutate(b);
+                        }
+                      }}
+                    >
+                      <Ban className="size-4" /> Block @{b.username}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
           <div className="space-y-1">
             {b.options.map((o, i) => {
               const count = b.counts?.[i] ?? 0;
@@ -161,6 +308,7 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
               );
             })}
           </div>
+
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
               {Math.round(b.distance_m)} m · {b.total} answered · {minutesLeft(b.expires_at)}
@@ -188,15 +336,28 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
           <DialogHeader>
             <DialogTitle>Ask the people around you</DialogTitle>
             <DialogDescription>
-              Nobody sees who asked or who answered. The question disappears after 15 minutes.
+              Your SKANAROUND username is shown with the question. Answers remain private.
+              Questions disappear after 15 minutes.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="rounded-xl border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 font-medium text-foreground">
+              <ShieldAlert className="size-3.5" /> Community safety
+            </span>
+            <p className="mt-1">
+              No harassment, sexual content, hate speech, threats, scams, illegal content or abuse.
+              Posts may be removed and accounts may be suspended.
+            </p>
+          </div>
+
           <Input
             value={question}
             maxLength={140}
             placeholder="Is the queue at the coffee place long?"
             onChange={(e) => setQuestion(e.target.value)}
           />
+
           {options.map((o, i) => (
             <Input
               key={i}
@@ -208,11 +369,13 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
               }
             />
           ))}
+
           {options.length < 4 ? (
             <Button variant="ghost" size="sm" onClick={() => setOptions((p) => [...p, ""])}>
               <Plus className="size-3.5" /> Add answer
             </Button>
           ) : null}
+
           <Button
             variant="heat"
             disabled={
@@ -223,6 +386,44 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
             onClick={() => post.mutate()}
           >
             Post question
+          </Button>
+
+          <p className="text-center text-[11px] text-muted-foreground">
+            By posting, you agree to the Community Rules in our Terms of Service.
+          </p>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(reporting)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReporting(null);
+            setReportReason("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Report question</DialogTitle>
+            <DialogDescription>
+              Tell us why this question is unsafe or inappropriate. Our moderation team reviews
+              reports within 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reportReason}
+            maxLength={500}
+            rows={4}
+            placeholder="Harassment, sexual content, hate speech, threat, scam, spam, or another concern…"
+            onChange={(e) => setReportReason(e.target.value)}
+          />
+          <Button
+            variant="destructive"
+            disabled={report.isPending || reportReason.trim().length < 3}
+            onClick={() => report.mutate()}
+          >
+            <Flag className="mr-2 size-4" /> Submit report
           </Button>
         </DialogContent>
       </Dialog>

@@ -14,6 +14,8 @@ const WEB_ALLOWED = [
   "/reset-password",
   "/privacy",
   "/terms",
+  "/support",
+  "/guide",
   "/csae",
   "/upgrade",
   "/business",
