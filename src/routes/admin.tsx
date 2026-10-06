@@ -452,7 +452,7 @@ export function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("reports")
-        .select("id, reason, created_at, reporter, reported")
+        .select("id, reason, created_at, reporter, reported, content_type, content_id, content_snapshot")
         .order("created_at", { ascending: false })
         .limit(100);
       if (!rows?.length) return [];
@@ -1421,6 +1421,12 @@ export function AdminPage() {
                   <p className="truncate text-[11px] leading-tight text-muted-foreground">
                     {r.reason}
                   </p>
+                  {r.content_type ? (
+                    <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
+                      {r.content_type === "broadcast" ? "Local question" : r.content_type}
+                      {r.content_snapshot ? ` · “${r.content_snapshot}”` : ""}
+                    </p>
+                  ) : null}
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -1444,6 +1450,11 @@ export function AdminPage() {
                     >
                       <Ban className="size-4" /> Ban member
                     </DropdownMenuItem>
+                    {r.content_type === "broadcast" && r.content_id ? (
+                      <DropdownMenuItem onSelect={() => void removeReportedContent(r.id)}>
+                        <Trash2 className="size-4" /> Remove reported question
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onSelect={() => void wipeActivity(r.reported)}>
                       <Trash2 className="size-4" /> Wipe their activity
                     </DropdownMenuItem>
