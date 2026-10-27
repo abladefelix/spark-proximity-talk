@@ -2,7 +2,7 @@
 
 ## Deployment status
 
-Implemented in source; deployment and enabling on production must be verified separately. No database migration is required. Do not tell Apple the demo is available until it has been tested in the installed iOS build.
+On October 27, 2026 the owner deployed branch `codex/review-demo-access` over phone SSH. The live Admin → App page displayed the new controls and confirmed demo data enabled for `ogyamwilson`. Implementation commit: `7554de8`; PR: https://github.com/abladefelix/spark-proximity-talk/pull/11. This confirms the admin action, not an end-to-end reviewer session. Testing in installed iOS 1.1.7 (19) and the live disable/re-enable cycle remain pending. No database migration is required. The feature branch must be integrated before a subsequent main deployment to retain this feature.
 
 ## Enable and disable
 
