@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { ReviewDemoEntry } from "@/components/ReviewDemoEntry";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeoutFallback } from "@/lib/net";
@@ -73,6 +74,7 @@ function AuthedLayout() {
             data-scrollable
             className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
+            <ReviewDemoEntry userId={user.id} />
             <Outlet />
           </div>
           <BottomNav />

@@ -21,6 +21,8 @@ import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReviewDemoRouteImport } from './routes/review-demo'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TreeviewRouteImport } from './routes/treeview'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
@@ -91,6 +93,16 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewDemoRoute = ReviewDemoRouteImport.update({
+  id: '/review-demo',
+  path: '/review-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -169,6 +181,8 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-demo': typeof ReviewDemoRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
@@ -194,6 +208,8 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-demo': typeof ReviewDemoRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
@@ -221,6 +237,8 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/review-demo': typeof ReviewDemoRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/treeview': typeof TreeviewRoute
   '/upgrade': typeof UpgradeRoute
@@ -248,6 +266,8 @@ export interface FileRouteTypes {
     | '/guide'
     | '/privacy'
     | '/reset-password'
+    | '/review-demo'
+    | '/support'
     | '/terms'
     | '/treeview'
     | '/upgrade'
@@ -273,6 +293,8 @@ export interface FileRouteTypes {
     | '/guide'
     | '/privacy'
     | '/reset-password'
+    | '/review-demo'
+    | '/support'
     | '/terms'
     | '/treeview'
     | '/upgrade'
@@ -299,6 +321,8 @@ export interface FileRouteTypes {
     | '/guide'
     | '/privacy'
     | '/reset-password'
+    | '/review-demo'
+    | '/support'
     | '/terms'
     | '/treeview'
     | '/upgrade'
@@ -326,6 +350,8 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ReviewDemoRoute: typeof ReviewDemoRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   TreeviewRoute: typeof TreeviewRoute
   UpgradeRoute: typeof UpgradeRoute
@@ -419,6 +445,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review-demo': {
+      id: '/review-demo'
+      path: '/review-demo'
+      fullPath: '/review-demo'
+      preLoaderRoute: typeof ReviewDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -540,6 +580,8 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ReviewDemoRoute: ReviewDemoRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   TreeviewRoute: TreeviewRoute,
   UpgradeRoute: UpgradeRoute,
