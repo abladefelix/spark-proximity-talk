@@ -44,7 +44,7 @@ type Broadcast = {
   total: number;
   my_answer: number | null;
   mine: boolean;
-  distance_m: number;
+  distance_m: number | null;
   expires_at: string;
   match_id: string | null;
 };
@@ -58,6 +58,8 @@ function containsBlockedContent(text: string) {
 
 function minutesLeft(iso: string) {
   const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  if (m >= 1440) return `${Math.ceil(m / 1440)}d left`;
+  if (m >= 60) return `${Math.ceil(m / 60)}h left`;
   return m > 0 ? `${m}m left` : "expiring";
 }
 
@@ -311,7 +313,7 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
 
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
-              {Math.round(b.distance_m)} m · {b.total} answered · {minutesLeft(b.expires_at)}
+              {b.distance_m === null ? "Sample question" : `${Math.round(b.distance_m)} m`} · {b.total} answered · {minutesLeft(b.expires_at)}
             </span>
             {b.mine ? null : b.match_id ? (
               <button type="button" className="text-primary" onClick={() => openChat(b.match_id as string)}>

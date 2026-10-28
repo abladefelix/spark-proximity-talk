@@ -578,6 +578,16 @@ export function AdminPage() {
     refreshAll();
   }
 
+  async function removeReportedContent(id: string) {
+    const { error } = await supabase.rpc("admin_remove_reported_content", { _report_id: id });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Reported content removed");
+    refreshAll();
+  }
+
   async function dismissReport(id: string) {
     const { error } = await supabase.from("reports").delete().eq("id", id);
     if (error) {

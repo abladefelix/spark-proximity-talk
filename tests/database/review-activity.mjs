@@ -1,0 +1,90 @@
+// Run with a temporary PGlite dependency, e.g. PGLITE_MODULE=/tmp/.../dist/index.js node ...
+// PostGIS is stubbed only for distance testing; production must also be checked.
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db = new PGlite();
+await db.exec(`
+create role anon; create role authenticated; create role service_role bypassrls;
+create schema auth; create schema private; create schema extensions;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+grant usage on schema auth to authenticated;
+create table auth.users(id uuid primary key);
+create table public.profiles(id uuid primary key references auth.users on delete cascade, username text unique, banned boolean default false);
+create table public.locations(user_id uuid,lat double precision,lng double precision);
+create table public.blocks(blocker uuid,blocked uuid);
+create table public.signals(id uuid default gen_random_uuid(),from_user uuid,to_user uuid,expires_at timestamptz,intent text,intent_note text,unique(from_user,to_user));
+create table public.matches(id uuid primary key default gen_random_uuid(), user_a uuid, user_b uuid, vanish_hours integer, vanish_on_leave boolean,unique(user_a,user_b));
+create table public.messages(id uuid primary key default gen_random_uuid(),match_id uuid references public.matches on delete cascade,sender_id uuid,content text,created_at timestamptz default now());
+create table public.broadcasts(id uuid primary key default gen_random_uuid(),user_id uuid,question text,options text[],lat double precision,lng double precision,expires_at timestamptz,created_at timestamptz default now());
+create table public.broadcast_answers(id uuid primary key default gen_random_uuid(),broadcast_id uuid references public.broadcasts on delete cascade,user_id uuid,option_index integer,unique(broadcast_id,user_id));
+create table public.reports(reporter uuid,reported uuid,reason text,content_type text,content_id uuid,content_snapshot text);
+alter table public.broadcasts enable row level security;
+create policy own on public.broadcasts for all to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+grant all on all tables in schema public to service_role;
+grant select,insert,update,delete on public.broadcasts,public.broadcast_answers to authenticated;
+create domain extensions.geography as point;
+create function extensions.ST_MakePoint(double precision,double precision) returns point language sql immutable as $$select point($1,$2)$$;
+create function extensions.ST_SetSRID(point,integer) returns point language sql immutable as $$select $1$$;
+create function extensions.ST_Distance(extensions.geography,extensions.geography,boolean) returns double precision language sql immutable as $$select ($1 <-> $2)*111000$$;
+`);
+const sql = readFileSync(new URL('../../supabase/migrations/20261028015428_populate_review_account.sql',import.meta.url),'utf8');
+const prior = readFileSync(new URL('../../supabase/migrations/20260904042446_a1d0fb0d-5fef-47c6-b1be-80a00052653f.sql',import.meta.url),'utf8');
+await db.exec(prior.slice(prior.indexOf('create or replace function public.answer_broadcast'),prior.indexOf('create or replace function public.signal_broadcast_author')));
+await db.exec(sql);
+const owner='3a05b02f-b5a0-4e1e-97a6-250d4344a2e8';
+const peers=['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','44444444-4444-4444-8444-444444444444'];
+const other='55555555-5555-4555-8555-555555555555';
+for(const [id,username] of [[owner,'ogyamwilson'],[other,'ordinary'],...peers.map((id,i)=>[id,`sample_${['alex','sam','jordan','taylor'][i]}_3a05b0`])]){
+ await db.query('insert into auth.users values ($1)',[id]);
+ await db.query('insert into public.profiles(id,username) values($1,$2)',[id,username]);
+}
+await db.exec('set role service_role');
+const populate=()=>db.query('select public.manage_review_activity($1,$2,true) result',[owner,peers]);
+assert.equal((await populate()).rows[0].result.chats,4);
+await populate();
+assert.equal((await db.query('select count(*)::int n from messages')).rows[0].n,24,'idempotent messages');
+assert.equal((await db.query('select count(*)::int n from signals')).rows[0].n,8);
+await db.exec('reset role');
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+const questions=(await db.query('select * from nearby_broadcasts()')).rows;
+assert.equal(questions.length,4,'samples visible without GPS');
+assert.ok(questions.every(q=>q.distance_m===null && q.total===3));
+const peerQuestion=questions.find(q=>!q.mine);
+await db.query('select answer_broadcast($1,1)',[peerQuestion.id]);
+assert.equal((await db.query('select option_index from broadcast_answers where broadcast_id=$1 and user_id=$2',[peerQuestion.id,owner])).rows[0].option_index,1);
+await db.query("select report_broadcast($1,'Test report for sample question')",[peerQuestion.id]);
+assert.equal((await db.query('select count(*)::int n from reports')).rows[0].n,1);
+assert.equal((await db.query('select signal_broadcast_author($1) id',[peerQuestion.id])).rows[0].id,peerQuestion.match_id);
+// Ordinary nearby questions retain their original distance filtering.
+await db.query('insert into locations values($1,5,0)',[other]);
+await db.query("insert into broadcasts(user_id,question,options,lat,lng,expires_at) values($1,'Ordinary nearby',array['Yes','No'],5,0,now()+interval '15 minutes')",[other]);
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[other]);
+assert.equal((await db.query('select * from nearby_broadcasts()')).rows.length,1,'only ordinary nearby question visible');
+await assert.rejects(()=>db.query('insert into broadcast_answers(broadcast_id,user_id,option_index) values($1,$2,0)',[questions[0].id,other]),/Question not available/);
+await assert.rejects(()=>db.query("select report_broadcast($1,'sample report')",[questions[0].id]),/no longer available/);
+await assert.rejects(()=>db.query('select signal_broadcast_author($1)',[questions[0].id]),/available|expired|not found|no longer live/i);
+await db.exec('set role authenticated');
+await assert.rejects(populate,/permission denied/);
+await assert.rejects(()=>db.query("insert into broadcasts(user_id,question,review_owner) values($1,'forged',$1)",[other]),/row-level security/);
+await db.exec('reset role');
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+await db.query('insert into blocks values($1,$2)',[owner,peers[0]]);
+assert.equal((await db.query('select * from nearby_broadcasts()')).rows.length,3,'blocks respected');
+// A real-member match and new reviewer message must survive refresh, while
+// cleanup deletes only conversations involving dedicated sample peers.
+const realMatch=(await db.query('insert into matches(user_a,user_b) values($1,$2) returning id',[owner,other])).rows[0].id;
+await db.query("insert into messages(match_id,sender_id,content) values($1,$2,'real conversation')",[realMatch,owner]);
+const sampleMatch=(await db.query('select id from matches where user_a=$1 or user_b=$1',[peers[0]])).rows[0].id;
+await db.query("insert into messages(match_id,sender_id,content) values($1,$2,'reviewer new message')",[sampleMatch,owner]);
+await db.exec('set role service_role');
+await populate();
+assert.equal((await db.query('select count(*)::int n from messages')).rows[0].n,26);
+await db.query('select manage_review_activity($1,$2,false)',[owner,peers]);
+assert.equal((await db.query('select count(*)::int n from messages')).rows[0].n,1);
+assert.equal((await db.query('select count(*)::int n from broadcasts where review_owner is not null')).rows[0].n,0);
+assert.equal((await db.query('select count(*)::int n from broadcast_answers')).rows[0].n,0);
+await populate();
+assert.equal((await db.query('select count(*)::int n from messages')).rows[0].n,25);
+await db.close();
+console.log('PASS: seed, refresh, removal, re-enable, GPS independence, isolation, blocks, forged writes and real-data preservation');
