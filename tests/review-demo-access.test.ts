@@ -98,3 +98,11 @@ test("wildcard usernames and nonboolean flags are rejected", () => {
     setReviewDemoAccess({ data: { username: "ogyamwilson", enabled: "true" as any } }),
   ).toThrow();
 });
+
+const { setReviewActivity } = await import("../src/lib/review-activity.functions");
+test("normal users cannot populate persistent activity", async () => {
+  await expect(setReviewActivity({ data: { username: "ogyamwilson", enabled: true } })).rejects.toThrow("Admins only");
+});
+test("persistent activity is restricted to the explicitly requested account", () => {
+  expect(() => setReviewActivity({ data: { username: "someone_else", enabled: true } })).toThrow("scoped to ogyamwilson");
+});

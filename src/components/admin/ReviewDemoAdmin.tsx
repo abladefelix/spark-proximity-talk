@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { setReviewDemoAccess } from "@/lib/review-demo.functions";
+import { setReviewActivity } from "@/lib/review-activity.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function ReviewDemoAdmin() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("ogyamwilson");
   const update = useMutation({
     mutationFn: (enabled: boolean) =>
-      setReviewDemoAccess({ data: { username: username.trim(), enabled } }),
+      setReviewActivity({ data: { username: username.trim(), enabled } }),
   });
   return (
     <section className="space-y-3 rounded-xl border p-3">
-      <h3 className="font-semibold">Review demo data</h3>
+      <h3 className="font-semibold">Review account activity</h3>
       <p className="text-sm text-muted-foreground">
-        Enable fictional sample people, chats and questions for one account. Demo actions stay on
-        that device and never contact real members. Pro membership is managed separately in Billing.
+        Populate the normal Chats and Local screens with four sample conversations and four
+        questions. Removing samples also deletes messages exchanged with these sample accounts.
+        Real-member conversations and Pro membership are unchanged.
       </p>
       <label className="block text-sm">
         Exact account username
@@ -30,23 +31,29 @@ export function ReviewDemoAdmin() {
       </label>
       <div className="flex gap-2">
         <Button disabled={!username.trim() || update.isPending} onClick={() => update.mutate(true)}>
-          Enable demo data
+          Populate / refresh samples
         </Button>
         <Button
           variant="outline"
           disabled={!username.trim() || update.isPending}
-          onClick={() => update.mutate(false)}
+          onClick={() => {
+            if (
+              window.confirm(
+                "Remove sample conversations, their messages, signals and questions? Real-member conversations are preserved.",
+              )
+            )
+              update.mutate(false);
+          }}
         >
-          Disable demo data
+          Remove sample activity
         </Button>
       </div>
       {update.error && <p role="alert">{update.error.message}</p>}
       {update.data && (
         <p role="status">
-          Demo data {update.data.enabled ? "enabled" : "disabled"} for @{update.data.username}.{" "}
           {update.data.enabled
-            ? "Open Chats → Open review demo in the app."
-            : "An open demo closes on its next access check (within 15 seconds while online)."}
+            ? `Saved ${update.data.chats} sample chats and ${update.data.questions} questions. Open Chats and Local in the app.`
+            : "Sample conversations, signals and questions removed."}
         </p>
       )}
     </section>

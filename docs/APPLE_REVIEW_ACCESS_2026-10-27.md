@@ -1,6 +1,6 @@
 # Apple review access remediation — October 27, 2026
 
-Status: review account inspected, complimentary Pro granted, and isolated interactive demo deployed and enabled. End-to-end verification in iOS and App Store Connect updates remain pending.
+Status update October 28: the owner confirmed the isolated demo opens on iOS, but requested normal account sample activity instead. The replacement is implemented and awaiting deployment and iOS verification; see [REVIEW_DEMO.md](REVIEW_DEMO.md) for current instructions. App Store Connect updates remain pending. The October 27 findings below are historical.
 Submission: `03bdc8a2-8197-4beb-910e-4f110d9bbd37`.
 Reviewed version: 1.1.7 (19), iPad Air 11-inch (M3).
 Reason: Guideline 2.1(a), access to all features/account types and populated sample chats/questions.
