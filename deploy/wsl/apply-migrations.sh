@@ -106,7 +106,9 @@ MISSING="$(psql_run -tAc "
       ('billing_public_info'), ('chat_retention'), ('claim_first_admin'),
       ('claim_zone_perk'), ('drop_help_beacon'), ('my_profile_private'),
       ('my_zone'), ('nearby_broadcasts'), ('nearby_help_beacons'),
-      ('nearby_people'), ('post_broadcast'), ('purge_expired_signals'),
+      ('nearby_people'), ('begin_location_checkin'), ('end_location_checkin'),
+      ('accept_community_rules'), ('admin_enforce_content_report'),
+      ('post_broadcast'), ('purge_expired_signals'),
       ('purge_old_chats'), ('set_chat_vanish'), ('set_my_intent'),
       ('set_my_mood'), ('signal_broadcast_author'), ('staff_profiles')
   )
@@ -124,10 +126,8 @@ if [[ -n "${MISSING// /}" ]]; then
   exit 1
 fi
 
-# A function can exist but still contain the old matching rules when an older
-# server already recorded a migration whose contents were later amended. Check
-# the behavior-critical clauses so a deploy cannot report success while mutual
-# discovery is still running stale SQL.
+# Verify the current manual check-in contract, not the retired heartbeat grace
+# period. Long check-ins intentionally outlive that old 30-minute cutoff.
 NEARBY_DEF="$(psql_run -tAc "
   select pg_get_functiondef(p.oid)
   from pg_proc p
@@ -136,8 +136,12 @@ NEARBY_DEF="$(psql_run -tAc "
     and p.proname = 'nearby_people'
     and pg_get_function_identity_arguments(p.oid) = 'radius_m double precision';
 ")"
-if [[ "$NEARBY_DEF" != *"greatest(pmin * 6, 10)"* ]]    || [[ "$NEARBY_DEF" != *"least(coalesce(myaccuracy, 0), 100)"* ]]    || [[ "$NEARBY_DEF" != *"least(coalesce(l.accuracy_m, 0), 100)"* ]]; then
-  echo "nearby_people still has stale matching rules — refusing to report a healthy deploy." >&2
+if [[ "$NEARBY_DEF" != *"JOIN private.location_checkins ci ON ci.user_id = l.user_id AND ci.expires_at > now()"* ]] \
+   || [[ "$NEARBY_DEF" != *"ST_MakePoint(ci.lng, ci.lat)"* ]] \
+   || [[ "$NEARBY_DEF" != *"least(coalesce(myaccuracy, 0), 100)"* ]] \
+   || [[ "$NEARBY_DEF" != *"least(coalesce(l.accuracy_m, 0), 100)"* ]] \
+   || [[ "$NEARBY_DEF" == *"greatest(pmin * 6, 10)"* ]]; then
+  echo "nearby_people does not match the current manual check-in rules — refusing to report a healthy deploy." >&2
   exit 1
 fi
 
