@@ -881,14 +881,17 @@ function RadarPage() {
           </section>
 
           {!visible ? (
-            <p
-              role="status"
-              className="max-w-xs text-center text-xs leading-5 text-muted-foreground"
-            >
-              {locationBusy
-                ? "Checking in…"
-                : "Tap Check in above to share your location and find people nearby."}
-            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span>Tap to</span>
+              <Button
+                size="sm"
+                className="bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-600"
+                disabled={locationBusy}
+                onClick={() => void locate(true)}
+              >
+                {locationBusy ? "Locating…" : "Check in"}
+              </Button>
+            </div>
           ) : (
             !geoError &&
             nearby.isSuccess &&
