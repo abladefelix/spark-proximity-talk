@@ -556,10 +556,7 @@ function RadarPage() {
   };
 
   return (
-    <main
-      data-fixed-page
-      className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-[var(--app-gutter)] pt-2 min-[390px]:pt-3"
-    >
+    <main className="mx-auto flex min-h-full w-full max-w-lg flex-col px-[var(--app-gutter)] pt-2 min-[390px]:pt-3">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
         <div className="flex min-w-0 items-center">
           <Brand />
@@ -579,32 +576,37 @@ function RadarPage() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Cards occupy only their measured space. The radar below is centered
-            between the bottom of this region and the bottom navigation. */}
-        <div className="relative z-20 max-h-[38%] shrink-0 overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-1 flex-col">
+        {/* Use the app shell's single scroll area: cards must never be clipped
+            into a fixed-height region above the radar. */}
+        <div className="shrink-0 pt-2 pb-2">
           <div className="mx-auto max-w-[min(24rem,100%)]">
-            <div className="mb-2 rounded-xl border p-3 text-xs">
-              <p>
-                {visible
-                  ? "You are sharing your check-in location for up to 15 minutes."
-                  : "Your location is hidden from other people."}
-              </p>
-              <p className="mt-1 text-muted-foreground">
-                Check in manually each time. Leaving Radar or backgrounding the app stops sharing.
-                No automatic check-ins.
-              </p>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={locationBusy}
-                onClick={() => void locate(false)}
-              >
-                Scan privately
-              </Button>
-              <Link to="/support" className="ml-3 underline">
-                Safety & contact
-              </Link>
+            <div className="mb-2 rounded-xl border px-3 py-2 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="font-medium" role="status">
+                  {visible ? "Sharing · up to 15 min" : "Location hidden"}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="min-h-9 px-2"
+                  disabled={locationBusy}
+                  onClick={() => void locate(false)}
+                >
+                  Scan privately
+                </Button>
+              </div>
+              <details className="text-muted-foreground">
+                <summary className="cursor-pointer py-1">Location privacy & safety</summary>
+                <p className="mt-1 leading-relaxed">
+                  Check in manually each time. Check-ins expire after 15 minutes and never renew
+                  automatically. Leaving Radar or backgrounding requests checkout; expiry still
+                  applies if you lose connection. Stop sharing is free.
+                </p>
+                <Link to="/support" className="inline-block py-2 underline">
+                  Safety & contact
+                </Link>
+              </details>
             </div>
 
             {geoError && (
@@ -637,13 +639,15 @@ function RadarPage() {
                 </Button>
               </div>
             )}
-            {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
-              <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
-                {located
-                  ? `${settings.empty_radar_text} Widen your scan range in your profile.`
-                  : "Choose Scan privately or Check in to find people nearby."}
-              </p>
-            )}
+            {located &&
+              !geoError &&
+              !nearby.isError &&
+              people.length === 0 &&
+              !nearby.isLoading && (
+                <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
+                  {settings.empty_radar_text} Widen your scan range in your profile.
+                </p>
+              )}
             <div className="mt-2.5 max-[360px]:mt-2">
               <IntentChip />
             </div>
@@ -652,8 +656,9 @@ function RadarPage() {
           </div>
         </div>
 
-        {/* This layer receives only the clear space left below the cards. */}
-        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
+        {/* Keep a true square in normal flow. Short screens scroll instead of
+            shrinking or covering the cards above. Bottom navigation stays fixed. */}
+        <div className="relative flex shrink-0 flex-col items-center justify-center gap-2 pb-3">
           <section
             ref={scopeRef}
             aria-label={geoError ?? "Radar"}
@@ -662,7 +667,7 @@ function RadarPage() {
             onPointerUp={endPointer}
             onPointerCancel={endPointer}
             style={{ touchAction: "pan-y" }}
-            className="relative aspect-square h-auto max-h-[calc(100%-3rem)] w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
+            className="relative aspect-square h-auto shrink-0 w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
           >
             <div
               className="absolute inset-0 origin-center"

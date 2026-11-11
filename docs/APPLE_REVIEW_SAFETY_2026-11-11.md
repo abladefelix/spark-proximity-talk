@@ -45,3 +45,7 @@ The migration turns off existing radar visibility. Every user must explicitly ch
 ## Local checks
 
 TypeScript and production build; existing 16 unit tests; PGlite database integration covering manual visibility, nonrenewal, expiry, revoke, access controls, EULA, filtering, immediate report hiding, moderation and age enforcement. The database harness uses minimal fixtures and PostGIS stubs; it does not replace a full live-stack/device check.
+
+## Radar layout follow-up
+
+After the first deployment, the owner confirmed that the rules gate, manual check-in and sample activity work in the iOS app. A subsequent iPhone screenshot showed the enlarged privacy notice crowding the fixed-height card region above Radar, clipping the chat preview. The follow-up replaces the long notice with a compact status and expandable privacy explanation, removes the duplicate pre-scan hint, and puts cards and the square radar in the app shell's single scroll area. Bottom navigation remains fixed. This layout follow-up needs deployment and a fresh iPhone visual check.
