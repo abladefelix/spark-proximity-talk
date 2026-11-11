@@ -880,13 +880,27 @@ function RadarPage() {
             )}
           </section>
 
-          {!geoError && nearby.isSuccess && people.length === 0 && helpMarkers.length === 0 && (
+          {!visible ? (
             <p
               role="status"
-              className="text-center text-xs font-medium leading-5 text-red-600 dark:text-red-400"
+              className="max-w-xs text-center text-xs leading-5 text-muted-foreground"
             >
-              {settings.empty_radar_text}
+              {locationBusy
+                ? "Checking in…"
+                : "Tap Check in above to share your location and find people nearby."}
             </p>
+          ) : (
+            !geoError &&
+            nearby.isSuccess &&
+            people.length === 0 &&
+            helpMarkers.length === 0 && (
+              <p
+                role="status"
+                className="text-center text-xs font-medium leading-5 text-red-600 dark:text-red-400"
+              >
+                {settings.empty_radar_text}
+              </p>
+            )
           )}
 
           {/* Compass toggle sits below the radar and its empty-state message. */}
