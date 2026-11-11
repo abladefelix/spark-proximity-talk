@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getManualPosition } from "@/lib/manual-location";
+import { Capacitor } from "@capacitor/core";
+import { locationRecovery } from "@/lib/location-recovery";
 import { toast } from "sonner";
 import { Zap, Check, LoaderCircle, Ban, Flag, MapPin, Compass, LifeBuoy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,6 +137,7 @@ function RadarPage() {
   const operation = useRef(0);
   const initialCheckout = useRef<PromiseLike<{ error: unknown }> | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [locationHelp, setLocationHelp] = useState<ReturnType<typeof locationRecovery>>(null);
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
@@ -156,6 +159,7 @@ function RadarPage() {
     const request = ++operation.current;
     setLocationBusy(true);
     setGeoError(null);
+    setLocationHelp(null);
     try {
       const checkout = await initialCheckout.current;
       if (checkout?.error)
@@ -195,7 +199,13 @@ function RadarPage() {
       setAccuracyM(coords.accuracy);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     } catch (error) {
-      setGeoError(errorMessage(error, "Could not get location. Please try again."));
+      const help = locationRecovery(error, Capacitor.getPlatform());
+      setLocationHelp(help);
+      setGeoError(
+        help
+          ? "Enable location in Settings, then tap Check in again."
+          : errorMessage(error, "Could not get location. Please try again."),
+      );
     } finally {
       setLocationBusy(false);
     }
@@ -610,9 +620,9 @@ function RadarPage() {
                   variant="outline"
                   size="sm"
                   className="shrink-0"
-                  onClick={() => void locate(false)}
+                  onClick={() => void locate(true)}
                 >
-                  Retry
+                  Check in
                 </Button>
               </div>
             )}
@@ -963,6 +973,47 @@ function RadarPage() {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={locationHelp !== null}
+        onOpenChange={(open) => {
+          if (!open) setLocationHelp(null);
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{locationHelp?.title}</DialogTitle>
+            <DialogDescription>{locationHelp?.instructions}</DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Return to SkanAround and tap Check in again. Your location stays hidden until check-in
+            succeeds.
+          </p>
+          {locationHelp?.canOpenSettings && (
+            <>
+              <Button asChild>
+                <a href="app-settings:">Open Settings</a>
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                This opens SkanAround’s settings. If Location Services is off for the whole phone,
+                go back in Settings to Privacy & Security → Location Services.
+              </p>
+            </>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => {
+              setLocationHelp(null);
+              void locate(true);
+            }}
+          >
+            Try check-in again
+          </Button>
+          <Button variant="ghost" onClick={() => setLocationHelp(null)}>
+            Not now
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(selected)}
