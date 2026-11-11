@@ -564,20 +564,6 @@ function RadarPage() {
         <div className="flex shrink-0 items-center gap-1.5">
           <NotificationBell />
           <ThemeToggle />
-
-          <Button
-            size="sm"
-            variant={visible ? "destructive" : "default"}
-            className={
-              visible
-                ? undefined
-                : "bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-600"
-            }
-            disabled={locationBusy}
-            onClick={() => (visible ? void stopSharing() : void locate(true))}
-          >
-            {locationBusy ? "Locating…" : visible ? "Stop sharing" : "Check in"}
-          </Button>
         </div>
       </div>
 
@@ -593,12 +579,16 @@ function RadarPage() {
                 </span>
                 <Button
                   size="sm"
-                  variant="ghost"
-                  className="min-h-9 px-2"
+                  variant={visible ? "destructive" : "default"}
+                  className={
+                    visible
+                      ? undefined
+                      : "bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-600"
+                  }
                   disabled={locationBusy}
-                  onClick={() => void locate(false)}
+                  onClick={() => (visible ? void stopSharing() : void locate(true))}
                 >
-                  Scan privately
+                  {locationBusy ? "Locating…" : visible ? "Stop sharing" : "Check in"}
                 </Button>
               </div>
               <details className="text-muted-foreground">
