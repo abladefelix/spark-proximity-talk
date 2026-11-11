@@ -15,7 +15,7 @@ export const APP_SETTINGS_DEFAULTS = {
   chat_prompt_text: "Say hello",
   terms_text: "",
   privacy_text: "",
-  support_email: "",
+  support_email: "niiabladefelix@gmail.com",
   min_age: 18,
   chat_enabled: true,
   location_sharing_enabled: true,

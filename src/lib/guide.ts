@@ -329,7 +329,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         term: "Visible on radar",
-        body: "This switch controls whether others can see you. Turning it off (invisible mode) is a Pro feature — you keep scanning while staying hidden.",
+        body: "Your location is hidden by default. Tap Check in to share a snapshot for up to 15 minutes. Each check-in is manual and never renews automatically. Stop sharing and private scanning are free.",
       },
       {
         term: "Scan range",
@@ -377,7 +377,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     items: [
       {
         term: "What you get",
-        body: "The exact perks are set by the admin, and typically include unlimited signals, a wider scan range, unlimited messages, seeing everyone who signalled you, invisible mode, custom beacons, longer chat history and priority placement. The upgrade screen always lists what is included in your plan.",
+        body: "The exact perks are set by the admin, and typically include unlimited signals, a wider scan range, unlimited messages, seeing everyone who signalled you, custom beacons, longer chat history and priority placement. The upgrade screen always lists what is included in your plan.",
       },
       {
         term: "How to buy",
@@ -571,7 +571,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       { term: "Heading-up", body: "Compass mode where the scope rotates with your phone, so the top of the screen is where you are facing." },
       { term: "North-up", body: "Compass mode where north is always at the top of the scope." },
       { term: "Scan range", body: "How far out the radar looks. Capped by the admin's maximum." },
-      { term: "Invisible mode", body: "Visibility off: you keep scanning but nobody sees your beacon. A Pro feature." },
+      { term: "Private scanning", body: "You can scan while hidden for free. Only a manual check-in makes your beacon visible, for up to 15 minutes." },
       { term: "Verified", body: "An account checked by a moderator. Shows a badge and a distinct beacon colour." },
       { term: "Pro", body: "The paid membership, bought through the App Store or Google Play." },
       { term: "Reactivation request", body: "An appeal sent to moderators after your account is banned." },

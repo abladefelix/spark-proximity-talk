@@ -226,7 +226,7 @@ function AuthPage() {
           return;
         }
         // Age gate — both stores require an age check on a dating/discovery app.
-        const minAge = settings.min_age || 18;
+        const minAge = Math.max(18, settings.min_age || 18);
         const age = ageFrom(dob);
         if (age === null) {
           toast.error("Enter your date of birth");
@@ -456,7 +456,7 @@ function AuthPage() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                You must be {settings.min_age || 18} or older. We only use this to verify your age.
+                You must be {Math.max(18, settings.min_age || 18)} or older. We only use this to verify your age.
               </p>
             </div>
             <div className="space-y-2">

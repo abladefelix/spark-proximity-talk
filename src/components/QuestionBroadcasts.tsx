@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Ban,
+  EyeOff,
   Flag,
   MessageCircleQuestion,
   MoreHorizontal,
@@ -188,6 +189,21 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
     onError: (e) => toast.error(errorMessage(e, "Could not block user")),
   });
 
+  const hide = useMutation({
+    mutationFn: async (id: string) => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) throw new Error("Sign in again");
+      const { error } = await supabase.from("hidden_broadcasts").insert({ user_id: me, broadcast_id: id });
+      if (error && error.code !== "23505") throw error;
+    },
+    onSuccess: (_, id) => {
+      qc.setQueryData<Broadcast[]>(["broadcasts", savedRadius], previous => previous?.filter(b => b.id !== id));
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
+      toast.success("Post removed from your feed");
+    },
+    onError: e => toast.error(errorMessage(e, "Could not hide post")),
+  });
+
   const report = useMutation({
     mutationFn: async () => {
       if (!reporting) return;
@@ -198,10 +214,12 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
       if (error) throw error;
     },
     onSuccess: () => {
+      if (reporting) qc.setQueryData<Broadcast[]>(["broadcasts", savedRadius], previous => previous?.filter(b => b.id !== reporting.id));
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
       setReporting(null);
       setReportReason("");
       toast.success("Report sent", {
-        description: "The question is hidden from you after you block the user. Reports are reviewed within 24 hours.",
+        description: "The question has been removed from your feed. Reports are reviewed within 24 hours.",
       });
     },
     onError: (e) => toast.error(errorMessage(e, "Could not send report")),
@@ -255,6 +273,9 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
                   </DropdownMenuItem>
                 ) : (
                   <>
+                    <DropdownMenuItem onSelect={() => hide.mutate(b.id)}>
+                      <EyeOff className="size-4" /> Remove from my feed
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
                         setReportReason("");

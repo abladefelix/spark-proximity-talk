@@ -1,15 +1,8 @@
-import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 
 import { supabase } from "@/integrations/supabase/client";
 
-/**
- * Make sure the backend has a recent position for me.
- *
- * The radar screen publishes location continuously, but actions on other
- * screens (help beacons, local questions) need a position too — otherwise the
- * server rejects them with "We need your location first".
- */
+/** Refresh a private position for an explicit local action; never check in. */
 export async function publishMyLocation(): Promise<void> {
   const me = (await supabase.auth.getSession()).data.session?.user?.id;
   if (!me) throw new Error("You need to be signed in.");
@@ -50,7 +43,7 @@ export async function publishMyLocation(): Promise<void> {
   if (lat === null || lng === null) {
     const { data } = await supabase.from("locations").select("lat").eq("user_id", me).maybeSingle();
     if (data) return; // an earlier position is good enough
-    throw new Error("Turn on location so people nearby can find you.");
+    throw new Error("Allow location to use this nearby feature. This does not check you in.");
   }
 
   const { error } = await supabase.from("locations").upsert(
@@ -59,6 +52,7 @@ export async function publishMyLocation(): Promise<void> {
       lat,
       lng,
       accuracy_m: accuracy,
+      is_visible: false,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

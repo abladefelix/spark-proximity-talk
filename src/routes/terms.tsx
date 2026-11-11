@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalDocument } from "@/components/LegalDocument";
-import { DEFAULT_TERMS } from "@/lib/legal";
+import { DEFAULT_TERMS, REQUIRED_COMMUNITY_RULES } from "@/lib/legal";
 import { useSettings } from "@/hooks/useAppSettings";
 
 export const Route = createFileRoute("/terms")({
@@ -29,7 +29,10 @@ function TermsPage() {
   const email = settings.support_email?.trim();
   return (
     <LegalDocument
-      markdown={settings.terms_text?.trim() ? settings.terms_text : DEFAULT_TERMS}
+      markdown={
+        (settings.terms_text?.trim() ? settings.terms_text : DEFAULT_TERMS) +
+        REQUIRED_COMMUNITY_RULES
+      }
       {...(email ? { supportEmail: email } : {})}
     />
   );

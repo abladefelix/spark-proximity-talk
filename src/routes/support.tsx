@@ -19,7 +19,7 @@ export const Route = createFileRoute("/support")({
 
 function SupportPage() {
   const settings = useSettings();
-  const email = settings.support_email?.trim();
+  const email = settings.support_email?.trim() || "niiabladefelix@gmail.com";
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-2xl px-5 py-10">
@@ -27,8 +27,8 @@ function SupportPage() {
       <h1 className="mt-3 text-3xl font-semibold">Support & Community Safety</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Need help or want to report inappropriate activity? Use the options below. Safety reports
-        are reviewed as quickly as possible and we aim to act on confirmed violations within
-        24 hours.
+        are reviewed and acted on within
+        24 hours. Confirmed offending content is removed and abusive users are suspended or banned.
       </p>
 
       <div className="mt-8 grid gap-3">

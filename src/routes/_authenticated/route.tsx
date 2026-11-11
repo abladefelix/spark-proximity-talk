@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { CommunityRulesGate } from "@/components/CommunityRulesGate";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeoutFallback } from "@/lib/net";
 import { ChatSheetProvider } from "@/components/ChatSheet";
@@ -61,6 +62,7 @@ function AuthedLayout() {
   useKeyboardInsetProvider();
 
   return (
+    <CommunityRulesGate userId={user.id}>
     <BiometricGate>
       <ChatSheetProvider>
         <PushManager userId={user?.id ?? null} />
@@ -79,6 +81,7 @@ function AuthedLayout() {
         </div>
       </ChatSheetProvider>
     </BiometricGate>
+    </CommunityRulesGate>
   );
 }
 

@@ -29,13 +29,13 @@ There is no tolerance for objectionable content or abusive users. You must not p
 Accounts that breach this section are suspended or permanently banned, and content is removed.
 
 ## 4. Reporting and moderation
-Every profile and chat has a Report and a Block action. Reports reach our moderation queue immediately. We review reports as quickly as possible and aim to remove offending content and suspend or permanently remove abusive users **within 24 hours**. Blocking is instant and hides both people from each other on the radar and in chat.
+Every profile and chat has a Report and a Block action. Reports reach our moderation queue immediately. We act on reports of objectionable content within 24 hours, removing confirmed offending content and suspending or banning the abusive user. Blocking is instant and hides both people from each other on the radar and in chat.
 
 ## 5. Your content
 You keep ownership of the photos and messages you post. You grant us the licence needed to store and display them to the people you chat with. You are responsible for what you send.
 
 ## 6. Location
-SKANAROUND shows approximate distance to other members near you. Your exact coordinates are never shown to another member. You can go invisible at any time from the radar screen, and you can revoke location permission in your device settings.
+SKANAROUND shows approximate distance to other members near you. Your exact coordinates are never shown to another member. Your location is hidden by default. You must manually check in each time you want your location displayed on radar. A check-in shares a snapshot for up to 15 minutes and is never automatically renewed. Stop sharing is free for everyone. Leaving Radar or backgrounding the app requests checkout; the server expiry applies even if the device loses connectivity. You can also revoke location permission in your device settings.
 
 ## 7. Meeting people
 SKANAROUND is a discovery app. We do not run background checks. Meet in public places, tell someone where you are going, and use your judgement. You interact with other members at your own risk.
@@ -58,7 +58,7 @@ Pro currently includes:
 - a priority beacon that stands out on nearby radars;
 - a custom beacon look;
 - longer chat history before conversations are purged;
-- invisible mode, letting you scan without showing your own beacon.
+Private scanning and stopping location sharing are free for every member.
 
 The operator may add, change or withdraw individual Pro features; the list shown in the app at the time of purchase is the current one. Free accounts keep working with daily signal, range and message limits.
 
@@ -83,7 +83,7 @@ This policy explains what SKANAROUND collects, why, and how to get rid of it.
 ## What we collect
 - **Account data:** email address, username, display name, date of birth, and optional bio and gender.
 - **Photos:** your profile picture, optional verification selfie, and any images you send in chat.
-- **Location:** your device's coordinates while the radar screen is open, used to work out who is nearby. Other members only ever see an approximate distance — never your coordinates or address.
+- **Location:** your device's coordinates when you explicitly scan, check in, or post to a nearby feature, used to work out who is nearby. Other members only ever see an approximate distance — never your coordinates or address.
 - **Usage data:** signals sent, matches, messages, blocks and reports, and the time you were last active.
 - **Membership data:** your subscription status and payment references when you buy Pro. Card details never reach us — Apple, Google or the payment processor handle them.
 - **Device data:** a push notification token if you enable notifications, and the devices signed into your account.
@@ -210,3 +210,23 @@ export function parseLegal(markdown: string): LegalBlock[] {
 export function stripEmphasis(text: string): string {
   return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/_(.+?)_/g, "$1");
 }
+
+
+export const REQUIRED_COMMUNITY_RULES = `
+## Current community safety and location rules — 11 November 2026
+You must be 18 or older and agree to the EULA. There is no tolerance for objectionable content or abusive users. Report and Block are available on user content. Remove from my feed hides a question immediately; Delete my question removes your own post. Confirmed offending content is removed and abusive users are suspended or banned within 24 hours of a report.
+
+Your radar location is hidden by default. Each display requires a manual check-in, lasting at most 15 minutes with no automatic renewal. Stop sharing is free. Leaving Radar or backgrounding requests checkout; server expiry still applies if connectivity is lost. Private scanning does not publish your position to other members.
+
+Contact safety support: niiabladefelix@gmail.com.
+`;
+
+export const REQUIRED_LOCATION_PRIVACY = `
+
+## Location sharing update — 11 November 2026
+Your radar location is hidden by default. Scanning privately does not make you visible. To appear on radar, you must tap Check in each time. This shares a snapshot of your position for up to 15 minutes; it does not track or automatically renew your shared location. Other nearby members see an approximate distance and bearing, not your raw coordinates.
+
+Stop sharing is free. Leaving Radar or backgrounding the app requests checkout. If your device loses connectivity, the server still stops displaying your check-in when it expires. Your most recent private position may remain stored for nearby discovery until the normal stale-location cleanup or account deletion.
+
+For privacy or safety concerns, contact niiabladefelix@gmail.com from Safety & contact in the app. These rules supersede any earlier description of automatic visibility or paid invisible mode.
+`;
