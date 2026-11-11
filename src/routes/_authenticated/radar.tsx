@@ -135,7 +135,6 @@ function RadarPage() {
   const operation = useRef(0);
   const initialCheckout = useRef<PromiseLike<{ error: unknown }> | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [located, setLocated] = useState(false);
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
@@ -194,7 +193,6 @@ function RadarPage() {
         if (error) throw error;
       }
       setAccuracyM(coords.accuracy);
-      setLocated(true);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
     } catch (error) {
       setGeoError(errorMessage(error, "Could not get location. Please try again."));
@@ -634,15 +632,6 @@ function RadarPage() {
                 </Button>
               </div>
             )}
-            {located &&
-              !geoError &&
-              !nearby.isError &&
-              people.length === 0 &&
-              !nearby.isLoading && (
-                <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
-                  {settings.empty_radar_text} Widen your scan range in your profile.
-                </p>
-              )}
             <div className="mt-2.5 max-[360px]:mt-2">
               <IntentChip />
             </div>
@@ -653,7 +642,7 @@ function RadarPage() {
 
         {/* Keep a true square in normal flow. Short screens scroll instead of
             shrinking or covering the cards above. Bottom navigation stays fixed. */}
-        <div className="relative flex shrink-0 flex-col items-center justify-center gap-2 pb-3">
+        <div className="relative mt-3 flex shrink-0 flex-col items-center justify-center gap-2 pb-3">
           <section
             ref={scopeRef}
             aria-label={geoError ?? "Radar"}
@@ -891,7 +880,16 @@ function RadarPage() {
             )}
           </section>
 
-          {/* Compass toggle: sits directly under the radar scope. */}
+          {!geoError && nearby.isSuccess && people.length === 0 && helpMarkers.length === 0 && (
+            <p
+              role="status"
+              className="text-center text-xs font-medium leading-5 text-red-600 dark:text-red-400"
+            >
+              {settings.empty_radar_text}
+            </p>
+          )}
+
+          {/* Compass toggle sits below the radar and its empty-state message. */}
           <button
             type="button"
             onClick={() => {
