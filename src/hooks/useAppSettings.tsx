@@ -11,7 +11,7 @@ export const APP_SETTINGS_KEY = ["app-settings"] as const;
 export const APP_SETTINGS_DEFAULTS = {
   tagline: "Find people around you",
   welcome_text: "Turn on location to see who is nearby.",
-  empty_radar_text: "No one around right now.",
+  empty_radar_text: "No one around.",
   chat_prompt_text: "Say hello",
   terms_text: "",
   privacy_text: "",
