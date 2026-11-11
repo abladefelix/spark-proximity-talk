@@ -44,7 +44,7 @@ export function CommunityRulesGate({ userId, children }: { userId: string; child
         accounts are suspended or banned within 24 hours.
       </p>
       <p>
-        Your location is hidden until you manually check in. Each check-in lasts up to 15 minutes,
+        Your location is hidden until you manually check in. Each check-in lasts for your chosen duration (15 minutes by default, up to 2 hours),
         with a free Stop sharing control.
       </p>
       <div className="flex flex-wrap gap-4 underline">

@@ -35,7 +35,7 @@ Every profile and chat has a Report and a Block action. Reports reach our modera
 You keep ownership of the photos and messages you post. You grant us the licence needed to store and display them to the people you chat with. You are responsible for what you send.
 
 ## 6. Location
-SKANAROUND shows approximate distance to other members near you. Your exact coordinates are never shown to another member. Your location is hidden by default. You must manually check in each time you want your location displayed on radar. A check-in shares a snapshot for up to 15 minutes and is never automatically renewed. Stop sharing is free for everyone. Leaving Radar or backgrounding the app requests checkout; the server expiry applies even if the device loses connectivity. You can also revoke location permission in your device settings.
+SKANAROUND shows approximate distance to other members near you. Your exact coordinates are never shown to another member. Your location is hidden by default. You must manually check in each time you want your location displayed on radar. A check-in shares a snapshot for your chosen duration (15 minutes by default, up to 2 hours) and is never automatically renewed. Stop sharing is free for everyone. Leaving Radar or backgrounding the app requests checkout; the server expiry applies even if the device loses connectivity. You can also revoke location permission in your device settings.
 
 ## 7. Meeting people
 SKANAROUND is a discovery app. We do not run background checks. Meet in public places, tell someone where you are going, and use your judgement. You interact with other members at your own risk.
@@ -216,7 +216,7 @@ export const REQUIRED_COMMUNITY_RULES = `
 ## Current community safety and location rules — 11 November 2026
 You must be 18 or older and agree to the EULA. There is no tolerance for objectionable content or abusive users. Report and Block are available on user content. Remove from my feed hides a question immediately; Delete my question removes your own post. Confirmed offending content is removed and abusive users are suspended or banned within 24 hours of a report.
 
-Your radar location is hidden by default. Each display requires a manual check-in, lasting at most 15 minutes with no automatic renewal. Stop sharing is free. Leaving Radar or backgrounding requests checkout; server expiry still applies if connectivity is lost. Private scanning does not publish your position to other members.
+Your radar location is hidden by default. Each display requires a manual check-in, lasting for your chosen duration (15 minutes by default, up to 2 hours) with no automatic renewal. Stop sharing is free. Leaving Radar or backgrounding requests checkout; server expiry still applies if connectivity is lost. Private scanning does not publish your position to other members.
 
 Contact safety support: niiabladefelix@gmail.com.
 `;
@@ -224,7 +224,7 @@ Contact safety support: niiabladefelix@gmail.com.
 export const REQUIRED_LOCATION_PRIVACY = `
 
 ## Location sharing update — 11 November 2026
-Your radar location is hidden by default. Scanning privately does not make you visible. To appear on radar, you must tap Check in each time. This shares a snapshot of your position for up to 15 minutes; it does not track or automatically renew your shared location. Other nearby members see an approximate distance and bearing, not your raw coordinates.
+Your radar location is hidden by default. Scanning privately does not make you visible. To appear on radar, you must tap Check in each time. This shares a snapshot of your position for your chosen duration (15 minutes by default, up to 2 hours); it does not track or automatically renew your shared location. Other nearby members see an approximate distance and bearing, not your raw coordinates.
 
 Stop sharing is free. Leaving Radar or backgrounding the app requests checkout. If your device loses connectivity, the server still stops displaying your check-in when it expires. Your most recent private position may remain stored for nearby discovery until the normal stale-location cleanup or account deletion.
 

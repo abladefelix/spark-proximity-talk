@@ -863,6 +863,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          checkin_duration_minutes: number
           avatar_url: string | null
           banned: boolean
           banned_at: string | null
@@ -887,6 +888,7 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          checkin_duration_minutes?: number
           avatar_url?: string | null
           banned?: boolean
           banned_at?: string | null
@@ -911,6 +913,7 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          checkin_duration_minutes?: number
           avatar_url?: string | null
           banned?: boolean
           banned_at?: string | null

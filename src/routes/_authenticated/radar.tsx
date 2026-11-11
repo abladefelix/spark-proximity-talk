@@ -150,7 +150,7 @@ function RadarPage() {
     const { error } = await supabase.rpc("end_location_checkin");
     if (error)
       setGeoError(
-        "Could not confirm checkout. Retry; the server check-in expires automatically after 15 minutes.",
+        "Could not confirm checkout. Retry; the server check-in still expires at its scheduled end time.",
       );
   }
 
@@ -583,7 +583,9 @@ function RadarPage() {
             <div className="mb-2 rounded-xl border px-3 py-2 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="font-medium" role="status">
-                  {visible ? "Sharing · up to 15 min" : "Location hidden"}
+                  {visible && checkinUntil
+                    ? `Sharing until ${new Date(checkinUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                    : "Location hidden"}
                 </span>
                 <Button
                   size="sm"
@@ -602,9 +604,10 @@ function RadarPage() {
               <details className="text-muted-foreground">
                 <summary className="cursor-pointer py-1">Location privacy & safety</summary>
                 <p className="mt-1 leading-relaxed">
-                  Check in manually each time. Check-ins expire after 15 minutes and never renew
-                  automatically. Leaving Radar or backgrounding requests checkout; expiry still
-                  applies if you lose connection. Stop sharing is free.
+                  Check in manually each time. Choose 15 minutes, 30 minutes, 1 hour or 2 hours in
+                  You → Check-in duration. Check-ins never renew automatically. Leaving Radar or
+                  backgrounding requests checkout; expiry still applies if you lose connection. Stop
+                  sharing is free.
                 </p>
                 <Link to="/support" className="inline-block py-2 underline">
                   Safety & contact

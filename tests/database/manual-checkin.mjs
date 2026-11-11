@@ -54,6 +54,7 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(readFileSync(new URL("../../supabase/migrations/20261111190027_configurable_checkin_duration.sql", import.meta.url), "utf8"));
 const alice = "11111111-1111-4111-8111-111111111111",
   bob = "22222222-2222-4222-8222-222222222222";
 for (const [id, name] of [
@@ -187,6 +188,34 @@ alter table profiles add date_of_birth date;
 create trigger test_age before update of date_of_birth on profiles for each row execute function enforce_min_age();`);
 await assert.rejects(() => db.query("update profiles set date_of_birth=current_date-interval '17 years' where id=$1", [bob]), /at least 18/);
 await db.query("update profiles set date_of_birth=current_date-interval '20 years' where id=$1", [bob]);
+// A chosen duration is applied only by the next explicit check-in.
+await db.query("select set_config('request.jwt.claim.sub',$1,false)", [bob]);
+for (const minutes of [15,30,60,120]) {
+  await db.query('update profiles set checkin_duration_minutes=$1 where id=$2', [minutes,bob]);
+  await db.query('select begin_location_checkin(5,0,3)');
+  const remaining = Number((await db.query('select extract(epoch from (expires_at-now())) as seconds from private.location_checkins where user_id=$1',[bob])).rows[0].seconds);
+  assert.ok(remaining > minutes*60-5 && remaining <= minutes*60, 'selected duration is honored');
+}
+const longExpiry = (await db.query('select expires_at from private.location_checkins where user_id=$1',[bob])).rows[0].expires_at;
+await db.query('update profiles set checkin_duration_minutes=15 where id=$1',[bob]);
+assert.equal(String((await db.query('select expires_at from private.location_checkins where user_id=$1',[bob])).rows[0].expires_at),String(longExpiry),'preference changes never modify an active check-in');
+await assert.rejects(()=>db.query('update profiles set checkin_duration_minutes=0 where id=$1',[bob]),/check constraint/);
+await assert.rejects(()=>db.query('update profiles set checkin_duration_minutes=240 where id=$1',[bob]),/check constraint/);
+// A long check-in is not silently hidden by the old heartbeat grace period.
+await db.query("update locations set updated_at=now()-interval '45 minutes' where user_id=$1",[bob]);
+await db.query('update profiles set banned=false where id=$1',[alice]);
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[alice]);
+assert.equal((await db.query('select * from nearby_people(1000)')).rows[0].is_online,true);
+await db.query("update private.location_checkins set expires_at=now()-interval '1 second' where user_id=$1",[bob]);
+assert.equal((await db.query('select * from nearby_people(1000)')).rows.length,0,'long check-ins still expire');
+await db.exec(`alter table profiles enable row level security;
+create policy test_own_duration on profiles for all to authenticated using(id=auth.uid()) with check(id=auth.uid());
+grant select(id) on profiles to authenticated;`);
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[bob]);
+await db.exec('set role authenticated');
+assert.equal((await db.query('update profiles set checkin_duration_minutes=60 where id=$1 returning checkin_duration_minutes',[alice])).rows.length,0,'members cannot change another member duration');
+assert.equal((await db.query('update profiles set checkin_duration_minutes=60 where id=$1 returning checkin_duration_minutes',[bob])).rows[0].checkin_duration_minutes,60);
+await db.exec('reset role');
 await db.close();
 console.log(
   "PASS: default hidden, direct-write guard, manual snapshot, no renewal, expiry, revocation, EULA, filtering, immediate report hiding and banned-user posting",
