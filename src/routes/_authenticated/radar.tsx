@@ -567,7 +567,12 @@ function RadarPage() {
 
           <Button
             size="sm"
-            variant={visible ? "destructive" : "outline"}
+            variant={visible ? "destructive" : "default"}
+            className={
+              visible
+                ? undefined
+                : "bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-600"
+            }
             disabled={locationBusy}
             onClick={() => (visible ? void stopSharing() : void locate(true))}
           >
