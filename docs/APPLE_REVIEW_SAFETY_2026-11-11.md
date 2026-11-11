@@ -4,7 +4,7 @@ Submission: `03bdc8a2-8197-4beb-910e-4f110d9bbd37`, version 1.1.7 (19).
 
 ## Status
 
-Implementation and local verification prepared. Production deployment and device verification remain required. Do not claim these fixes are live in a review reply until those steps pass.
+Implementation and local checks completed in commit `b763535`. The owner reported deployment completed without errors on 11 November. Browser checks confirmed the new public safety contact and 24-hour wording, the updated Admin report guidance, and a successful refresh of four sample chats and four questions for `ogyamwilson`. The normal web member experience is disabled by app settings, so iPhone/iPad verification remains pending. Do not submit a review reply claiming device verification until it passes.
 
 App Store Connect App Information was inspected on 11 November: 18+ in 173 countries/regions, 19+ in Korea, and the legacy 17+ classification on operating systems earlier than version 26. No questionnaire answers were fabricated to obtain a rating.
 
