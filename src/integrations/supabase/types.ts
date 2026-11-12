@@ -1260,6 +1260,7 @@ export type Database = {
     Functions: {
       admin_enforce_content_report: { Args: { _report_id: string }; Returns: undefined }
       begin_location_checkin: { Args: { _lat: number; _lng: number; _accuracy?: number }; Returns: string }
+      get_my_location_checkin: { Args: never; Returns: string | null }
       end_location_checkin: { Args: never; Returns: undefined }
       accept_community_rules: { Args: { _version: string }; Returns: undefined }
 

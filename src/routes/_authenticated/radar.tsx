@@ -135,7 +135,6 @@ function RadarPage() {
   const [locationBusy, setLocationBusy] = useState(false);
   const [checkinUntil, setCheckinUntil] = useState<number | null>(null);
   const operation = useRef(0);
-  const initialCheckout = useRef<PromiseLike<{ error: unknown }> | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locationHelp, setLocationHelp] = useState<ReturnType<typeof locationRecovery>>(null);
 
@@ -161,9 +160,6 @@ function RadarPage() {
     setGeoError(null);
     setLocationHelp(null);
     try {
-      const checkout = await initialCheckout.current;
-      if (checkout?.error)
-        throw new Error("Could not confirm your location is hidden. Reload and try again.");
       const coords = await getManualPosition();
       if (request !== operation.current || document.hidden) return;
       if (share) {
@@ -212,16 +208,25 @@ function RadarPage() {
   }
 
   useEffect(() => {
-    // Never restore a previous session's check-in, including after a crash.
-    initialCheckout.current = supabase.rpc("end_location_checkin").then((result) => result);
+    // A route change unmounts Radar but does not end a manually-started lease.
+    // Restore only its existing server expiry; this never renews the check-in.
+    let disposed = false;
+    const request = operation.current;
+    void supabase.rpc("get_my_location_checkin").then(({ data, error }) => {
+      if (disposed || request !== operation.current || document.hidden || error || !data) return;
+      const expiresAt = new Date(data).getTime();
+      if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+        setVisible(true);
+        setCheckinUntil(expiresAt);
+      }
+    });
     const onHidden = () => {
       if (document.hidden) void stopSharing();
     };
     window.addEventListener("pagehide", stopSharing);
     document.addEventListener("visibilitychange", onHidden);
     return () => {
-      operation.current += 1;
-      void supabase.rpc("end_location_checkin");
+      disposed = true;
       window.removeEventListener("pagehide", stopSharing);
       document.removeEventListener("visibilitychange", onHidden);
     };
@@ -605,8 +610,9 @@ function RadarPage() {
                 <summary className="cursor-pointer py-1">Location privacy & safety</summary>
                 <p className="mt-1 leading-relaxed">
                   Check in manually each time. Choose 15 minutes, 30 minutes, 1 hour or 2 hours in
-                  You → Check-in duration. Check-ins never renew automatically. Leaving Radar or
-                  backgrounding requests checkout; expiry still applies if you lose connection. Stop
+                  You → Check-in duration. Check-ins never renew automatically. Changing screens
+                  keeps this check-in active; backgrounding requests checkout. Expiry still applies
+                  if you lose connection. Stop
                   sharing is free.
                 </p>
                 <Link to="/support" className="inline-block py-2 underline">

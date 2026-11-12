@@ -49,8 +49,8 @@ export function CheckinDurationSetting({ userId }: { userId: string }) {
         Check-in duration
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        Choose how long your next manual check-in can last. Sharing never renews automatically. Stop
-        sharing, leaving Radar or backgrounding the app ends it earlier.
+        Choose how long your next manual check-in can last. Sharing never renews automatically.
+        Changing screens keeps it active; stop sharing or background the app to end it earlier.
       </p>
       <div className="mt-3">
         <Select

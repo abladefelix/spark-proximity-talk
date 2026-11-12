@@ -106,7 +106,7 @@ MISSING="$(psql_run -tAc "
       ('billing_public_info'), ('chat_retention'), ('claim_first_admin'),
       ('claim_zone_perk'), ('drop_help_beacon'), ('my_profile_private'),
       ('my_zone'), ('nearby_broadcasts'), ('nearby_help_beacons'),
-      ('nearby_people'), ('begin_location_checkin'), ('end_location_checkin'),
+      ('nearby_people'), ('begin_location_checkin'), ('get_my_location_checkin'), ('end_location_checkin'),
       ('accept_community_rules'), ('admin_enforce_content_report'),
       ('post_broadcast'), ('purge_expired_signals'),
       ('purge_old_chats'), ('set_chat_vanish'), ('set_my_intent'),
