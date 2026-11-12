@@ -2,23 +2,14 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { getManualPosition } from "@/lib/manual-location";
 import { Capacitor } from "@capacitor/core";
-import { Geolocation } from "@capacitor/geolocation";
+import { locationRecovery } from "@/lib/location-recovery";
 import { toast } from "sonner";
-import {
-  Zap,
-  Check,
-  LoaderCircle,
-  Ban,
-  Flag,
-  MapPin,
-  Compass,
-  LifeBuoy,
-} from "lucide-react";
+import { Zap, Check, LoaderCircle, Ban, Flag, MapPin, Compass, LifeBuoy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { errorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -43,7 +34,6 @@ import { IntentChip } from "@/components/IntentSheet";
 import { useMyIntent } from "@/hooks/useIntent";
 import { intentFor, helpKindFor } from "@/lib/intents";
 import { ActiveChats } from "@/components/ActiveChats";
-import { useProUpgradeSheet } from "@/components/ProUpgradeSheet";
 import { beaconColor } from "@/lib/beacon-styles";
 import { useChatSheet } from "@/components/ChatSheet";
 import { sendPushNotification } from "@/lib/push-notifications.functions";
@@ -55,18 +45,9 @@ import { useBillingInfo, useIsPro } from "@/hooks/useBilling";
 import { useFeatureAccess, FEATURE } from "@/hooks/useProFeatures";
 import { useRadarAlert } from "@/hooks/useRadarSound";
 import { useCompassHeading, compassPoint } from "@/hooks/useCompassHeading";
-import { GeoKalman, preciseDistance } from "@/lib/geo-filter";
 import { withTimeout } from "@/lib/net";
 import { nativeDebug, nativeDebugError } from "@/lib/native-debug";
-import { runNativePermissionPrompt } from "@/lib/native-permission-queue";
 
-
-
-
-
-
-/** Fixes worse than this are network/wifi guesses, not usable GPS. */
-const COARSE_FIX_LIMIT_M = 65;
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
     meta: [
@@ -88,7 +69,6 @@ export const Route = createFileRoute("/_authenticated/radar")({
     </SuspendedGate>
   ),
 });
-
 
 type NearbyPerson = {
   id: string;
@@ -119,16 +99,11 @@ type NearbyPerson = {
   mood?: string | null;
 };
 
-
-
-
-
 function genderToken(gender: NearbyPerson["gender"]) {
   if (gender === "male") return "gender-male";
   if (gender === "female") return "gender-female";
   return "gender-other";
 }
-
 
 function RadarPage() {
   const { user } = Route.useRouteContext();
@@ -156,476 +131,121 @@ function RadarPage() {
   }, [settings.default_radius_m]);
   const radius = Math.min(Math.max(radiusPref, MIN_RADIUS), cap);
 
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [locationBusy, setLocationBusy] = useState(false);
+  const [checkinUntil, setCheckinUntil] = useState<number | null>(null);
+  const operation = useRef(0);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [located, setLocated] = useState(false);
-  const [retryKey, setRetryKey] = useState(0);
-  const [askLocation, setAskLocation] = useState(false);
-  const [permDenied, setPermDenied] = useState(false);
-  const { open: openPro } = useProUpgradeSheet();
-
-
+  const [locationHelp, setLocationHelp] = useState<ReturnType<typeof locationRecovery>>(null);
 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
-  const lastCoords = useRef<{
-    latitude: number;
-    longitude: number;
-    accuracy?: number;
-  } | null>(null);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
-  const myIdRef = useRef<string | null>(user.id);
 
-  // Keep my location fresh while the radar is open.
+  async function stopSharing() {
+    operation.current += 1;
+    setVisible(false);
+    setCheckinUntil(null);
+    const { error } = await supabase.rpc("end_location_checkin");
+    if (error)
+      setGeoError(
+        "Could not confirm checkout. Retry; the server check-in still expires at its scheduled end time.",
+      );
+  }
 
-  useEffect(() => {
-    if (askLocation) return;
-    const isNative = Capacitor.isNativePlatform();
-    nativeDebug("radar location effect started", { platform: Capacitor.getPlatform() });
-    // On Android the WebView's own location provider goes through the same
-    // native permission flow as the plugin. Running both at once while the
-    // system permission dialog is open kills the app process, so the WebView
-    // fallback is kept for iPhone only (where it rescues lost plugin
-    // callbacks after the app resumes).
-    const webFallbackOk = !isNative || Capacitor.getPlatform() === "ios";
-    // After the native plugin has already failed there is no permission dialog
-    // left to race with, so the WebView provider is a safe last resort on
-    // Android too — otherwise a missing native plugin means no position at all.
-    const lateFallbackOk = true;
-
-    if (!isNative && !("geolocation" in navigator)) {
-      setGeoError("This device can't share location.");
-      return;
-    }
-
-    let cancelled = false;
-    let browserWatch: number | undefined;
-    let nativeWatch: string | undefined;
-    let nativeHighAccuracy = true;
-    let lastPublished: { lat: number; lng: number; at: number; accuracy: number } | null = null;
-    let publishInFlight = false;
-    let pendingFix: { latitude: number; longitude: number; accuracy?: number | null } | null = null;
-    let safetyTimeout: ReturnType<typeof setTimeout> | undefined;
-    const filter = new GeoKalman();
-    const push = async (
-      raw: {
-        latitude: number;
-        longitude: number;
-        accuracy?: number | null;
-        speed?: number | null;
-      },
-      force = false,
-      preSmoothed = false,
-    ) => {
-
-      if (cancelled) return;
-      if (!Number.isFinite(raw.latitude) || !Number.isFinite(raw.longitude)) return;
-
-      // Smooth GPS jitter before publishing so distances stay steady while
-      // standing still, yet still follow real movement.
-      const smoothed = preSmoothed
-        ? { latitude: raw.latitude, longitude: raw.longitude, accuracy: raw.accuracy ?? filter.accuracy ?? 50 }
-        : filter.process(raw);
-      if (!smoothed) return;
-      const coords = { latitude: smoothed.latitude, longitude: smoothed.longitude };
-      const accuracy = smoothed.accuracy;
-
-      // Publish the first usable native fix immediately. Android's fused
-      // provider often starts above 65m indoors; withholding that fix made two
-      // nearby phones mutually invisible until a more precise fix arrived.
-      if (accuracy > COARSE_FIX_LIMIT_M) {
-        lastCoords.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy };
-        setAccuracyM(accuracy);
-        // Once a precise fix has landed, retain it briefly instead of replacing
-        // it with a much coarser network estimate.
-        const precise =
-          lastPublished &&
-          lastPublished.accuracy <= COARSE_FIX_LIMIT_M &&
-          Date.now() - lastPublished.at < 120000;
-        if (precise) return;
-      }
-
-
-      // Native and WebView providers can report at the same time. Serialize
-      // writes and retain only the newest fix so an older async write cannot
-      // land after a newer one and make the beacon jump backwards.
-      if (publishInFlight) {
-        pendingFix = coords;
-        return;
-      }
-
-      // Accuracy gate: a coarse wifi/IP fix can sit hundreds of metres away and
-      // would place this person in completely the wrong direction for everyone
-      // else. Never let one overwrite a recent precise GPS fix.
-      if (
-        lastPublished &&
-        accuracy > Math.max(60, lastPublished.accuracy * 2.5) &&
-        Date.now() - lastPublished.at < 120000
-      ) {
-        return;
-      }
-
-      lastCoords.current = {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        accuracy,
-      };
-      localStorage.setItem("skan-last-location", JSON.stringify(lastCoords.current));
-      setAccuracyM(accuracy);
-
-      // Track motion promptly. The threshold follows the reported horizontal
-      // uncertainty so stationary GPS noise is not presented as real motion.
-      if (!force && lastPublished) {
-        const moved = preciseDistance(
-          { latitude: lastPublished.lat, longitude: lastPublished.lng },
-          coords,
-        );
-        // Keep the floor sub-metre on a good fix so short walks register.
-        const movementFloor = Math.max(0.5, Math.min(3, accuracy * 0.2));
-        if (moved < movementFloor && Date.now() - lastPublished.at < 4000) return;
-      }
-
-
-
-      // Use the locally cached session: a network round-trip here (getUser)
-      // can hang on flaky mobile networks and silently kill the heartbeat.
-      let me = myIdRef.current;
-      if (!me) {
-        me = (await supabase.auth.getSession()).data.session?.user?.id ?? null;
-        myIdRef.current = me;
-      }
-      if (!me) return;
-      publishInFlight = true;
-      try {
-        nativeDebug("location publish started", { accuracyBucket: accuracy <= COARSE_FIX_LIMIT_M ? "precise" : "coarse" });
-        const publishedAt = Date.now();
-        const { error } = await supabase.from("locations").upsert(
-          {
-            user_id: me,
-            lat: coords.latitude,
-            lng: coords.longitude,
-            accuracy_m: accuracy,
-            is_visible: visible,
-            updated_at: new Date(publishedAt).toISOString(),
-          },
-          { onConflict: "user_id" },
-        );
-        if (error) {
-          nativeDebugError("location publish failed", error);
-          setGeoError(error.message);
+  async function locate(share: boolean) {
+    if (locationBusy) return;
+    const request = ++operation.current;
+    setLocationBusy(true);
+    setGeoError(null);
+    setLocationHelp(null);
+    try {
+      const coords = await getManualPosition();
+      if (request !== operation.current || document.hidden) return;
+      if (share) {
+        const { data, error } = await supabase.rpc("begin_location_checkin", {
+          _lat: coords.latitude,
+          _lng: coords.longitude,
+          _accuracy: coords.accuracy,
+        });
+        if (error) throw error;
+        // If the app was backgrounded while the request was running, revoke
+        // the newly-created lease rather than restoring visibility on return.
+        if (request !== operation.current || document.hidden) {
+          await supabase.rpc("end_location_checkin");
           return;
         }
-        nativeDebug("location publish succeeded");
-        lastPublished = {
+        setVisible(true);
+        setCheckinUntil(new Date(data).getTime());
+      } else {
+        const { error: checkoutError } = await supabase.rpc("end_location_checkin");
+        if (checkoutError) throw checkoutError;
+        setVisible(false);
+        setCheckinUntil(null);
+        const { error } = await supabase.from("locations").upsert({
+          user_id: user.id,
           lat: coords.latitude,
           lng: coords.longitude,
-          at: publishedAt,
-          accuracy,
-        };
-        setGeoError(null);
-        setLocated(true);
-        queryClient.invalidateQueries({ queryKey: ["nearby"] });
-      } finally {
-        publishInFlight = false;
-        const next = pendingFix;
-        pendingFix = null;
-        if (next && !cancelled) void push(next);
+          accuracy_m: coords.accuracy,
+          is_visible: false,
+          updated_at: new Date().toISOString(),
+        });
+        if (error) throw error;
       }
-    };
-
-    // Retain the cached fix only for local continuity. Never publish it: an old
-    // coordinate is worse than a short wait for a fresh high-accuracy fix.
-    const cachedLocation = localStorage.getItem("skan-last-location");
-    if (cachedLocation) {
-      try {
-        const parsed = JSON.parse(cachedLocation) as {
-          latitude?: unknown;
-          longitude?: unknown;
-          accuracy?: unknown;
-        };
-        if (typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
-          const cachedAccuracy =
-            typeof parsed.accuracy === "number" ? parsed.accuracy : undefined;
-          lastCoords.current = {
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
-            ...(cachedAccuracy === undefined ? {} : { accuracy: cachedAccuracy }),
-          };
-        }
-      } catch {
-        localStorage.removeItem("skan-last-location");
-      }
-    }
-    const refreshFix = () => {
-      if (isNative) {
-        nativeDebug("requesting one-off native location refresh");
-        void Geolocation.getCurrentPosition({
-          enableHighAccuracy: nativeHighAccuracy,
-          maximumAge: 0,
-          timeout: 15000,
-          enableLocationFallback: true,
-        })
-          .then((position) => {
-            nativeDebug("one-off native location received", { accuracy: position.coords.accuracy });
-            return push(position.coords);
-          })
-          .catch((error) => {
-            nativeDebugError("one-off native location failed", error);
-            // A remotely hosted Capacitor app can occasionally lose the native
-            // plugin callback after resume. WKWebView location remains usable,
-            // so fall back instead of silently letting presence expire.
-            if (lateFallbackOk) startBrowserWatch();
-          });
-      } else if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => void push(position.coords),
-          () => {},
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-        );
-      }
-    };
-    const fail = (denied: boolean, unavailable = false) => {
-      if (cancelled) return;
-      if (denied) {
-        setPermDenied(true);
-        setAskLocation(true);
-        setGeoError("Location permission is off. Turn it on to see who's around.");
-        return;
-      }
-      if (unavailable) setGeoError("Turn on Location Services to use the radar.");
-    };
-
-    const startBrowserWatch = () => {
-      if (!("geolocation" in navigator) || browserWatch !== undefined) return;
-      nativeDebug("starting WebView location backup");
-      navigator.geolocation.getCurrentPosition(
-        (position) => void push(position.coords),
-        () => {},
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-      );
-      browserWatch = navigator.geolocation.watchPosition(
-        (position) => void push(position.coords),
-        () => {},
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-      );
-    };
-
-    void (async () => {
-      if (isNative) {
-        // Start the WKWebView provider in parallel. Capacitor's permission or
-        // position promise can remain pending after an iOS resume; waiting for
-        // it used to prevent both presence updates and nearby queries.
-        if (webFallbackOk && "geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => void push(position.coords),
-            () => {},
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-          );
-          browserWatch = navigator.geolocation.watchPosition(
-            (position) => void push(position.coords),
-            () => {},
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-          );
-        }
-        try {
-          nativeDebug("checking native location permission");
-          let permission = await Geolocation.checkPermissions();
-          nativeDebug("native location permission checked", {
-            location: permission.location,
-            coarseLocation: permission.coarseLocation,
-          });
-          const canLocate = () =>
-            permission.location === "granted" || permission.coarseLocation === "granted";
-          if (
-            !canLocate() &&
-            (permission.location === "prompt" ||
-              permission.location === "prompt-with-rationale" ||
-              permission.coarseLocation === "prompt" ||
-              permission.coarseLocation === "prompt-with-rationale")
-          ) {
-            nativeDebug("showing native location permission prompt");
-            permission = await runNativePermissionPrompt(() => Geolocation.requestPermissions());
-            nativeDebug("native location permission prompt returned", {
-              location: permission.location,
-              coarseLocation: permission.coarseLocation,
-            });
-          }
-          if (!canLocate()) {
-            fail(true);
-            return;
-          }
-
-          // Android 12+ lets people grant approximate location while declining
-          // precise location. That is still fully usable for proximity discovery,
-          // but requesting a fine-only fix can stall or repeatedly re-prompt.
-          nativeHighAccuracy = permission.location === "granted";
-
-          setAskLocation(false);
-          setPermDenied(false);
-          // The system permission dialog is closed by now, so starting the
-          // WebView provider on Android no longer risks the process-killing
-          // race. It acts as a backup if the native plugin stalls.
-          startBrowserWatch();
-          nativeDebug("starting native location watcher");
-          nativeWatch = await Geolocation.watchPosition(
-             {
-               enableHighAccuracy: nativeHighAccuracy,
-               maximumAge: 0,
-               timeout: 15000,
-               minimumUpdateInterval: 5000,
-               interval: 10000,
-               enableLocationFallback: true,
-             },
-            (position, error) => {
-              if (position) {
-                nativeDebug("native location watcher update", { accuracy: position.coords.accuracy });
-                void push(position.coords);
-              }
-              else if (error) {
-                nativeDebugError("native location watcher failed", error);
-                const denied = error.code === "OS-PLUG-GLOC-0003";
-                const unavailable = error.code === "OS-PLUG-GLOC-0007";
-                fail(denied, unavailable);
-                if (!denied && !unavailable) startBrowserWatch();
-              }
-            },
-          );
-          nativeDebug("native location watcher started", { hasWatchId: Boolean(nativeWatch) });
-          // If the native plugin never delivers a fix, the WebView provider
-          // rescues presence after a short grace period.
-          safetyTimeout = setTimeout(() => {
-            if (!lastPublished) {
-              nativeDebug("native location safety timeout, starting WebView backup");
-              startBrowserWatch();
-            }
-          }, 20000);
-          if (cancelled && nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
-
-          // A cached fix makes startup instant when available. A timeout here is
-          // not an error: the watcher above remains active until iOS gets a fix.
-          try {
-            nativeDebug("requesting initial native location fix");
-            const position = await Geolocation.getCurrentPosition({
-              enableHighAccuracy: nativeHighAccuracy,
-              maximumAge: 0,
-              timeout: 15000,
-              enableLocationFallback: true,
-            });
-            nativeDebug("initial native location fix received", { accuracy: position.coords.accuracy });
-            await push(position.coords);
-          } catch (error) {
-            nativeDebugError("initial native location fix failed", error);
-            // Keep the native watcher, but also start the WebView provider. On
-            // iOS it can recover when a plugin callback is lost after resume.
-            if (lateFallbackOk) startBrowserWatch();
-          }
-        } catch (error) {
-          nativeDebugError("native location startup failed", error);
-          const message = error instanceof Error ? error.message.toLowerCase() : "";
-          const denied = message.includes("permission") || message.includes("denied");
-          const unavailable = message.includes("location services") || message.includes("disabled");
-          fail(denied, unavailable);
-          if (!denied && !unavailable) startBrowserWatch();
-        }
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => void push(position.coords),
-        (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-      );
-      browserWatch = navigator.geolocation.watchPosition(
-        (position) => void push(position.coords),
-        (error) => fail(error.code === error.PERMISSION_DENIED, error.code === error.POSITION_UNAVAILABLE),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-      );
-    })();
-
-    // Even when the position itself cannot be refreshed (stationary phone, or a
-    // coarse indoor fix we refuse to publish), presence must stay fresh or the
-    // person disappears from everyone else's radar after the presence timeout.
-    const touchPresence = async () => {
-      if (cancelled || publishInFlight || !lastPublished) return;
-      if (Date.now() - lastPublished.at < 60000) return;
-      let me = myIdRef.current;
-      if (!me) {
-        me = (await supabase.auth.getSession()).data.session?.user?.id ?? null;
-        myIdRef.current = me;
-      }
-      if (!me) return;
-      const at = Date.now();
-      const { error } = await supabase.from("locations").upsert(
-        {
-          user_id: me,
-          lat: lastPublished.lat,
-          lng: lastPublished.lng,
-          accuracy_m: lastPublished.accuracy,
-          is_visible: visible,
-          updated_at: new Date(at).toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-      if (!error && lastPublished) lastPublished = { ...lastPublished, at };
-    };
-
-    // Stationary phones stop emitting position updates, which would make the
-    // user look offline to everyone else. Re-publish the last fix periodically,
-    // and ask for a fresh one when the watcher never delivered anything.
-    const heartbeat = setInterval(() => {
-      const coords = lastCoords.current;
-      if (coords) void push(coords, true, true);
-      else {
-        refreshFix();
-        // If neither provider has ever produced a fix, make sure the WebView
-        // watcher is actually running (it may have been stopped by an error).
-        if (!lastPublished) startBrowserWatch();
-      }
-      void touchPresence();
-    }, 10000);
-
-    // Backgrounded tabs and suspended apps stop the heartbeat, so the person
-    // goes stale for everyone else. Re-publish (and refresh) on foreground.
-    const onWake = () => {
-      if (document.visibilityState !== "visible") return;
-      const coords = lastCoords.current;
-      if (coords) void push(coords, true, true);
-      void touchPresence();
-      refreshFix();
+      setAccuracyM(coords.accuracy);
       queryClient.invalidateQueries({ queryKey: ["nearby"] });
+    } catch (error) {
+      const help = locationRecovery(error, Capacitor.getPlatform());
+      setLocationHelp(help);
+      setGeoError(
+        help
+          ? "Enable location in Settings, then tap Check in again."
+          : errorMessage(error, "Could not get location. Please try again."),
+      );
+    } finally {
+      setLocationBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    // A route change unmounts Radar but does not end a manually-started lease.
+    // Restore only its existing server expiry; this never renews the check-in.
+    let disposed = false;
+    const request = operation.current;
+    void supabase.rpc("get_my_location_checkin").then(({ data, error }) => {
+      if (disposed || request !== operation.current || document.hidden || error || !data) return;
+      const expiresAt = new Date(data).getTime();
+      if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+        setVisible(true);
+        setCheckinUntil(expiresAt);
+      }
+    });
+    const onHidden = () => {
+      if (document.hidden) void stopSharing();
     };
-
-    document.addEventListener("visibilitychange", onWake);
-    window.addEventListener("focus", onWake);
-    window.addEventListener("pageshow", onWake);
-    window.addEventListener("online", onWake);
-
+    window.addEventListener("pagehide", stopSharing);
+    document.addEventListener("visibilitychange", onHidden);
     return () => {
-      cancelled = true;
-      clearInterval(heartbeat);
-      clearTimeout(safetyTimeout);
-      document.removeEventListener("visibilitychange", onWake);
-      window.removeEventListener("focus", onWake);
-      window.removeEventListener("pageshow", onWake);
-      window.removeEventListener("online", onWake);
-      if (browserWatch !== undefined) navigator.geolocation.clearWatch(browserWatch);
-      if (nativeWatch) void Geolocation.clearWatch({ id: nativeWatch });
+      disposed = true;
+      window.removeEventListener("pagehide", stopSharing);
+      document.removeEventListener("visibilitychange", onHidden);
     };
-  }, [visible, queryClient, retryKey, askLocation]);
+  }, []);
 
-
-
-
+  useEffect(() => {
+    if (checkinUntil === null) return;
+    const timer = window.setTimeout(
+      () => void stopSharing(),
+      Math.max(0, checkinUntil - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [checkinUntil]);
 
   // Stale signal cleanup is a staff-only maintenance routine (see admin panel).
 
-
-
   const nearby = useQuery({
     queryKey: ["nearby", radius],
-    // Runs even before our own fix lands: the server falls back to the last
-    // published location, so the radar is never blank just because the
-    // device watcher is slow.
+    // Discovery can use our last private position; it never creates a check-in.
     enabled: true,
     refetchInterval: 2000,
     refetchOnWindowFocus: true,
@@ -670,21 +290,19 @@ function RadarPage() {
       const me = (await supabase.auth.getUser()).data.user?.id;
       if (!me) throw new Error("Not signed in");
       const result = await withTimeout<{ error: { message: string } | null }>(
-        (supabase as any)
-          .from("signals")
-          .upsert(
-            {
-              from_user: me,
-              to_user: person.id,
-              intent: myIntent?.intent ?? null,
-              intent_note: myIntent?.intent_note ?? null,
-              created_at: new Date().toISOString(),
-              expires_at: new Date(
-                Date.now() + (settings.signal_expiry_hours || 6) * 3_600_000,
-              ).toISOString(),
-            },
-            { onConflict: "from_user,to_user" },
-          ),
+        (supabase as any).from("signals").upsert(
+          {
+            from_user: me,
+            to_user: person.id,
+            intent: myIntent?.intent ?? null,
+            intent_note: myIntent?.intent_note ?? null,
+            created_at: new Date().toISOString(),
+            expires_at: new Date(
+              Date.now() + (settings.signal_expiry_hours || 6) * 3_600_000,
+            ).toISOString(),
+          },
+          { onConflict: "from_user,to_user" },
+        ),
         10_000,
         "Signal",
       );
@@ -728,7 +346,6 @@ function RadarPage() {
     onError: (e) => toast.error(errorMessage(e, "Could not send signal")),
   });
 
-
   // nearby_people already applies the server's presence grace window. Keep
   // those rows on the scope when a phone briefly suspends its heartbeat;
   // is_online is presentation state, not a second visibility filter.
@@ -751,9 +368,8 @@ function RadarPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [people]);
-  
-  const selected = people.find((p) => p.id === selectedId) ?? null;
 
+  const selected = people.find((p) => p.id === selectedId) ?? null;
 
   async function blockPerson(person: NearbyPerson) {
     const me = (await supabase.auth.getUser()).data.user?.id;
@@ -816,7 +432,6 @@ function RadarPage() {
   const compassCalibrating = headingUp && calibrating && !compassUnavailable;
   const rot = compassActive ? -(heading as number) : 0;
 
-
   // Auto-fitting layout. Beacons keep a constant on-screen size and gap, so
   // pinching to zoom genuinely expands the map and pulls crowded people apart
   // instead of stacking them.
@@ -838,21 +453,16 @@ function RadarPage() {
     const limit = scope * 0.46 - layerSize / 2;
 
     const nodes = people.map((person, index) => {
-        // True geographic placement: north is up, bearing runs clockwise, and
-        // the radius is the real distance scaled against the scan range. At
-        // exactly the same coordinates PostGIS has no azimuth, so distribute
-        // those beacons around the centre instead of filtering them out.
-        const reportedBearing = Number(person.bearing_deg);
-        const bearing = Number.isFinite(reportedBearing)
-          ? reportedBearing
-          : (index * 137.508) % 360;
-        const rad = (bearing * Math.PI) / 180;
-        const rr = Math.max(
-          layerSize * 0.6,
-          Math.min(1, person.distance_m / viewMax) * limit,
-        );
-        return { person, bearing, radius: rr, angle: rad };
-      });
+      // True geographic placement: north is up, bearing runs clockwise, and
+      // the radius is the real distance scaled against the scan range. At
+      // exactly the same coordinates PostGIS has no azimuth, so distribute
+      // those beacons around the centre instead of filtering them out.
+      const reportedBearing = Number(person.bearing_deg);
+      const bearing = Number.isFinite(reportedBearing) ? reportedBearing : (index * 137.508) % 360;
+      const rad = (bearing * Math.PI) / 180;
+      const rr = Math.max(layerSize * 0.6, Math.min(1, person.distance_m / viewMax) * limit);
+      return { person, bearing, radius: rr, angle: rad };
+    });
 
     return {
       beaconSize: size,
@@ -868,7 +478,6 @@ function RadarPage() {
           top: `calc(50% + ${-Math.cos(n.angle) * n.radius}px)`,
         })),
     };
-
   }, [people, scopeSize, radius, zoom]);
 
   // Bat-Signals ride the same scope as people: true bearing, scaled distance,
@@ -897,9 +506,6 @@ function RadarPage() {
         };
       });
   }, [helpBeacons, people, scopeSize, radius, zoom]);
-
-
-
 
   // ---- Pinch to resize the beacons ---------------------------------------
   // The radar disc itself never scales or pans: pinching only grows or shrinks
@@ -962,9 +568,8 @@ function RadarPage() {
     if (pointers.current.size < 2) gesture.current = null;
   };
 
-
   return (
-    <main data-fixed-page className="mx-auto flex h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-[var(--app-gutter)] pt-2 min-[390px]:pt-3">
+    <main className="mx-auto flex min-h-full w-full max-w-lg flex-col px-[var(--app-gutter)] pt-2 min-[390px]:pt-3">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
         <div className="flex min-w-0 items-center">
           <Brand />
@@ -972,33 +577,49 @@ function RadarPage() {
         <div className="flex shrink-0 items-center gap-1.5">
           <NotificationBell />
           <ThemeToggle />
-
-
-          <Switch
-            checked={visible}
-            onCheckedChange={(next) => {
-              if (!next && !has(FEATURE.invisibleMode)) {
-                toast.error("Going invisible is a Pro feature", {
-                  description: "Upgrade to hide your beacon while you scan.",
-                  action: { label: "Go Pro", onClick: () => openPro() },
-                });
-                return;
-              }
-              setVisible(next);
-            }}
-            aria-label="Visible on radar"
-          />
-          <span className="hidden text-xs text-muted-foreground min-[380px]:inline">
-            {visible ? "Visible" : "Hidden"}
-          </span>
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {/* Cards occupy only their measured space. The radar below is centered
-            between the bottom of this region and the bottom navigation. */}
-        <div className="relative z-20 max-h-[38%] shrink-0 overflow-y-auto overscroll-contain pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-1 flex-col">
+        {/* Use the app shell's single scroll area: cards must never be clipped
+            into a fixed-height region above the radar. */}
+        <div className="shrink-0 pt-2 pb-2">
           <div className="mx-auto max-w-[min(24rem,100%)]">
+            <div className="mb-2 rounded-xl border px-3 py-2 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="font-medium" role="status">
+                  {visible && checkinUntil
+                    ? `Sharing until ${new Date(checkinUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                    : "Location hidden"}
+                </span>
+                <Button
+                  size="sm"
+                  variant={visible ? "destructive" : "default"}
+                  className={
+                    visible
+                      ? undefined
+                      : "bg-green-700 text-white hover:bg-green-800 focus-visible:ring-green-600"
+                  }
+                  disabled={locationBusy}
+                  onClick={() => (visible ? void stopSharing() : void locate(true))}
+                >
+                  {locationBusy ? "Locating…" : visible ? "Stop sharing" : "Check in"}
+                </Button>
+              </div>
+              <details className="text-muted-foreground">
+                <summary className="cursor-pointer py-1">Location privacy & safety</summary>
+                <p className="mt-1 leading-relaxed">
+                  Check in manually each time. Choose 15 minutes, 30 minutes, 1 hour or 2 hours in
+                  You → Check-in duration. Check-ins never renew automatically. Changing screens
+                  keeps this check-in active; backgrounding requests checkout. Expiry still applies
+                  if you lose connection. Stop
+                  sharing is free.
+                </p>
+                <Link to="/support" className="inline-block py-2 underline">
+                  Safety & contact
+                </Link>
+              </details>
+            </div>
 
             {geoError && (
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
@@ -1008,15 +629,17 @@ function RadarPage() {
                   variant="outline"
                   size="sm"
                   className="shrink-0"
-                  onClick={() => setRetryKey((k) => k + 1)}
+                  onClick={() => void locate(true)}
                 >
-                  Retry
+                  Check in
                 </Button>
               </div>
             )}
             {!geoError && nearby.isError && (
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
-                <span className="min-w-0">Radar could not refresh. Check your connection and try again.</span>
+                <span className="min-w-0">
+                  Radar could not refresh. Check your connection and try again.
+                </span>
                 <Button
                   type="button"
                   variant="outline"
@@ -1028,13 +651,6 @@ function RadarPage() {
                 </Button>
               </div>
             )}
-            {!geoError && !nearby.isError && people.length === 0 && !nearby.isLoading && (
-              <p className="mb-2 text-center text-xs leading-5 text-muted-foreground">
-                {located
-                  ? `${settings.empty_radar_text} Widen your scan range in your profile.`
-                  : "Finding your location…"}
-              </p>
-            )}
             <div className="mt-2.5 max-[360px]:mt-2">
               <IntentChip />
             </div>
@@ -1043,337 +659,369 @@ function RadarPage() {
           </div>
         </div>
 
-        {/* This layer receives only the clear space left below the cards. */}
-        <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-2 pb-2 min-h-[700px]:gap-3 min-h-[700px]:pb-3">
-      <section
-        ref={scopeRef}
-        aria-label={geoError ?? "Radar"}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endPointer}
-        onPointerCancel={endPointer}
-        style={{ touchAction: "pan-y" }}
-        className="relative aspect-square h-auto max-h-[calc(100%-3rem)] w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
-      >
-        <div
-          className="absolute inset-0 origin-center"
-          style={{
-            transform: `rotate(${rot}deg)`,
-            // will-change only while pinching/panning: keeping it on during
-            // compass rotation makes the browser reuse a cached bitmap, which
-            // is what made the grid and labels look blurry while walking.
-            willChange: gesture.current ? "transform" : "auto",
-            transition: gesture.current ? "none" : "transform 260ms cubic-bezier(0.22,1,0.36,1)",
-          }}
-        >
-
-          <div className="radar-grid absolute inset-0" />
-          {/* Compass rose: beacons sit at their true bearing. In heading-up mode
-              the rose turns with the phone so N always points at real north. */}
-          <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
-            N
-          </span>
-          <span className="pointer-events-none absolute right-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
-            E
-          </span>
-          <span className="pointer-events-none absolute bottom-[2%] left-1/2 -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
-            S
-          </span>
-          <span className="pointer-events-none absolute left-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
-            W
-          </span>
-          <div className="absolute inset-[16%] rounded-full border border-border/70" />
-          <div className="absolute inset-[33%] rounded-full border border-border/50" />
-          <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
-          <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
-          <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
-          <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
-          <BrandMark
-            size={80}
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
-          />
-
-          {beacons.map(({ person, left, top }) => {
-            const priority = Boolean(person.is_pro) && proPriorityOn;
-            const custom = beaconColor(person.beacon_style);
-            const scaleUp = priority ? 1.16 : 1;
-            return (
-            <button
-              key={person.id}
-              type="button"
-              onClick={() => {
-                if (dragged.current) return;
-                setSelectedId(person.id);
-              }}
-              style={{
-                left,
-                top,
-                opacity: person.is_online ? 1 : 0.5,
-                zIndex: priority ? 3 : 2,
-                transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
-              }}
-
-              aria-label={`${person.display_name ?? person.username}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
-              // Only tween position/fade. Tweening `all` restarted a 500ms
-              // animation on every compass tick, which smeared the beacons.
-            >
-              <span
-                className="relative flex items-center justify-center"
-                style={{
-                  width: beaconSize,
-                  height: beaconSize,
-                  transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
-                  transition: "transform 260ms cubic-bezier(0.22,1,0.36,1)",
-                }}
-              >
-
-                {(() => {
-                  const token = genderToken(person.gender);
-                  const glowClass = {
-                    "gender-male": "bg-gender-male/30",
-                    "gender-female": "bg-gender-female/30",
-                    "gender-other": "bg-gender-other/30",
-                  }[token];
-                  const pingClass = {
-                    "gender-male": "border-gender-male/60",
-                    "gender-female": "border-gender-female/60",
-                    "gender-other": "border-gender-other/60",
-                  }[token];
-                  const ringClass = {
-                    "gender-male": "ring-gender-male",
-                    "gender-female": "ring-gender-female",
-                    "gender-other": "ring-gender-other",
-                  }[token];
-                  const iconClass = {
-                    "gender-male": "text-gender-male",
-                    "gender-female": "text-gender-female",
-                    "gender-other": "text-gender-other",
-                  }[token];
-                  return (
-                    <>
-                      {/* soft glow pool */}
-                      <span
-                        aria-hidden
-                        className={custom ? "absolute inset-0 rounded-full blur-md" : `absolute inset-0 rounded-full blur-md ${glowClass}`}
-                        style={custom ? { background: custom, opacity: 0.35 } : undefined}
-                      />
-                      {/* ping for people who signaled you */}
-                      {person.they_signaled && !person.match_id && (
-                        <span
-                          aria-hidden
-                          className={custom ? "beacon-ping absolute inset-0 rounded-full border" : `beacon-ping absolute inset-0 rounded-full border ${pingClass}`}
-                          style={custom ? { borderColor: custom } : undefined}
-                        />
-                      )}
-                      {/* Pro priority halo */}
-                      {priority && (
-                        <span
-                          aria-hidden
-                          className="absolute inset-[-14%] rounded-full border"
-                          style={{ borderColor: custom ?? "oklch(0.82 0.16 85)", opacity: 0.7 }}
-                        />
-                      )}
-                      {/* gendered avatar marker; neutral gender is intentionally bare — only the ring + glow */}
-                      <span
-                        className={
-                          custom
-                            ? "relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow"
-                            : `relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`
-                        }
-                        style={{
-                          width: beaconSize * 0.62,
-                          height: beaconSize * 0.62,
-                          ...(custom ? { ["--tw-ring-color" as any]: custom } : {}),
-                        }}
-                      >
-                        {person.gender && person.gender !== "other" && (
-                          <GenderAvatarIcon
-                            gender={person.gender}
-                            className={custom ? "h-[76%] w-[76%]" : `h-[76%] w-[76%] ${iconClass}`}
-                            {...(custom ? { style: { color: custom } } : {})}
-                          />
-                        )}
-                      </span>
-
-                    </>
-                  );
-                })()}
-                {intentFor(person.intent) ? (
-                  <span
-                    aria-hidden
-                    className="absolute -right-1 -top-1 z-20 flex size-[45%] items-center justify-center rounded-full bg-background text-[9px] leading-none shadow-sm ring-1 ring-border"
-                  >
-                    {intentFor(person.intent)?.emoji}
-                  </span>
-                ) : null}
-              </span>
-            </button>
-            );
-          })}
-
-          {helpMarkers.map(({ beacon, size, left, top }) => (
-            <button
-              key={beacon.id}
-              type="button"
-              onClick={() => {
-                if (dragged.current) return;
-                navigate({ to: "/local", hash: "help-beacons" });
-                setTimeout(() => {
-                  document
-                    .getElementById("help-beacons")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 250);
-              }}
-              style={{ left, top, zIndex: 4 }}
-              aria-label={`${helpKindFor(beacon.kind)?.label ?? "Someone needs help"}, ${Math.round(beacon.distance_m)} metres away`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 active:scale-90"
-            >
-              <span
-                className="relative flex items-center justify-center"
-                style={{
-                  width: size,
-                  height: size,
-                  transform: `scale(${markerScale}) rotate(${-rot}deg)`,
-                }}
-              >
-                <span
-                  aria-hidden
-                  className="beacon-ping absolute inset-[-20%] rounded-full border border-destructive/70"
-                />
-                <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full bg-destructive/30 blur-md"
-                />
-                <span className="relative z-10 flex size-full items-center justify-center rounded-full bg-destructive text-destructive-foreground ring-2 ring-background">
-                  <LifeBuoy className="size-[62%]" />
-                </span>
-              </span>
-            </button>
-          ))}
-
-        </div>
-
-        {settings.radar_sweep_enabled && (
-          <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
-        )}
-
-        {/* Facing indicator: fixed to the screen, marks the way you are pointed. */}
-        {compassActive && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-[6%] size-0 -translate-x-1/2 border-x-[6px] border-b-[10px] border-x-transparent border-b-primary/70"
-          />
-        )}
-
-
-        {nearby.isLoading && (
-          <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
-        )}
-      </section>
-
-      {/* Compass toggle: sits directly under the radar scope. */}
-      <button
-        type="button"
-        onClick={() => {
-          if (needsPermission) {
-            void requestCompass().then((ok) => {
-              if (ok) {
-                if (!headingUp) toggleHeadingUp();
-              }
-              else toast.error("Compass access was declined");
-            });
-            return;
-          }
-          if (headingUp && heading == null) {
-            void requestCompass().then((ok) => {
-              if (!ok) toast.error("Compass is unavailable on this device");
-            });
-            return;
-          }
-          toggleHeadingUp();
-        }}
-        className="mb-1 flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
-      >
-        {compassCalibrating ||
-        (headingUp && heading == null && !needsPermission && !compassUnavailable) ? (
-          <LoaderCircle className="size-3.5 animate-spin text-primary" />
-        ) : (
-          <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
-        )}
-        {needsPermission
-          ? "Enable compass"
-          : compassActive
-            ? compassCalibrating
-              ? "Calibrating…"
-              : `Facing ${compassPoint(heading as number)}`
-            : headingUp
-              ? compassUnavailable
-                ? "No compass signal — tap to retry"
-                : "Finding north…"
-              : "North up"}
-
-      </button>
-
-      {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
-      {compassCalibrating && (
-        <div className="flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
-          <LoaderCircle className="size-3.5 animate-spin text-primary" />
-          Calibrating compass — move your phone in a figure 8
-        </div>
-      )}
-
-      {headingUp && compassUnavailable && (
-        <div className="max-w-[18rem] rounded-2xl border border-border bg-background/90 px-3 py-2 text-center text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
-          Your phone isn’t sending a compass reading. Move away from metal or magnets, wave the
-          phone in a figure 8, then tap the compass button to try again.
-        </div>
-      )}
-
-      </div>
-    </div>
-
-    <Dialog open={askLocation} onOpenChange={(o) => !o && setAskLocation(false)}>
-      <DialogContent className="max-w-xs rounded-3xl text-center">
-        <DialogHeader className="items-center">
-          <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
-            <MapPin className="size-7 text-primary" />
-          </span>
-          <DialogTitle>Turn on location</DialogTitle>
-          <DialogDescription>
-            {permDenied
-              ? Capacitor.isNativePlatform()
-                ? "Location is turned off for SKANAROUND. Open your phone Settings, find SKANAROUND, allow Location, then tap Try again."
-                : "Location is blocked for SKANAROUND. Allow location in your device settings, then tap Try again."
-              : "SKANAROUND needs your location to show people around you. Only distance is ever shared — never your exact spot."}
-          </DialogDescription>
-          <Link
-            to="/privacy"
-            className="text-xs text-muted-foreground underline underline-offset-4"
+        {/* Keep a true square in normal flow. Short screens scroll instead of
+            shrinking or covering the cards above. Bottom navigation stays fixed. */}
+        <div className="relative mt-3 flex shrink-0 flex-col items-center justify-center gap-2 pb-3">
+          <section
+            ref={scopeRef}
+            aria-label={geoError ?? "Radar"}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endPointer}
+            onPointerCancel={endPointer}
+            style={{ touchAction: "pan-y" }}
+            className="relative aspect-square h-auto shrink-0 w-full max-w-[min(24rem,100%)] overflow-hidden rounded-full border border-border bg-secondary/20"
           >
-            How we use your location
-          </Link>
-        </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button
-            variant="heat"
-            className="w-full"
+            <div
+              className="absolute inset-0 origin-center"
+              style={{
+                transform: `rotate(${rot}deg)`,
+                // will-change only while pinching/panning: keeping it on during
+                // compass rotation makes the browser reuse a cached bitmap, which
+                // is what made the grid and labels look blurry while walking.
+                willChange: gesture.current ? "transform" : "auto",
+                transition: gesture.current
+                  ? "none"
+                  : "transform 260ms cubic-bezier(0.22,1,0.36,1)",
+              }}
+            >
+              <div className="radar-grid absolute inset-0" />
+              {/* Compass rose: beacons sit at their true bearing. In heading-up mode
+              the rose turns with the phone so N always points at real north. */}
+              <span className="pointer-events-none absolute left-1/2 top-[2%] -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/70">
+                N
+              </span>
+              <span className="pointer-events-none absolute right-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+                E
+              </span>
+              <span className="pointer-events-none absolute bottom-[2%] left-1/2 -translate-x-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+                S
+              </span>
+              <span className="pointer-events-none absolute left-[2%] top-1/2 -translate-y-1/2 text-[9px] font-semibold tracking-widest text-muted-foreground/50">
+                W
+              </span>
+              <div className="absolute inset-[16%] rounded-full border border-border/70" />
+              <div className="absolute inset-[33%] rounded-full border border-border/50" />
+              <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/40" />
+              <div className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-border/40" />
+              <span className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+              <span className="pulse-ring absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30" />
+              <BrandMark
+                size={80}
+                className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.12]"
+              />
+
+              {beacons.map(({ person, left, top }) => {
+                const priority = Boolean(person.is_pro) && proPriorityOn;
+                const custom = beaconColor(person.beacon_style);
+                const scaleUp = priority ? 1.16 : 1;
+                return (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => {
+                      if (dragged.current) return;
+                      setSelectedId(person.id);
+                    }}
+                    style={{
+                      left,
+                      top,
+                      opacity: person.is_online ? 1 : 0.5,
+                      zIndex: priority ? 3 : 2,
+                      transition: "left 500ms ease, top 500ms ease, opacity 500ms ease",
+                    }}
+
+                    aria-label={`${person.display_name ?? person.username}${person.is_online ? ", active now" : ""}${priority ? ", Pro member" : ""}`}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 duration-500 active:scale-90"
+                    // Only tween position/fade. Tweening `all` restarted a 500ms
+                    // animation on every compass tick, which smeared the beacons.
+                  >
+                    <span
+                      className="relative flex items-center justify-center"
+                      style={{
+                        width: beaconSize,
+                        height: beaconSize,
+                        transform: `scale(${markerScale * scaleUp}) rotate(${-rot}deg)`,
+                        transition: "transform 260ms cubic-bezier(0.22,1,0.36,1)",
+                      }}
+                    >
+                      {(() => {
+                        const token = genderToken(person.gender);
+                        const glowClass = {
+                          "gender-male": "bg-gender-male/30",
+                          "gender-female": "bg-gender-female/30",
+                          "gender-other": "bg-gender-other/30",
+                        }[token];
+                        const pingClass = {
+                          "gender-male": "border-gender-male/60",
+                          "gender-female": "border-gender-female/60",
+                          "gender-other": "border-gender-other/60",
+                        }[token];
+                        const ringClass = {
+                          "gender-male": "ring-gender-male",
+                          "gender-female": "ring-gender-female",
+                          "gender-other": "ring-gender-other",
+                        }[token];
+                        const iconClass = {
+                          "gender-male": "text-gender-male",
+                          "gender-female": "text-gender-female",
+                          "gender-other": "text-gender-other",
+                        }[token];
+                        return (
+                          <>
+                            {/* soft glow pool */}
+                            <span
+                              aria-hidden
+                              className={
+                                custom
+                                  ? "absolute inset-0 rounded-full blur-md"
+                                  : `absolute inset-0 rounded-full blur-md ${glowClass}`
+                              }
+                              style={custom ? { background: custom, opacity: 0.35 } : undefined}
+                            />
+                            {/* ping for people who signaled you */}
+                            {person.they_signaled && !person.match_id && (
+                              <span
+                                aria-hidden
+                                className={
+                                  custom
+                                    ? "beacon-ping absolute inset-0 rounded-full border"
+                                    : `beacon-ping absolute inset-0 rounded-full border ${pingClass}`
+                                }
+                                style={custom ? { borderColor: custom } : undefined}
+                              />
+                            )}
+                            {/* Pro priority halo */}
+                            {priority && (
+                              <span
+                                aria-hidden
+                                className="absolute inset-[-14%] rounded-full border"
+                                style={{
+                                  borderColor: custom ?? "oklch(0.82 0.16 85)",
+                                  opacity: 0.7,
+                                }}
+                              />
+                            )}
+                            {/* gendered avatar marker; neutral gender is intentionally bare — only the ring + glow */}
+                            <span
+                              className={
+                                custom
+                                  ? "relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow"
+                                  : `relative z-10 flex items-center justify-center rounded-full bg-background ring-2 heartbeat-glow ${ringClass}`
+                              }
+                              style={{
+                                width: beaconSize * 0.62,
+                                height: beaconSize * 0.62,
+                                ...(custom ? { ["--tw-ring-color" as any]: custom } : {}),
+                              }}
+                            >
+                              {person.gender && person.gender !== "other" && (
+                                <GenderAvatarIcon
+                                  gender={person.gender}
+                                  className={
+                                    custom ? "h-[76%] w-[76%]" : `h-[76%] w-[76%] ${iconClass}`
+                                  }
+                                  {...(custom ? { style: { color: custom } } : {})}
+                                />
+                              )}
+                            </span>
+                          </>
+                        );
+                      })()}
+                      {intentFor(person.intent) ? (
+                        <span
+                          aria-hidden
+                          className="absolute -right-1 -top-1 z-20 flex size-[45%] items-center justify-center rounded-full bg-background text-[9px] leading-none shadow-sm ring-1 ring-border"
+                        >
+                          {intentFor(person.intent)?.emoji}
+                        </span>
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {helpMarkers.map(({ beacon, size, left, top }) => (
+                <button
+                  key={beacon.id}
+                  type="button"
+                  onClick={() => {
+                    if (dragged.current) return;
+                    navigate({ to: "/local", hash: "help-beacons" });
+                    setTimeout(() => {
+                      document
+                        .getElementById("help-beacons")
+                        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 250);
+                  }}
+                  style={{ left, top, zIndex: 4 }}
+                  aria-label={`${helpKindFor(beacon.kind)?.label ?? "Someone needs help"}, ${Math.round(beacon.distance_m)} metres away`}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 active:scale-90"
+                >
+                  <span
+                    className="relative flex items-center justify-center"
+                    style={{
+                      width: size,
+                      height: size,
+                      transform: `scale(${markerScale}) rotate(${-rot}deg)`,
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      className="beacon-ping absolute inset-[-20%] rounded-full border border-destructive/70"
+                    />
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 rounded-full bg-destructive/30 blur-md"
+                    />
+                    <span className="relative z-10 flex size-full items-center justify-center rounded-full bg-destructive text-destructive-foreground ring-2 ring-background">
+                      <LifeBuoy className="size-[62%]" />
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {settings.radar_sweep_enabled && (
+              <div className="radar-sweep pointer-events-none absolute inset-0 rounded-full" />
+            )}
+
+            {/* Facing indicator: fixed to the screen, marks the way you are pointed. */}
+            {compassActive && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-[6%] size-0 -translate-x-1/2 border-x-[6px] border-b-[10px] border-x-transparent border-b-primary/70"
+              />
+            )}
+
+            {nearby.isLoading && (
+              <LoaderCircle className="absolute inset-x-0 bottom-[16%] mx-auto size-5 animate-spin text-muted-foreground" />
+            )}
+          </section>
+
+          {!visible ? (
+            <p
+              role="status"
+              className="max-w-xs text-center text-xs leading-5 text-muted-foreground"
+            >
+              {locationBusy
+                ? "Checking in…"
+                : "You’re not checked in yet. Tap Check in above to become visible to nearby people."}
+            </p>
+          ) : (
+            !geoError &&
+            nearby.isSuccess &&
+            people.length === 0 &&
+            helpMarkers.length === 0 && (
+              <p
+                role="status"
+                className="text-center text-xs font-medium leading-5 text-red-600 dark:text-red-400"
+              >
+                {settings.empty_radar_text}
+              </p>
+            )
+          )}
+
+          {/* Compass toggle sits below the radar and its empty-state message. */}
+          <button
+            type="button"
             onClick={() => {
-              setPermDenied(false);
-              setAskLocation(false);
-              setRetryKey((k) => k + 1);
+              if (needsPermission) {
+                void requestCompass().then((ok) => {
+                  if (ok) {
+                    if (!headingUp) toggleHeadingUp();
+                  } else toast.error("Compass access was declined");
+                });
+                return;
+              }
+              if (headingUp && heading == null) {
+                void requestCompass().then((ok) => {
+                  if (!ok) toast.error("Compass is unavailable on this device");
+                });
+                return;
+              }
+              toggleHeadingUp();
+            }}
+            className="mb-1 flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+          >
+            {compassCalibrating ||
+            (headingUp && heading == null && !needsPermission && !compassUnavailable) ? (
+              <LoaderCircle className="size-3.5 animate-spin text-primary" />
+            ) : (
+              <Compass className={`size-3.5 ${compassActive ? "text-primary" : ""}`} />
+            )}
+            {needsPermission
+              ? "Enable compass"
+              : compassActive
+                ? compassCalibrating
+                  ? "Calibrating…"
+                  : `Facing ${compassPoint(heading as number)}`
+                : headingUp
+                  ? compassUnavailable
+                    ? "No compass signal — tap to retry"
+                    : "Finding north…"
+                  : "North up"}
+          </button>
+
+          {/* Calibration notice: shown below the compass button while the magnetometer settles. */}
+          {compassCalibrating && (
+            <div className="flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+              <LoaderCircle className="size-3.5 animate-spin text-primary" />
+              Calibrating compass — move your phone in a figure 8
+            </div>
+          )}
+
+          {headingUp && compassUnavailable && (
+            <div className="max-w-[18rem] rounded-2xl border border-border bg-background/90 px-3 py-2 text-center text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+              Your phone isn’t sending a compass reading. Move away from metal or magnets, wave the
+              phone in a figure 8, then tap the compass button to try again.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Dialog
+        open={locationHelp !== null}
+        onOpenChange={(open) => {
+          if (!open) setLocationHelp(null);
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{locationHelp?.title}</DialogTitle>
+            <DialogDescription>{locationHelp?.instructions}</DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Return to SkanAround and tap Check in again. Your location stays hidden until check-in
+            succeeds.
+          </p>
+          {locationHelp?.canOpenSettings && (
+            <>
+              <Button asChild>
+                <a href="app-settings:">Open Settings</a>
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                This opens SkanAround’s settings. If Location Services is off for the whole phone,
+                go back in Settings to Privacy & Security → Location Services.
+              </p>
+            </>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => {
+              setLocationHelp(null);
+              void locate(true);
             }}
           >
-            {permDenied ? "Try again" : "Allow location"}
+            Try check-in again
           </Button>
-          <Button variant="ghost" className="w-full" onClick={() => setAskLocation(false)}>
+          <Button variant="ghost" onClick={() => setLocationHelp(null)}>
             Not now
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
 
-    <Dialog
+      <Dialog
         open={Boolean(selected)}
         onOpenChange={(o) => {
           if (!o) {
@@ -1449,11 +1097,7 @@ function RadarPage() {
                     onChange={(e) => setReason(e.target.value)}
                   />
                   <DialogFooter className="flex-row gap-2">
-                    <Button
-                      variant="ghost"
-                      className="flex-1"
-                      onClick={() => setReporting(false)}
-                    >
+                    <Button variant="ghost" className="flex-1" onClick={() => setReporting(false)}>
                       Cancel
                     </Button>
                     <Button

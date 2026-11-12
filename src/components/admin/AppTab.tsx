@@ -1,3 +1,4 @@
+import { ReviewDemoAdmin } from "./ReviewDemoAdmin";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
@@ -115,6 +116,7 @@ export function AppTab() {
 
   return (
     <div className="space-y-3 pb-24">
+      <ReviewDemoAdmin />
       <Section title="App text" hint="Copy shown to members across the app.">
         <Field label="Tagline">
           <Input value={value.tagline} onChange={(e) => set("tagline", e.target.value)} />

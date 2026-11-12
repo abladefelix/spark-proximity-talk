@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useSettings } from "@/hooks/useAppSettings";
+import { CheckinDurationSetting } from "@/components/CheckinDurationSetting";
 import { ScanRangeSetting } from "@/components/ScanRangeSetting";
 import { BeaconStyleSetting } from "@/components/BeaconStyleSetting";
 
@@ -358,6 +359,7 @@ function ProfilePage() {
       <section className="mt-8 space-y-4">
         <ProUpgradeCard />
         <ScanRangeSetting />
+        {profile && <CheckinDurationSetting userId={profile.id} />}
         <BeaconStyleSetting />
 
         <RadarSoundSetting />

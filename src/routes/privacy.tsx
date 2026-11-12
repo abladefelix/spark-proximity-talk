@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalDocument } from "@/components/LegalDocument";
-import { DEFAULT_PRIVACY } from "@/lib/legal";
+import { DEFAULT_PRIVACY, REQUIRED_LOCATION_PRIVACY } from "@/lib/legal";
 import { useSettings } from "@/hooks/useAppSettings";
 
 export const Route = createFileRoute("/privacy")({
@@ -29,7 +29,10 @@ function PrivacyPage() {
   const email = settings.support_email?.trim();
   return (
     <LegalDocument
-      markdown={settings.privacy_text?.trim() ? settings.privacy_text : DEFAULT_PRIVACY}
+      markdown={
+        (settings.privacy_text?.trim() ? settings.privacy_text : DEFAULT_PRIVACY) +
+        REQUIRED_LOCATION_PRIVACY
+      }
       {...(email ? { supportEmail: email } : {})}
     />
   );

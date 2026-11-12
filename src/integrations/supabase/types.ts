@@ -14,6 +14,19 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_acceptances: {
+        Row: { user_id: string; version: string; accepted_at: string }
+        Insert: { user_id: string; version: string; accepted_at?: string }
+        Update: { version?: string; accepted_at?: string }
+        Relationships: []
+      }
+      hidden_broadcasts: {
+        Row: { user_id: string; broadcast_id: string }
+        Insert: { user_id: string; broadcast_id: string }
+        Update: { user_id?: string; broadcast_id?: string }
+        Relationships: []
+      }
+
       activity_log: {
         Row: {
           action: string
@@ -850,6 +863,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          checkin_duration_minutes: number
           avatar_url: string | null
           banned: boolean
           banned_at: string | null
@@ -874,6 +888,7 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          checkin_duration_minutes?: number
           avatar_url?: string | null
           banned?: boolean
           banned_at?: string | null
@@ -898,6 +913,7 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          checkin_duration_minutes?: number
           avatar_url?: string | null
           banned?: boolean
           banned_at?: string | null
@@ -979,6 +995,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          actioned_at: string | null
           content_id: string | null
           content_snapshot: string | null
           content_type: string | null
@@ -989,6 +1006,7 @@ export type Database = {
           reporter: string
         }
         Insert: {
+          actioned_at?: string | null
           content_id?: string | null
           content_snapshot?: string | null
           content_type?: string | null
@@ -999,6 +1017,7 @@ export type Database = {
           reporter: string
         }
         Update: {
+          actioned_at?: string | null
           content_id?: string | null
           content_snapshot?: string | null
           content_type?: string | null
@@ -1239,6 +1258,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_enforce_content_report: { Args: { _report_id: string }; Returns: undefined }
+      begin_location_checkin: { Args: { _lat: number; _lng: number; _accuracy?: number }; Returns: string }
+      get_my_location_checkin: { Args: never; Returns: string | null }
+      end_location_checkin: { Args: never; Returns: undefined }
+      accept_community_rules: { Args: { _version: string }; Returns: undefined }
+
       admin_activity_log: {
         Args: {
           _category?: string

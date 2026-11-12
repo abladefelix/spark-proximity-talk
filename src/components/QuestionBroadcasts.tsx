@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Ban,
+  EyeOff,
   Flag,
   MessageCircleQuestion,
   MoreHorizontal,
@@ -44,7 +45,7 @@ type Broadcast = {
   total: number;
   my_answer: number | null;
   mine: boolean;
-  distance_m: number;
+  distance_m: number | null;
   expires_at: string;
   match_id: string | null;
 };
@@ -58,6 +59,8 @@ function containsBlockedContent(text: string) {
 
 function minutesLeft(iso: string) {
   const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  if (m >= 1440) return `${Math.ceil(m / 1440)}d left`;
+  if (m >= 60) return `${Math.ceil(m / 60)}h left`;
   return m > 0 ? `${m}m left` : "expiring";
 }
 
@@ -186,6 +189,21 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
     onError: (e) => toast.error(errorMessage(e, "Could not block user")),
   });
 
+  const hide = useMutation({
+    mutationFn: async (id: string) => {
+      const me = (await supabase.auth.getUser()).data.user?.id;
+      if (!me) throw new Error("Sign in again");
+      const { error } = await supabase.from("hidden_broadcasts").insert({ user_id: me, broadcast_id: id });
+      if (error && error.code !== "23505") throw error;
+    },
+    onSuccess: (_, id) => {
+      qc.setQueryData<Broadcast[]>(["broadcasts", savedRadius], previous => previous?.filter(b => b.id !== id));
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
+      toast.success("Post removed from your feed");
+    },
+    onError: e => toast.error(errorMessage(e, "Could not hide post")),
+  });
+
   const report = useMutation({
     mutationFn: async () => {
       if (!reporting) return;
@@ -196,10 +214,12 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
       if (error) throw error;
     },
     onSuccess: () => {
+      if (reporting) qc.setQueryData<Broadcast[]>(["broadcasts", savedRadius], previous => previous?.filter(b => b.id !== reporting.id));
+      qc.invalidateQueries({ queryKey: ["broadcasts"] });
       setReporting(null);
       setReportReason("");
       toast.success("Report sent", {
-        description: "The question is hidden from you after you block the user. Reports are reviewed within 24 hours.",
+        description: "The question has been removed from your feed. Reports are reviewed within 24 hours.",
       });
     },
     onError: (e) => toast.error(errorMessage(e, "Could not send report")),
@@ -253,6 +273,9 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
                   </DropdownMenuItem>
                 ) : (
                   <>
+                    <DropdownMenuItem onSelect={() => hide.mutate(b.id)}>
+                      <EyeOff className="size-4" /> Remove from my feed
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
                         setReportReason("");
@@ -311,7 +334,7 @@ export function QuestionBroadcasts({ radiusM }: { radiusM?: number } = {}) {
 
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
-              {Math.round(b.distance_m)} m · {b.total} answered · {minutesLeft(b.expires_at)}
+              {b.distance_m === null ? "Sample question" : `${Math.round(b.distance_m)} m`} · {b.total} answered · {minutesLeft(b.expires_at)}
             </span>
             {b.mine ? null : b.match_id ? (
               <button type="button" className="text-primary" onClick={() => openChat(b.match_id as string)}>

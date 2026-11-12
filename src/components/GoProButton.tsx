@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Crown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export function GoProButton({ variant = "icon", className }: Props) {
   const { data: billing, isLoading, isError, refetch } = useBillingInfo();
   const { data: sub } = useMySubscription();
   const [open, setOpen] = useState(false);
+  const openedFromPointer = useRef(false);
 
   // Keep the navigation slot stable while auth restores on a cold launch. If
   // settings fail once, leave a visible retry control instead of making the
@@ -66,12 +67,18 @@ export function GoProButton({ variant = "icon", className }: Props) {
             type="button"
             aria-label={isPro ? billing.pro_label : "Go Pro"}
             className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none transition-colors max-[359px]:text-[10px]",
-              isPro ? "text-primary" : "text-muted-foreground",
+              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] leading-none outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 max-[359px]:text-[10px]",
+              open ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
               className,
             )}
+            onPointerDown={() => {
+              openedFromPointer.current = true;
+            }}
+            onKeyDown={() => {
+              openedFromPointer.current = false;
+            }}
           >
-            <Crown className={cn("size-5 shrink-0", isPro && "fill-current")} />
+            <Crown className={cn("size-5 shrink-0", open && "fill-current")} />
             <span className="max-w-full truncate">{isPro ? "Pro" : "Go Pro"}</span>
           </button>
         ) : variant === "icon" ? (
@@ -97,12 +104,23 @@ export function GoProButton({ variant = "icon", className }: Props) {
         )}
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[calc(100vw-1rem)] max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0">
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          // Touch/mouse dismissal should not leave a focus highlight on the tab.
+          // Preserve normal focus restoration for keyboard users.
+          if (variant === "nav" && openedFromPointer.current) event.preventDefault();
+          openedFromPointer.current = false;
+        }}
+        className="flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[calc(100vw-1rem)] max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0"
+      >
         <DialogHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 pr-12 text-left">
           <DialogTitle>{billing.pro_label}</DialogTitle>
           <DialogDescription>{billing.pro_pitch}</DialogDescription>
         </DialogHeader>
-        <div data-scrollable className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-[max(1rem,var(--safe-bottom))]">
+        <div
+          data-scrollable
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-[max(1rem,var(--safe-bottom))]"
+        >
           <ProUpgradeCard />
         </div>
       </DialogContent>

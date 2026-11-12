@@ -452,7 +452,7 @@ export function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("reports")
-        .select("id, reason, created_at, reporter, reported, content_type, content_id, content_snapshot")
+        .select("id, reason, created_at, reporter, reported, content_type, content_id, content_snapshot, actioned_at")
         .order("created_at", { ascending: false })
         .limit(100);
       if (!rows?.length) return [];
@@ -575,6 +575,24 @@ export function AdminPage() {
       return;
     }
     toast.success("Profile removed");
+    refreshAll();
+  }
+
+  async function enforceContentReport(id: string) {
+    if (!window.confirm("Confirm this violation, remove this member's posts and messages, and ban the member?")) return;
+    const { error } = await supabase.rpc("admin_enforce_content_report", { _report_id: id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Content removed and member banned");
+    queryClient.invalidateQueries();
+  }
+
+  async function removeReportedContent(id: string) {
+    const { error } = await supabase.rpc("admin_remove_reported_content", { _report_id: id });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Reported content removed");
     refreshAll();
   }
 
@@ -1398,6 +1416,7 @@ export function AdminPage() {
         </TabsContent>
 
         <TabsContent value="reports" className="mt-3">
+          <p className="mb-3 text-sm">Check this queue and niiabladefelix@gmail.com daily. Remove confirmed objectionable content and ban abusive members within 24 hours of the report.</p>
           <AdminSearch
             value={reportsSearch}
             onChange={(v) => {
@@ -1421,6 +1440,9 @@ export function AdminPage() {
                   <p className="truncate text-[11px] leading-tight text-muted-foreground">
                     {r.reason}
                   </p>
+                  <p className={r.actioned_at ? "text-xs text-muted-foreground" : "text-xs text-destructive"}>
+                    {r.actioned_at ? "Action taken" : Date.now() - new Date(r.created_at).getTime() >= 24 * 60 * 60 * 1000 ? "Overdue — review immediately" : "Review within 24 hours"}
+                  </p>
                   {r.content_type ? (
                     <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
                       {r.content_type === "broadcast" ? "Local question" : r.content_type}
@@ -1435,6 +1457,9 @@ export function AdminPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="text-destructive" onSelect={() => void enforceContentReport(r.id)}>
+                      <Ban className="size-4" /> Confirm violation: remove content & ban
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setDetailsUserId(r.reported)}>
                       <Eye className="size-4" /> View details
                     </DropdownMenuItem>
