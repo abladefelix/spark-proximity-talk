@@ -36,7 +36,7 @@ The migration turns off existing radar visibility. Every user must explicitly ch
 
 1. On iPhone and iPad, sign in with review username `ogyamwilson` using the password already stored in App Review Information. Verify the rules gate, links and explicit agreement.
 2. Verify existing sample chats/questions. Refresh the scoped sample activity in Admin if expired; do not create sample activity for real users.
-3. With two authorized test accounts, confirm hidden by default, manual Check in, Stop sharing, background/return, leaving Radar and expiry. Returning must not re-publish location. Denied GPS must leave chats and sample questions usable.
+3. With two authorized test accounts, confirm hidden by default, manual Check in, Stop sharing, internal screen navigation and expiry. Returning to Radar from another in-app screen must show the same remaining lease. Backgrounding still requests checkout, so returning from the background must remain hidden and require a new manual check-in. Denied GPS must leave chats and sample questions usable.
 4. On disposable test content, exercise question hide, report, block, own delete and text rejection. Confirm the report reaches Admin. Staff enforcement must be tested only on a disposable account, never the reviewer or a real user.
 5. Confirm Safety & contact, Terms/EULA and Privacy load on device and the email link is usable.
 6. Review the existing submitted binary. Its Capacitor configuration loads the live site, so these web/database changes may be delivered without replacing the binary; verify build 19 actually displays them before deciding whether a new build is needed.
